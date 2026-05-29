@@ -6898,9 +6898,9 @@
     return byField;
   }
 
-  function synthesisSubsetSpecsForOutcome(synthesisPlan, outcomeKey) {
-    const planEntry = (synthesisPlan?.outcomes || {})[outcomeKey] || {};
-    const subsets = Array.isArray(planEntry?.plan?.subsets) ? planEntry.plan.subsets : [];
+  function synthesisSubsetSpecsForAnalysis(analysis = {}) {
+    const config = analysis?.results?.synthesis_configuration || analysis?.synthesis_configuration || {};
+    const subsets = Array.isArray(config.subsets) ? config.subsets : [];
     return new Map(
       subsets
         .filter((subset) => subset?.name)
@@ -7675,7 +7675,6 @@
     comparisonPayload,
     outcomeExtractionTables = [],
     subgroupPlan = {},
-    synthesisPlan = {},
     cochraneOutcomeAlignment = {},
     cochraneSynthesisCiOverlap = {},
     screeningResults = {},
@@ -7698,7 +7697,6 @@
     return `
       <div class="outcome-panel-list synthesis-outcome-list">
         ${plottedOutcomes.map(({ entry, analyses }) => {
-          const subsetSpecMap = synthesisSubsetSpecsForOutcome(synthesisPlan, entry.key);
           const definitionNote = synthesisOutcomeDefinition(entry, outcomeExtractionTables);
           const measureNote = analyses.length > 1
             ? "Different effect measures were extracted for this outcome, so each measure is synthesized separately."
@@ -7716,6 +7714,7 @@
                 </div>
               </summary>
               ${analyses.map((analysis) => {
+                    const subsetSpecMap = synthesisSubsetSpecsForAnalysis(analysis);
 	                  const primaryResult = analysis.primaryResult || {};
 	                  const hasEstimate = primaryResult.pooled_effect !== null && primaryResult.pooled_effect !== undefined && primaryResult.pooled_effect !== "";
                     const mixedDesignSynthesis = isMixedStudyDesignSynthesis(analysis);
@@ -7876,7 +7875,6 @@
     const screeningQueryUpdate = current.screening_query_update || {};
     const assets = current.assets || {};
     const synthesis = current.synthesis_results || {};
-    const synthesisPlan = current.synthesis_plan || {};
     const extractionTemplates = current.extraction_templates || {};
     const perStudyOutputs = current.per_study_outputs || [];
     const outcomeExtractionTables = current.outcome_extraction_tables || [];
@@ -8097,7 +8095,7 @@
 	      </div>
       <div>
         <div class="detail-card" id="synthesis-results">
-          ${synthesisOutcomeSection(synthesis, assets, current.comparison || {}, outcomeExtractionTables, subgroupPlan, synthesisPlan, cochraneOutcomeAlignment, cochraneSynthesisCiOverlap, screening, extractionSourceSummary)}
+          ${synthesisOutcomeSection(synthesis, assets, current.comparison || {}, outcomeExtractionTables, subgroupPlan, cochraneOutcomeAlignment, cochraneSynthesisCiOverlap, screening, extractionSourceSummary)}
         </div>
       </div>
       ${finalReportSection(finalReportMarkdown, current.final_report_verification || current.human_verification || {})}
