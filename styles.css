@@ -321,6 +321,31 @@ p {
   margin: -4px 0;
 }
 
+.report-status-banner {
+  display: grid;
+  gap: 4px;
+  margin-top: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 252, 246, 0.76);
+  color: var(--muted);
+}
+
+.report-status-banner strong {
+  color: var(--ink);
+}
+
+.report-status-draft {
+  border-color: rgba(217, 119, 6, 0.34);
+  background: rgba(217, 119, 6, 0.08);
+}
+
+.report-status-verified {
+  border-color: rgba(15, 118, 110, 0.28);
+  background: var(--accent-soft);
+}
+
 .report-body h3,
 .report-body h4,
 .report-body h5 {
@@ -1316,6 +1341,31 @@ main {
 .synthesis-forest-result .synthesis-analysis-notes {
   margin-top: 0;
   padding: 0 14px 14px;
+}
+
+.synthesis-publication-overlap-warning {
+  display: grid;
+  gap: 8px;
+  margin: 10px 14px;
+  padding: 12px 14px;
+  border: 1px solid rgba(217, 119, 6, 0.32);
+  border-radius: var(--radius-sm);
+  background: rgba(217, 119, 6, 0.08);
+  color: var(--ink);
+  font-size: var(--text-sm);
+  line-height: 1.4;
+}
+
+.synthesis-publication-overlap-warning ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 18px;
+}
+
+.synthesis-publication-overlap-detail {
+  display: block;
+  color: var(--muted);
 }
 
 .synthesis-diagnostics-collapsible {

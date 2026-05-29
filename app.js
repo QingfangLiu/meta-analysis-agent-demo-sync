@@ -6382,6 +6382,38 @@
     `;
   }
 
+  function renderPublicationOverlapWarnings(warnings) {
+    const items = (Array.isArray(warnings) ? warnings : [])
+      .filter((warning) => warning && typeof warning === "object");
+    if (!items.length) {
+      return "";
+    }
+    return `
+      <div class="synthesis-publication-overlap-warning" role="note">
+        <strong>Possible overlapping dataset</strong>
+        <ul>
+          ${items.map((warning) => {
+            const groupId = String(warning.group_id || "linked publication group").trim();
+            const members = (Array.isArray(warning.member_labels_in_analysis)
+              ? warning.member_labels_in_analysis
+              : warning.member_pmids_in_analysis || []
+            )
+              .map((item) => String(item || "").trim())
+              .filter(Boolean);
+            const message = String(warning.message || "This synthesis includes multiple linked publications; manual review is required.").trim();
+            const reason = String(warning.reason || "").trim();
+            return `
+              <li>
+                <span>${escapeHtml(message)}</span>
+                <span class="synthesis-publication-overlap-detail">Group: ${escapeHtml(groupId)}${members.length ? `; studies: ${escapeHtml(members.join("; "))}` : ""}${reason ? `; reason: ${escapeHtml(reason)}` : ""}</span>
+              </li>
+            `;
+          }).join("")}
+        </ul>
+      </div>
+    `;
+  }
+
   function cochraneReferenceStatusSummaryLabel(status) {
     return COCHRANE_REFERENCE_STATUS_META[String(status || "")]?.label
       || String(status || "").replaceAll("_", " ");
@@ -7052,6 +7084,11 @@
                               ? interactivePlot
                               : `<p class="note">No forest plot was generated for this subgroup subset.</p>`
                             }
+                            ${renderPublicationOverlapWarnings(
+                              subgroup.plotData?.publication_overlap_warnings
+                              || subgroup.primaryResult?.publication_overlap_warnings
+                              || []
+                            )}
                             ${renderSynthesisDiagnostics(subgroup.primaryResult || {}, null, subgroupPlan, { showSubgroupDifferences: false })}
                           </div>
                         </div>
@@ -7123,6 +7160,11 @@
                   </div>
                   <div class="synthesis-plot-card synthesis-forest-result labeled-forest-result agent-synthesis-forest-result" data-forest-source-label="Agent made">
                     ${interactivePlot || `<p class="note">No forest plot was generated for this study-design branch.</p>`}
+                    ${renderPublicationOverlapWarnings(
+                      branch.plotData?.publication_overlap_warnings
+                      || branch.primaryResult?.publication_overlap_warnings
+                      || []
+                    )}
                     ${renderSynthesisDiagnostics(branch.primaryResult || {}, null, subgroupPlan, { showSubgroupDifferences: false })}
                   </div>
                 </div>
@@ -7727,6 +7769,11 @@
                         )}
                         <div class="synthesis-plot-card synthesis-forest-result labeled-forest-result agent-synthesis-forest-result" data-forest-source-label="Agent made">
                           ${interactivePlot}
+                          ${renderPublicationOverlapWarnings(
+                            analysis.plotData?.publication_overlap_warnings
+                            || primaryResult.publication_overlap_warnings
+                            || []
+                          )}
                           ${renderSynthesisDiagnostics(primaryResult, {}, subgroupPlan, {
                             collapsed: showCochraneReproducedPlot,
                           })}
@@ -7763,8 +7810,16 @@
     `;
   }
 
-  function finalReportSection(markdown) {
+  function finalReportSection(markdown, verification = {}) {
     const text = String(markdown || "").trim();
+    const isHumanVerified = verification?.human_verified === true
+      || verification?.final_report_human_verified === true
+      || String(verification?.status || "").trim().toLowerCase() === "human_verified";
+    const statusClass = isHumanVerified ? "report-status-verified" : "report-status-draft";
+    const statusLabel = isHumanVerified ? "Human-verified narrative report" : "AI-generated draft";
+    const statusText = isHumanVerified
+      ? "A human reviewer has marked this narrative report as verified."
+      : "This narrative report has not been human-verified. Use it as a draft audit summary, not as a final evidence synthesis.";
     if (!text) {
       return `
         <details class="detail-card final-report-panel" id="final-report" style="margin-top:14px;">
@@ -7781,10 +7836,33 @@
         <summary class="collapsible-table-summary final-report-summary">
           <span>Final Report</span>
         </summary>
+        <div class="report-status-banner ${statusClass}">
+          <strong>${escapeHtml(statusLabel)}</strong>
+          <span>${escapeHtml(statusText)}</span>
+        </div>
         <div class="report-body">
           ${renderMarkdown(text)}
         </div>
       </details>
+    `;
+  }
+
+  function extractionRobStatusBanner(verification = {}) {
+    const isHumanVerified = verification?.human_verified === true
+      || verification?.extraction_rob_human_verified === true
+      || String(verification?.status || "").trim().toLowerCase() === "human_verified";
+    const statusClass = isHumanVerified ? "report-status-verified" : "report-status-draft";
+    const statusLabel = isHumanVerified
+      ? "Human-verified extraction and RoB results"
+      : "AI-generated draft";
+    const statusText = isHumanVerified
+      ? "A human reviewer has marked these extraction and RoB results as verified."
+      : "Extraction and RoB results require human verification.";
+    return `
+      <div class="report-status-banner ${statusClass}">
+        <strong>${escapeHtml(statusLabel)}</strong>
+        <span>${escapeHtml(statusText)}</span>
+      </div>
     `;
   }
 
@@ -7995,6 +8073,7 @@
 	          <h2>Extraction and risk of bias</h2>
 	        </div>
 	      </div>
+	      ${extractionRobStatusBanner(current.extraction_rob_verification || {})}
 	      <div class="detail-card" id="extraction-results" style="margin-top:14px;">
 	        <h3>Study extraction results</h3>
 	        <p class="note">This section summarizes outcome-specific extraction rows. With full text, extraction and RoB are produced together; without full text, extraction uses abstract plus exact linked NCT records when available, otherwise the abstract alone, and RoB is skipped.</p>
@@ -8021,7 +8100,7 @@
           ${synthesisOutcomeSection(synthesis, assets, current.comparison || {}, outcomeExtractionTables, subgroupPlan, synthesisPlan, cochraneOutcomeAlignment, cochraneSynthesisCiOverlap, screening, extractionSourceSummary)}
         </div>
       </div>
-      ${finalReportSection(finalReportMarkdown)}
+      ${finalReportSection(finalReportMarkdown, current.final_report_verification || current.human_verification || {})}
 	    </section>
 
 		    ${renderEvaluationSummary(cochraneSearchScreeningMetrics, cochraneOutcomeAlignment, cochraneComparisonAlignment, cochraneSynthesisCiOverlap, synthesisPlotSummary)}
