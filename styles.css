@@ -2341,7 +2341,7 @@ th {
 
 .study-arm-list {
   display: grid;
-  gap: 6px;
+  gap: 4px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -2357,6 +2357,24 @@ th {
   padding: 0;
   line-height: 1.35;
   text-align: left;
+}
+
+.study-arm-single {
+  display: block;
+  text-align: left;
+}
+
+.study-arm-list-multi li {
+  position: relative;
+  padding-left: 14px;
+}
+
+.study-arm-list-multi li::before {
+  content: "-";
+  position: absolute;
+  left: 0;
+  color: var(--muted);
+  font-weight: 700;
 }
 
 .study-arm-note {
@@ -2600,6 +2618,22 @@ details[open] > .collapsible-table-summary::before,
   font-size: var(--text-xs);
   font-weight: 700;
   white-space: nowrap;
+}
+
+.inline-section-count {
+  color: var(--muted);
+  font-size: 0.86em;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.summary-description {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  letter-spacing: 0;
 }
 
 .screening-table th,

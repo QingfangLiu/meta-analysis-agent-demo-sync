@@ -3727,7 +3727,10 @@
       return `
         <details class="detail-card publication-linkage-section" id="publication-linkage" style="margin-top:14px;">
           <summary class="collapsible-table-summary publication-linkage-summary">
-            <h3>Publication Linkage</h3>
+            <span>
+              <h3>Publication Linkage <span class="inline-section-count">(x 0)</span></h3>
+              <span class="summary-description">Groups papers that may report the same underlying dataset or trial.</span>
+            </span>
           </summary>
           <p class="note">No publication linkage results were saved for this run${status ? ` (${escapeHtml(status)})` : ""}.</p>
         </details>
@@ -3737,7 +3740,10 @@
     return `
       <details class="detail-card publication-linkage-section" id="publication-linkage" style="margin-top:14px;">
         <summary class="collapsible-table-summary publication-linkage-summary">
-          <h3>Publication Linkage</h3>
+          <span>
+            <h3>Publication Linkage <span class="inline-section-count">(x ${number(displayGroups.length)})</span></h3>
+            <span class="summary-description">Groups papers that may report the same underlying dataset or trial.</span>
+          </span>
         </summary>
         <p class="note">Likely linked reports are grouped by shared underlying dataset, trial, or cohort. Group-level and per-PMID evidence are shown below for audit.</p>
         ${renderLinkageOverview()}
@@ -4284,7 +4290,10 @@
       return `
         <details class="detail-card subgroup-plan-section" id="subgroup-plan" style="margin-top:14px;">
           <summary class="collapsible-table-summary subgroup-plan-summary">
-            <h3>Subgroups</h3>
+            <span>
+              <h3>Subgroups <span class="inline-section-count">(x 0)</span></h3>
+              <span class="summary-description">Planned study/result factors that may be used for subgroup analyses.</span>
+            </span>
           </summary>
           <p class="note">No subgroup dimensions were saved for this run${status ? ` (${escapeHtml(status)})` : ""}.</p>
         </details>
@@ -4348,7 +4357,10 @@
     return `
       <details class="detail-card subgroup-plan-section" id="subgroup-plan" style="margin-top:14px;">
         <summary class="collapsible-table-summary subgroup-plan-summary">
-          <h3>Heterogeneity Factors</h3>
+          <span>
+            <h3>Heterogeneity Factors <span class="inline-section-count">(x ${number(dimensions.length)})</span></h3>
+            <span class="summary-description">Planned study/result factors that may be used for subgroup analyses.</span>
+          </span>
         </summary>
         <p class="note">These study-level and result-level factors are planned from study tables. Synthesis uses a factor only when extracted data support an analyzable subset.</p>
         <div class="outcome-panel-list subgroup-plan-list">
@@ -4371,8 +4383,11 @@
       if (!items.length) {
         return `<span class="muted">—</span>`;
       }
+      if (items.length === 1) {
+        return `<span class="study-arm-single">${sentence(items[0])}</span>`;
+      }
       return `
-        <ul class="study-arm-list">
+        <ul class="study-arm-list study-arm-list-multi">
           ${items.map((value) => `<li>${sentence(value)}</li>`).join("")}
         </ul>
       `;
@@ -4419,8 +4434,7 @@
       return `
         <details class="study-arms-omitted">
           <summary>
-            <span>Studies without mapped arm details</span>
-            <span class="mono">${number(omittedStudies.length)}</span>
+            <span>Studies without mapped arm details <span class="inline-section-count">(x ${number(omittedStudies.length)})</span></span>
           </summary>
           <p class="note">No intervention, comparator, extra arm, or study-arm detail was saved in study_arms.json.</p>
           <div class="table-wrap screening-wrap study-arms-omitted-wrap">
@@ -4450,8 +4464,7 @@
     return `
       <details class="${options.embedded ? "study-arms-section comparison-subsection" : "detail-card study-arms-section"}"${options.embedded ? "" : ` id="study-arms"`} style="margin-top:14px;">
         <summary class="collapsible-table-summary study-arms-summary">
-          <h3>${escapeHtml(options.title || "Study arms")}</h3>
-          <span class="mono">${number(studies.length)} shown</span>
+          <h3>${escapeHtml(options.title || "Study arms")} <span class="inline-section-count">(x ${number(studies.length)})</span></h3>
         </summary>
         <p class="note">${options.embedded ? "Per-study intervention and comparator arms projected from saved study tables." : "Intervention and comparator arms are projected from saved study tables for candidates not excluded by full-text screening."}</p>
         ${studies.length
@@ -4990,8 +5003,7 @@
     return `
       <details class="detail-card nct-linkage-panel" id="nct-linkage">
         <summary class="collapsible-table-summary nct-linkage-summary">
-          <h3>NCT Linkage</h3>
-          <span class="collapsible-table-count mono">${number(entries.length)} studies</span>
+          <h3>NCT Linkage <span class="inline-section-count">(x ${number(entries.length)})</span></h3>
         </summary>
         <p class="note">Exact NCT IDs found in PubMed abstracts are linked to ClinicalTrials.gov records. This deterministic linkage is generated after screening and can support publication linkage and abstract+NCT extraction. Trial labels are shown when the abstract names the trial near the NCT ID or the ClinicalTrials.gov record provides an acronym. Posted Results counts how many linked NCT records have posted results on ClinicalTrials.gov.</p>
         ${entries.length ? `
@@ -8068,6 +8080,8 @@
     const shownScreeningCount = String(currentScreeningLimit) === "all"
       ? filteredScreeningStudies.length
       : Math.min(Number(currentScreeningLimit) || 20, filteredScreeningStudies.length);
+    const fulltextScreenedCount = (Array.isArray(perStudyOutputs) ? perStudyOutputs : [])
+      .filter((entry) => entry?.fulltext_source?.fulltext_obtained === true).length;
     const synthesisPlotSummary = synthesisForestPlotSummary(synthesis, assets);
     renderHero(current);
 
@@ -8204,7 +8218,7 @@
 		      ${nctLinkageSection(nctLinkageRows)}
 		      <details class="detail-card fulltext-screening-panel" id="fulltext-screening" style="margin-top:14px;">
 		        <summary class="collapsible-table-summary fulltext-screening-summary">
-		          <h3>Full text screening</h3>
+		          <h3>Full text screening <span class="inline-section-count">(x ${number(fulltextScreenedCount)})</span></h3>
 		        </summary>
 		        ${fulltextEligibilitySection(perStudyOutputs) || `<p class="note">No full-text screening rows were found for this run.</p>`}
 		      </details>
@@ -8229,7 +8243,7 @@
 	      </div>
 	      ${studyTypeRoutingSection(robDisplay)}
 	      <div class="detail-card" id="rob-assessments" style="margin-top:14px;">
-        <h3>RoB Assessments</h3>
+        <h3>RoB Assessments <span class="inline-section-count">(x ${number(completedRobReviewCount)})</span></h3>
         <p class="note">${number(completedRobReviewCount)} completed study-level RoB assessments are grouped below by the RoB tool that was actually administered. Incomplete or unavailable RoB outputs are omitted from these domain tables but remain visible in the routing table above.</p>
         ${riskOfBiasTable(robDisplay)}
       </div>
