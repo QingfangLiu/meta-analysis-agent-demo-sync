@@ -2268,6 +2268,7 @@
         items: [
           ["NCT linkage", "#nct-linkage"],
           ["Full text screening", "#fulltext-screening"],
+          ["Source availability", "#source-availability-gate"],
           ["Outcomes", "#outcomes"],
           ["Comparison", "#comparison"],
           ["Publication linkage", "#publication-linkage"],
@@ -5245,6 +5246,63 @@
     `;
   }
 
+  function sourceAvailabilityGateSection(gate) {
+    if (!gate || typeof gate !== "object" || !Object.keys(gate).length) {
+      return "";
+    }
+    const counts = gate.counts && typeof gate.counts === "object" ? gate.counts : {};
+    const droppedRecords = Array.isArray(gate.dropped_records) ? gate.dropped_records : [];
+    const droppedCount = Number(counts.n_dropped_no_source_text ?? droppedRecords.length) || 0;
+    const retainedCount = Number(counts.n_retained ?? 0) || 0;
+
+    function gatePubInfoCell(record) {
+      const label = cleanText(record.study_label);
+      const journal = cleanText(record.journal);
+      const title = cleanText(record.title);
+      const tooltip = [label, journal, title].filter(Boolean).join("\n");
+      return `
+        <div class="screen-study-cell"${tooltip ? ` title="${escapeHtml(tooltip)}"` : ""}>
+          <div class="screen-study-primary">${label ? sentence(label) : "No author/year."}</div>
+          ${journal ? `<div class="screen-study-journal">${sentence(journal)}</div>` : ""}
+        </div>
+      `;
+    }
+
+    return `
+      <details class="detail-card source-availability-panel" id="source-availability-gate" style="margin-top:14px;">
+        <summary class="collapsible-table-summary source-availability-summary">
+          <div>
+            <h3>Source availability gate <span class="inline-section-count">(x ${number(droppedCount)})</span></h3>
+            <p class="summary-note">Drops only not-enough-info candidates with no abstract, linked NCT text, or full text.</p>
+          </div>
+        </summary>
+        <p class="note">${number(retainedCount)} candidates retained after this deterministic gate.</p>
+        ${droppedRecords.length ? `
+          <div class="table-wrap screening-wrap">
+            <table class="screening-table extraction-study-summary-table source-availability-table">
+              <thead>
+                <tr>
+                  <th>PMID</th>
+                  <th>Pub. Info</th>
+                  <th>Reason</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${droppedRecords.map((record) => `
+                  <tr>
+                    <td class="screen-col-pmid mono">${renderPmidLink(record)}</td>
+                    <td class="screen-col-title">${gatePubInfoCell(record)}</td>
+                    <td>${sentence(record.reason || "No usable source text was available.")}</td>
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+          </div>
+        ` : `<p class="note">No candidates were dropped by this gate.</p>`}
+      </details>
+    `;
+  }
+
   function extractionAttemptSection(
     outcomeTables,
     nonExtractableLimit,
@@ -8056,6 +8114,7 @@
     const outcomeSourceContribution = current.outcome_source_contribution || {};
     const comparison = current.comparison || {};
     const studyArms = current.study_arms || {};
+    const sourceAvailabilityGate = current.source_availability_gate || {};
     const subgroupPlan = current.subgroup_plan || {};
     const publicationLinkage = current.publication_linkage || {};
     const publicationLinkageEvidence = current.publication_linkage_evidence || {};
@@ -8222,6 +8281,7 @@
 		        </summary>
 		        ${fulltextEligibilitySection(perStudyOutputs) || `<p class="note">No full-text screening rows were found for this run.</p>`}
 		      </details>
+		      ${sourceAvailabilityGateSection(sourceAvailabilityGate)}
 			      ${outcomesSection(outcomes, pico, outcomeSignalInventory, cochraneOutcomeAlignment, outcomeSourceContribution)}
 		      ${comparisonSection(comparison, pico, cochraneComparisonAlignment, studyArms)}
 		      ${publicationLinkageSection(publicationLinkage, publicationLinkageEvidence, screening.screened_studies || [])}
