@@ -61,6 +61,17 @@
     "visual_evidence_notes",
     "synthesis_effect_size_source",
     "synthesis_effect_size_source_note",
+    "rob_attempted",
+    "assessment_status",
+    "rob_status_reason",
+    "study_design_type",
+    "study_design_subtype",
+    "recommended_rob_tool_id",
+    "implemented_rob_tool_id",
+    "administered_rob_tool_id",
+    "rob_routing_status",
+    "overall_risk_of_bias",
+    "overall_reason",
   ]);
   const VARIANCE_FALLBACK_SOURCES = new Set(["arm_mean_sd_n", "arm_event_counts"]);
   const RUN_TIMING_STAGE_LABELS = {
@@ -2366,7 +2377,7 @@
     return parts.length ? parts[parts.length - 1] : "";
   }
 
-  function extractionPubInfoCell(row) {
+  function extractionPubInfoParts(row) {
     const metadata = row?.metadata && typeof row.metadata === "object" ? row.metadata : {};
     const author = cleanText(
       row?.first_author_last_name
@@ -2374,7 +2385,8 @@
       || metadata.first_author_last_name
       || firstAuthorLastNameFromAuthors(metadata.authors)
     );
-    const authorYear = [
+    const studyLabel = cleanText(row?.study_label || metadata.study_label || "");
+    const authorYear = studyLabel || [
       author,
       cleanText(row?.year || metadata.year),
     ].filter(Boolean).join(", ");
@@ -2388,11 +2400,28 @@
     );
     const title = cleanText(row?.title || metadata.title || "");
     const tooltip = [authorYear, journal, title].filter(Boolean).join("\n");
+    return { authorYear, journal, title, tooltip };
+  }
+
+  function extractionPubInfoCell(row) {
+    const { authorYear, journal, tooltip } = extractionPubInfoParts(row);
 
     return `
       <div class="screen-study-cell"${tooltip ? ` title="${escapeHtml(tooltip)}"` : ""}>
         <div class="screen-study-primary">${authorYear ? sentence(authorYear) : "No author/year."}</div>
         ${journal ? `<div class="screen-study-journal">${sentence(journal)}</div>` : ""}
+      </div>
+    `;
+  }
+
+  function compactStudyCell(row) {
+    const { authorYear, journal, title, tooltip } = extractionPubInfoParts(row);
+    const pmid = String(row?.pmid || row?.metadata?.pmid || "").trim();
+    const studyTooltip = tooltip || [authorYear, journal, title, pmid ? `PMID ${pmid}` : ""].filter(Boolean).join("\n");
+    return `
+      <div class="screen-study-cell compact-study-cell"${studyTooltip ? ` title="${escapeHtml(studyTooltip)}"` : ""}>
+        <div class="screen-study-primary">${authorYear ? sentence(authorYear) : "No author/year."}</div>
+        ${pmid ? `<div class="compact-study-pmid">PMID ${renderPmidLink({ ...row, pmid })}</div>` : ""}
       </div>
     `;
   }
@@ -3200,57 +3229,6 @@
     const excludedBenchmarkPmids = new Set(pmidListFromValue(benchmark.excluded_pmids));
     const showBenchmarkColumn = currentEvaluationVisible && (includedBenchmarkPmids.size || excludedBenchmarkPmids.size);
 
-    function shortTitle(title, maxLength = 90) {
-      const text = String(title || "").trim();
-      if (!text) {
-        return "No title available.";
-      }
-      if (text.length <= maxLength) {
-        return text;
-      }
-      return `${text.slice(0, maxLength).trim()}...`;
-    }
-
-    function firstAuthorLastName(study) {
-      const authors = Array.isArray(study.authors) ? study.authors : [];
-      const firstAuthor = String(authors[0] || "").trim();
-      if (!firstAuthor) {
-        return "";
-      }
-      if (firstAuthor.includes(",")) {
-        return firstAuthor.split(",", 1)[0].trim();
-      }
-      const parts = firstAuthor.split(/\s+/).filter(Boolean);
-      return parts.length ? parts[parts.length - 1] : "";
-    }
-
-    function firstAuthorYear(study) {
-      return [
-        firstAuthorLastName(study),
-        String(study.year || "").trim(),
-      ].filter(Boolean).join(", ");
-    }
-
-    function studyCell(study) {
-      const authorYear = firstAuthorYear(study);
-      const journal = String(study.journal || "").trim();
-      const abstract = String(study.abstract || "").trim();
-      const publicationTypes = Array.isArray(study.publication_types)
-        ? study.publication_types.map((value) => String(value || "").trim()).filter(Boolean)
-        : [];
-      const publicationTypesLabel = publicationTypes.length
-        ? `Publication types: ${publicationTypes.join(", ")}`
-        : "";
-      const abstractLabel = abstract ? `Abstract: ${abstract}` : "";
-      const tooltip = [authorYear, journal, publicationTypesLabel, abstractLabel].filter(Boolean).join("\n\n");
-      return `
-        <div class="screen-study-cell" title="${escapeHtml(tooltip)}">
-          <div class="screen-study-primary">${authorYear ? sentence(authorYear) : "No author/year."}</div>
-          <div class="screen-study-journal">${journal ? sentence(journal) : "No journal listed."}</div>
-        </div>
-      `;
-    }
-
     function lookupAssessment(items, criterion) {
       return (items || []).find((item) => item.criterion === criterion) || {};
     }
@@ -3323,12 +3301,11 @@
 
     return `
       <div class="table-wrap screening-wrap">
-        <table class="screening-table screening-results-table">
+        <table class="screening-table screening-results-table study-sticky-table">
           <thead>
             <tr>
               <th class="screen-col-index">#</th>
-              <th>PMID</th>
-              <th>Pub. Info</th>
+              <th class="screen-col-study">Study</th>
               ${inclusion.map((criterion, index) => `<th class="screen-col-inclusion">${criterionHeader("I", criterion, index)}</th>`).join("")}
               ${exclusion.map((criterion, index) => `<th class="screen-col-exclusion${index === 0 ? " screen-col-section-start" : ""}">${criterionHeader("E", criterion, index)}</th>`).join("")}
               <th class="screen-col-decision screen-col-overall" title="Final screening decision">Decision</th>
@@ -3339,8 +3316,7 @@
             ${studies.map((study, index) => `
               <tr>
                 <td class="screen-col-index mono">${index + 1}</td>
-                <td class="screen-col-pmid mono">${renderPmidLink(study)}</td>
-                <td class="screen-col-title">${studyCell(study)}</td>
+                <td class="screen-col-study">${compactStudyCell(study)}</td>
                 ${inclusion.map((criterion) => `<td class="screen-col-inclusion">${inclusionCell(study, criterion)}</td>`).join("")}
                 ${exclusion.map((criterion, criterionIndex) => `<td class="screen-col-exclusion${criterionIndex === 0 ? " screen-col-section-start" : ""}">${exclusionCell(study, criterion)}</td>`).join("")}
                 <td class="screen-col-decision screen-col-overall">${decisionCell(study)}</td>
@@ -4412,19 +4388,6 @@
       );
     }
 
-    function pubInfoCell(study) {
-      const label = cleanText(study.study_label);
-      const journal = cleanText(study.journal);
-      const title = cleanText(study.title);
-      const tooltip = [label, journal, title].filter(Boolean).join("\n");
-      return `
-        <div class="screen-study-cell"${tooltip ? ` title="${escapeHtml(tooltip)}"` : ""}>
-          <div class="screen-study-primary">${label ? sentence(label) : "No author/year."}</div>
-          ${journal ? `<div class="screen-study-journal">${sentence(journal)}</div>` : ""}
-        </div>
-      `;
-    }
-
     const studies = allStudies.filter(hasArmContent);
     const omittedStudies = allStudies.filter((study) => !hasArmContent(study));
 
@@ -4439,19 +4402,19 @@
           </summary>
           <p class="note">No intervention, comparator, extra arm, or study-arm detail was saved in study_arms.json.</p>
           <div class="table-wrap screening-wrap study-arms-omitted-wrap">
-            <table class="screening-table extraction-study-summary-table">
+            <table class="screening-table extraction-study-summary-table study-sticky-table">
               <thead>
                 <tr>
-                  <th>PMID</th>
-                  <th>Pub. Info</th>
+                  <th class="screen-col-index">#</th>
+                  <th class="screen-col-study">Study</th>
                   <th>Reason</th>
                 </tr>
               </thead>
               <tbody>
-                ${omittedStudies.map((study) => `
+                ${omittedStudies.map((study, index) => `
                   <tr>
-                    <td class="screen-col-pmid mono">${renderPmidLink(study)}</td>
-                    <td class="screen-col-title">${pubInfoCell(study)}</td>
+                    <td class="screen-col-index mono">${index + 1}</td>
+                    <td class="screen-col-study">${compactStudyCell(study)}</td>
                     <td class="study-arm-omitted-reason">No mapped arm detail saved.</td>
                   </tr>
                 `).join("")}
@@ -4471,18 +4434,18 @@
         ${studies.length
           ? `
             <div class="table-wrap screening-wrap study-arms-table-wrap">
-              <table class="screening-table study-arms-table">
+              <table class="screening-table study-arms-table study-sticky-table">
                 <thead>
                   <tr>
-                    <th>PMID</th>
-                    <th>Pub. Info</th>
+                    <th class="screen-col-index">#</th>
+                    <th class="screen-col-study">Study</th>
                     <th>Intervention arms</th>
                     <th>Comparator arms</th>
                     <th>Extra arms / handling note</th>
                   </tr>
                 </thead>
                 <tbody>
-                  ${studies.map((study) => {
+                  ${studies.map((study, index) => {
                     const extraArms = uniqueTextList(study.extra_or_irrelevant_arms);
                     const handlingNote = cleanText(study.multi_arm_handling_note);
                     const fallbackArms = !uniqueTextList(study.intervention_arms).length && !uniqueTextList(study.comparator_arms).length
@@ -4490,8 +4453,8 @@
                       : [];
                     return `
                       <tr>
-                        <td class="screen-col-pmid mono">${renderPmidLink(study)}</td>
-                        <td class="screen-col-title">${pubInfoCell(study)}</td>
+                        <td class="screen-col-index mono">${index + 1}</td>
+                        <td class="screen-col-study">${compactStudyCell(study)}</td>
                         <td>${armList(study.intervention_arms)}</td>
                         <td>${armList(study.comparator_arms)}</td>
                         <td class="study-arms-extra-col">
@@ -4845,6 +4808,290 @@
     return lines.length ? `${field}\n${lines.join("\n")}` : "";
   }
 
+  function sourceTraceEvidenceCandidates(evidence) {
+    const candidates = [];
+    const addCandidate = (value) => {
+      if (Array.isArray(value)) {
+        value.forEach(addCandidate);
+        return;
+      }
+      const text = cleanText(value);
+      if (text && !candidates.includes(text)) {
+        candidates.push(text);
+      }
+    };
+    if (evidence && typeof evidence === "object" && !Array.isArray(evidence)) {
+      ["evidence", "quote", "evidence_text", "text"].forEach((key) => addCandidate(evidence[key]));
+    } else {
+      addCandidate(evidence);
+    }
+    return candidates;
+  }
+
+  function sourceTraceRowEvidenceCandidates(row) {
+    const evidenceByField = parseFieldEvidence(row);
+    const candidates = [];
+    Object.values(evidenceByField || {}).forEach((evidence) => {
+      if (!isAbstractSourceEvidence(row, evidence)) {
+        return;
+      }
+      sourceTraceEvidenceCandidates(evidence).forEach((candidate) => {
+        if (candidate && !candidates.includes(candidate)) {
+          candidates.push(candidate);
+        }
+      });
+    });
+    return candidates;
+  }
+
+  function isAbstractSourceEvidence(row, evidence) {
+    const source = cleanText(evidence?.source).toLowerCase();
+    const textSource = cleanText(row?.extraction_text_source).toLowerCase();
+    if (source.includes("abstract")) {
+      return true;
+    }
+    return textSource === "abstract" && !source.includes("nct") && !source.includes("full");
+  }
+
+  function isAbstractSourceTraceCell(row, evidence) {
+    return isAbstractSourceEvidence(row, evidence)
+      && sourceTraceEvidenceCandidates(evidence).length > 0;
+  }
+
+  function currentPerStudyMetadataByPmid(pmid) {
+    const current = findRun(currentRunId);
+    const target = String(pmid || "").trim();
+    if (!target) {
+      return {};
+    }
+    const entry = (current?.per_study_outputs || []).find((item) => {
+      const entryPmid = String(item?.pmid || item?.metadata?.pmid || "").trim();
+      return entryPmid === target;
+    });
+    return entry?.metadata || {};
+  }
+
+  function currentExtractionRowForCell(cell) {
+    const rowNode = cell?.closest("[data-extraction-row]");
+    const pmid = rowNode?.getAttribute("data-extraction-pmid") || "";
+    const outcomeKey = rowNode?.getAttribute("data-extraction-outcome-key") || "";
+    const field = cell?.getAttribute("data-extraction-field") || "";
+    if (!pmid || !outcomeKey || !field) {
+      return {};
+    }
+    const current = findRun(currentRunId);
+    const tables = Array.isArray(current?.outcome_extraction_tables)
+      ? current.outcome_extraction_tables
+      : [];
+    for (const [tableIndex, table] of tables.entries()) {
+      if (extractionOutcomeKey(table, tableIndex) !== outcomeKey) {
+        continue;
+      }
+      const row = (table.extractable_rows || []).find((item) => String(item?.pmid || "").trim() === pmid);
+      if (row) {
+        return { row, field, table };
+      }
+    }
+    return {};
+  }
+
+  function sourceTracePayloadForCell(cell) {
+    const { row, field, table } = currentExtractionRowForCell(cell);
+    if (!row || !field) {
+      return null;
+    }
+    const evidence = parseFieldEvidence(row)?.[field];
+    if (!isAbstractSourceTraceCell(row, evidence)) {
+      return null;
+    }
+    const metadata = currentPerStudyMetadataByPmid(row.pmid);
+    const pubInfo = extractionPubInfoParts({ ...row, metadata });
+    return {
+      row,
+      field,
+      value: row[field],
+      evidence,
+      evidenceCandidates: sourceTraceEvidenceCandidates(evidence),
+      allEvidenceCandidates: sourceTraceRowEvidenceCandidates(row),
+      abstract: cleanText(metadata.abstract),
+      pmid: cleanText(row.pmid || metadata.pmid),
+      pubInfo,
+      outcomeName: cleanText(table?.outcome_name || table?.label || "Outcome"),
+    };
+  }
+
+  function highlightedSourceText(sourceText, evidenceCandidates, { all = false } = {}) {
+    const text = String(sourceText || "");
+    const candidates = (evidenceCandidates || [])
+      .map((candidate) => cleanText(candidate))
+      .filter((candidate, index, list) => candidate && list.indexOf(candidate) === index);
+    if (!all) {
+      for (const candidate of candidates) {
+        const index = text.indexOf(candidate);
+        if (index < 0) {
+          continue;
+        }
+        return {
+          matched: true,
+          matchedCount: 1,
+          totalCandidates: candidates.length,
+          html: [
+            escapeHtml(text.slice(0, index)),
+            `<mark class="source-trace-highlight">${escapeHtml(candidate)}</mark>`,
+            escapeHtml(text.slice(index + candidate.length)),
+          ].join(""),
+        };
+      }
+      return { matched: false, matchedCount: 0, totalCandidates: candidates.length, html: escapeHtml(text) };
+    }
+
+    const ranges = [];
+    const matchedCandidates = new Set();
+    candidates
+      .slice()
+      .sort((a, b) => b.length - a.length)
+      .forEach((candidate) => {
+        let start = 0;
+        while (start < text.length) {
+          const index = text.indexOf(candidate, start);
+          if (index < 0) {
+            break;
+          }
+          const end = index + candidate.length;
+          const overlaps = ranges.some((range) => index < range.end && end > range.start);
+          if (!overlaps) {
+            ranges.push({ start: index, end, text: candidate });
+            matchedCandidates.add(candidate);
+          }
+          start = end;
+        }
+      });
+
+    if (!ranges.length) {
+      return { matched: false, matchedCount: 0, totalCandidates: candidates.length, html: escapeHtml(text) };
+    }
+
+    ranges.sort((a, b) => a.start - b.start);
+    const pieces = [];
+    let cursor = 0;
+    ranges.forEach((range) => {
+      pieces.push(escapeHtml(text.slice(cursor, range.start)));
+      pieces.push(`<mark class="source-trace-highlight">${escapeHtml(text.slice(range.start, range.end))}</mark>`);
+      cursor = range.end;
+    });
+    pieces.push(escapeHtml(text.slice(cursor)));
+    return {
+      matched: true,
+      matchedCount: matchedCandidates.size,
+      totalCandidates: candidates.length,
+      html: pieces.join(""),
+    };
+  }
+
+  function hasExtraSourceTraceEvidence(payload) {
+    const clicked = new Set(payload?.evidenceCandidates || []);
+    const all = payload?.allEvidenceCandidates || [];
+    return all.some((candidate) => !clicked.has(candidate)) || all.length > 1;
+  }
+
+  function sourceTraceWarningHtml(payload, highlighted, showAllEvidence) {
+    if (!payload.abstract) {
+      return `<p class="source-trace-warning">No abstract text was saved for this study.</p>`;
+    }
+    if (!highlighted.matched) {
+      return `<p class="source-trace-warning">Exact source highlight not found.</p>`;
+    }
+    if (showAllEvidence && highlighted.matchedCount < highlighted.totalCandidates) {
+      return `<p class="source-trace-warning">Some evidence snippets were not found exactly in the source text.</p>`;
+    }
+    return "";
+  }
+
+  function sourceTraceToggleButton(showAllEvidence) {
+    return `
+      <button class="source-trace-toggle" type="button" data-source-trace-toggle-all aria-pressed="${showAllEvidence ? "true" : "false"}">
+        ${showAllEvidence ? "Show clicked field only" : "Highlight all evidence"}
+      </button>
+    `;
+  }
+
+  function sourceTraceBodyHtml(payload, showAllEvidence) {
+    const candidates = showAllEvidence ? payload.allEvidenceCandidates : payload.evidenceCandidates;
+    const highlighted = payload.abstract
+      ? highlightedSourceText(payload.abstract, candidates, { all: showAllEvidence })
+      : { matched: false, matchedCount: 0, totalCandidates: candidates.length, html: "" };
+    return `
+      ${sourceTraceWarningHtml(payload, highlighted, showAllEvidence)}
+      ${payload.abstract ? `
+        <div class="source-trace-source">
+          <h4>PubMed abstract</h4>
+          <div class="source-trace-text">${highlighted.html}</div>
+        </div>
+      ` : ""}
+    `;
+  }
+
+  function bindSourceTraceToggle(actionsNode, bodyNode, payload, showAllEvidence) {
+    actionsNode.innerHTML = payload.abstract && hasExtraSourceTraceEvidence(payload)
+      ? sourceTraceToggleButton(showAllEvidence)
+      : "";
+    actionsNode.querySelector("[data-source-trace-toggle-all]")?.addEventListener("click", () => {
+      renderSourceTraceContent(actionsNode, bodyNode, payload, !showAllEvidence);
+    });
+  }
+
+  function renderSourceTraceContent(actionsNode, bodyNode, payload, showAllEvidence = false) {
+    if (!actionsNode || !bodyNode || !payload) {
+      return;
+    }
+    bindSourceTraceToggle(actionsNode, bodyNode, payload, showAllEvidence);
+    bodyNode.innerHTML = sourceTraceBodyHtml(payload, showAllEvidence);
+  }
+
+  function sourceTraceDrawer() {
+    return `
+      <aside class="source-trace-drawer" data-source-trace-drawer hidden aria-live="polite" aria-label="Extracted source detail">
+        <div class="source-trace-head">
+          <div class="source-trace-head-main">
+            <div class="source-trace-study" data-source-trace-study></div>
+            <div class="source-trace-actions" data-source-trace-actions></div>
+          </div>
+          <button class="source-trace-close" type="button" data-source-trace-close aria-label="Close source trace">×</button>
+        </div>
+        <div class="source-trace-body" data-source-trace-body></div>
+      </aside>
+    `;
+  }
+
+  function openSourceTraceDrawer(payload) {
+    const drawer = app.querySelector("[data-source-trace-drawer]");
+    const studyNode = drawer?.querySelector("[data-source-trace-study]");
+    const actionsNode = drawer?.querySelector("[data-source-trace-actions]");
+    const bodyNode = drawer?.querySelector("[data-source-trace-body]");
+    if (!drawer || !studyNode || !actionsNode || !bodyNode || !payload) {
+      return;
+    }
+    studyNode.innerHTML = `
+      <div class="screen-study-primary">${escapeHtml(payload.pubInfo.authorYear || payload.pmid || "Study")}</div>
+      ${payload.pubInfo.journal ? `<div class="screen-study-journal">${escapeHtml(payload.pubInfo.journal)}</div>` : ""}
+      ${payload.pmid ? `<div class="screen-study-title">PMID ${escapeHtml(payload.pmid)}</div>` : ""}
+    `;
+    renderSourceTraceContent(actionsNode, bodyNode, payload, false);
+    drawer.hidden = false;
+    drawer.classList.add("is-open");
+    document.body.classList.add("source-trace-open");
+  }
+
+  function closeSourceTraceDrawer() {
+    const drawer = app.querySelector("[data-source-trace-drawer]");
+    if (!drawer) {
+      return;
+    }
+    drawer.classList.remove("is-open");
+    drawer.hidden = true;
+    document.body.classList.remove("source-trace-open");
+  }
+
   function extractionStudyGroupsFromTables(tables) {
     const allStudies = new Map();
     const extractablePmids = new Set();
@@ -5191,8 +5438,7 @@
               const reason = row.reason ? sentence(row.reason) : "Full text unavailable.";
               return `
                 <div class="fulltext-missing-item" title="${escapeHtml(reason)}">
-                  <span class="screen-col-pmid mono">${renderPmidLink(row)}</span>
-                  <span>${extractionPubInfoCell(row)}</span>
+                  ${compactStudyCell(row)}
                 </div>
               `;
             }).join("")}
@@ -5215,12 +5461,11 @@
         </div>
         ${obtainedRows.length ? `
           <div class="table-wrap screening-wrap">
-          <table class="screening-table screening-results-table fulltext-eligibility-table">
+          <table class="screening-table screening-results-table fulltext-eligibility-table study-sticky-table">
             <thead>
               <tr>
                 <th class="screen-col-index">#</th>
-                <th>PMID</th>
-                <th>Pub. Info</th>
+                <th class="screen-col-study">Study</th>
                 ${inclusionCriteria.map((criterion, index) => `<th class="fulltext-criterion-col">${criterionHeader("I", criterion, index)}</th>`).join("")}
                 ${exclusionCriteria.map((criterion, index) => `<th class="fulltext-criterion-col${index === 0 ? " screen-col-section-start" : ""}">${criterionHeader("E", criterion, index)}</th>`).join("")}
                 <th class="screen-col-decision screen-col-overall">Decision</th>
@@ -5230,8 +5475,7 @@
               ${obtainedRows.map((row, index) => `
                 <tr>
                   <td class="screen-col-index mono">${index + 1}</td>
-                  <td class="screen-col-pmid mono">${renderPmidLink(row)}</td>
-                  <td class="screen-col-title">${extractionPubInfoCell(row)}</td>
+                  <td class="screen-col-study">${compactStudyCell(row)}</td>
                   ${inclusionCriteria.map((criterion) => `<td class="fulltext-criterion-col">${criterionDecisionCell(row, criterion, "inclusion")}</td>`).join("")}
                   ${exclusionCriteria.map((criterion, criterionIndex) => `<td class="fulltext-criterion-col${criterionIndex === 0 ? " screen-col-section-start" : ""}">${criterionDecisionCell(row, criterion, "exclusion")}</td>`).join("")}
                   <td class="screen-col-decision screen-col-overall">${eligibilityDecisionCell(row)}</td>
@@ -5255,19 +5499,6 @@
     const droppedCount = Number(counts.n_dropped_no_source_text ?? droppedRecords.length) || 0;
     const retainedCount = Number(counts.n_retained ?? 0) || 0;
 
-    function gatePubInfoCell(record) {
-      const label = cleanText(record.study_label);
-      const journal = cleanText(record.journal);
-      const title = cleanText(record.title);
-      const tooltip = [label, journal, title].filter(Boolean).join("\n");
-      return `
-        <div class="screen-study-cell"${tooltip ? ` title="${escapeHtml(tooltip)}"` : ""}>
-          <div class="screen-study-primary">${label ? sentence(label) : "No author/year."}</div>
-          ${journal ? `<div class="screen-study-journal">${sentence(journal)}</div>` : ""}
-        </div>
-      `;
-    }
-
     return `
       <details class="detail-card source-availability-panel" id="source-availability-gate" style="margin-top:14px;">
         <summary class="collapsible-table-summary source-availability-summary">
@@ -5279,19 +5510,19 @@
         <p class="note">${number(retainedCount)} candidates retained after this deterministic gate.</p>
         ${droppedRecords.length ? `
           <div class="table-wrap screening-wrap">
-            <table class="screening-table extraction-study-summary-table source-availability-table">
+            <table class="screening-table extraction-study-summary-table source-availability-table study-sticky-table">
               <thead>
                 <tr>
-                  <th>PMID</th>
-                  <th>Pub. Info</th>
+                  <th class="screen-col-index">#</th>
+                  <th class="screen-col-study">Study</th>
                   <th>Reason</th>
                 </tr>
               </thead>
               <tbody>
-                ${droppedRecords.map((record) => `
+                ${droppedRecords.map((record, index) => `
                   <tr>
-                    <td class="screen-col-pmid mono">${renderPmidLink(record)}</td>
-                    <td class="screen-col-title">${gatePubInfoCell(record)}</td>
+                    <td class="screen-col-index mono">${index + 1}</td>
+                    <td class="screen-col-study">${compactStudyCell(record)}</td>
                     <td>${sentence(record.reason || "No usable source text was available.")}</td>
                   </tr>
                 `).join("")}
@@ -5328,8 +5559,8 @@
       ? "all"
       : Number(nonExtractableLimit) || 5;
 
-    function renderCsvPmidLink(row) {
-      return renderPmidLink({ pmid: row.pmid });
+    function renderExtractionStudyCell(row) {
+      return compactStudyCell(row);
     }
 
     function extractionDisplayFields(table) {
@@ -5339,10 +5570,21 @@
 
     function renderExtractedValueCell(row, field, evidenceByField) {
       const value = row[field];
+      const evidence = evidenceByField?.[field];
       const tooltip = fieldEvidenceTooltip(field, evidenceByField);
-      const evidenceAttrs = tooltip ? ` title="${escapeHtml(tooltip)}" aria-label="${escapeHtml(tooltip)}"` : "";
-      const evidenceClass = tooltip ? " has-field-evidence" : "";
-      return `<td class="extract-value-col${evidenceClass}"${evidenceAttrs}>${hasValue(value) ? sentence(value) : "—"}</td>`;
+      const hasSourceTrace = isAbstractSourceTraceCell(row, evidence);
+      const evidenceAttrs = [
+        tooltip && !hasSourceTrace ? `title="${escapeHtml(tooltip)}"` : "",
+        tooltip && !hasSourceTrace ? `aria-label="${escapeHtml(tooltip)}"` : "",
+        hasSourceTrace ? `aria-label="${escapeHtml(`Open abstract source trace for ${field}`)}"` : "",
+        hasSourceTrace ? `data-source-trace-cell data-extraction-field="${escapeHtml(field)}" role="button" tabindex="0"` : "",
+      ].filter(Boolean).join(" ");
+      const evidenceClass = [
+        tooltip ? "has-field-evidence" : "",
+        hasSourceTrace ? "has-source-trace" : "",
+      ].filter(Boolean).join(" ");
+      const className = evidenceClass ? `extract-value-col ${evidenceClass}` : "extract-value-col";
+      return `<td class="${className}"${evidenceAttrs ? ` ${evidenceAttrs}` : ""}>${hasValue(value) ? sentence(value) : "—"}</td>`;
     }
 
     function linkageRowParts(row) {
@@ -5398,12 +5640,11 @@
             <div class="table-scroll-proxy-inner"></div>
           </div>
           <div class="table-wrap screening-wrap extraction-table-wrap" data-scroll-body="${escapeHtml(scrollKey)}">
-            <table class="screening-table extractable-table">
+            <table class="screening-table extractable-table study-sticky-table">
               <thead>
                 <tr>
                   <th class="screen-col-index">#</th>
-                  <th>PMID</th>
-                  <th>Pub. Info</th>
+                  <th class="screen-col-study">Study</th>
                   <th class="extract-source-col">Source</th>
                   ${fields.map((field) => `<th class="mono extract-value-col">${escapeHtml(field)}</th>`).join("")}
                 </tr>
@@ -5414,8 +5655,7 @@
                   return `
                     <tr${extractionRowAttributes(row, table, tableIndex)}>
                       <td class="screen-col-index mono">${index + 1}</td>
-                      <td class="screen-col-pmid mono">${renderCsvPmidLink(row)}</td>
-                      <td class="screen-col-title">${extractionPubInfoCell(row)}</td>
+                      <td class="screen-col-study">${renderExtractionStudyCell(row)}</td>
                       <td class="extract-source-col">${sentence(sourceLabel(row.extraction_text_source))}</td>
                       ${fields.map((field) => renderExtractedValueCell(row, field, evidenceByField)).join("")}
                     </tr>
@@ -5450,12 +5690,11 @@
           </label>
         </div>
         <div class="table-wrap screening-wrap">
-          <table class="screening-table nonextract-table">
+          <table class="screening-table nonextract-table study-sticky-table">
             <thead>
               <tr>
                 <th class="screen-col-index">#</th>
-                <th>PMID</th>
-                <th>Pub. Info</th>
+                <th class="screen-col-study">Study</th>
                 <th>Source</th>
                 <th class="nonextract-note-col">Why Not Extractable</th>
               </tr>
@@ -5466,8 +5705,7 @@
                 return `
                   <tr${linkageRowAttributes(row)}>
                     <td class="screen-col-index mono">${index + 1}</td>
-                    <td class="screen-col-pmid mono">${renderCsvPmidLink(row)}</td>
-                    <td class="screen-col-title">${extractionPubInfoCell(row)}</td>
+                    <td class="screen-col-study">${compactStudyCell(row)}</td>
                     <td>${sentence(sourceLabel(row.extraction_text_source))}</td>
                     <td class="nonextract-note-col">${note ? sentence(note) : "No non-extractable reason provided."}</td>
                   </tr>
@@ -8085,6 +8323,7 @@
   }
 
   function render() {
+    document.body.classList.remove("source-trace-open");
     const current = findRun(currentRunId);
     const pico = current.pico || {};
     const screening = current.screening_results || {};
@@ -8325,10 +8564,11 @@
       ${finalReportSection(finalReportMarkdown, current.final_report_verification || current.human_verification || {})}
 	    </section>
 
-		    ${renderEvaluationSummary(cochraneSearchScreeningMetrics, cochraneOutcomeAlignment, cochraneComparisonAlignment, cochraneSynthesisCiOverlap, synthesisPlotSummary)}
-		    ${runTimingSection(timing, run)}
+			    ${renderEvaluationSummary(cochraneSearchScreeningMetrics, cochraneOutcomeAlignment, cochraneComparisonAlignment, cochraneSynthesisCiOverlap, synthesisPlotSummary)}
+			    ${runTimingSection(timing, run)}
+			    ${sourceTraceDrawer()}
 
-		    <div class="page-jump-controls" aria-label="Page navigation">
+			    <div class="page-jump-controls" aria-label="Page navigation">
       <button class="page-jump-button" id="jump-top" type="button">Top</button>
       <button class="page-jump-button" id="jump-bottom" type="button">Bottom</button>
     </div>
@@ -8535,6 +8775,24 @@
       templatePanel.addEventListener("toggle", (event) => {
         currentTemplateOpen = event.target.open;
       });
+    });
+
+    app.querySelectorAll("[data-source-trace-cell]").forEach((cell) => {
+      const activate = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        openSourceTraceDrawer(sourceTracePayloadForCell(cell));
+      };
+      cell.addEventListener("click", activate);
+      cell.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          activate(event);
+        }
+      });
+    });
+
+    app.querySelectorAll("[data-source-trace-close]").forEach((button) => {
+      button.addEventListener("click", closeSourceTraceDrawer);
     });
 
     app.querySelectorAll("[data-extraction-row]").forEach((row) => {
