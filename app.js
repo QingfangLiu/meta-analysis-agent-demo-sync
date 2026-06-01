@@ -2242,7 +2242,6 @@
 
   function renderSideNavigation(options = {}) {
     const hasEvaluationArtifacts = options.hasEvaluationArtifacts === true;
-    const hasStudyArms = options.hasStudyArms === true;
     const groups = [
       {
         label: "Review setup",
@@ -2270,7 +2269,6 @@
           ["NCT linkage", "#nct-linkage"],
           ["Full text screening", "#fulltext-screening"],
           ["Outcomes", "#outcomes"],
-          hasStudyArms && ["Study arms", "#study-arms"],
           ["Comparison", "#comparison"],
           ["Publication linkage", "#publication-linkage"],
           ["Heterogeneity factors", "#subgroup-plan"],
@@ -4360,7 +4358,7 @@
     `;
   }
 
-  function studyArmsSection(studyArmsArtifact) {
+  function studyArmsSection(studyArmsArtifact, options = {}) {
     const artifact = studyArmsArtifact || {};
     const allStudies = Array.isArray(artifact.studies) ? artifact.studies.filter(Boolean) : [];
     if (!allStudies.length && !Object.keys(artifact).length) {
@@ -4450,12 +4448,12 @@
     }
 
     return `
-      <details class="detail-card study-arms-section" id="study-arms" style="margin-top:14px;">
+      <details class="${options.embedded ? "study-arms-section comparison-subsection" : "detail-card study-arms-section"}"${options.embedded ? "" : ` id="study-arms"`} style="margin-top:14px;">
         <summary class="collapsible-table-summary study-arms-summary">
-          <h3>Study arms</h3>
+          <h3>${escapeHtml(options.title || "Study arms")}</h3>
           <span class="mono">${number(studies.length)} shown</span>
         </summary>
-        <p class="note">Intervention and comparator arms are projected from saved study tables for candidates not excluded by full-text screening.</p>
+        <p class="note">${options.embedded ? "Per-study intervention and comparator arms projected from saved study tables." : "Intervention and comparator arms are projected from saved study tables for candidates not excluded by full-text screening."}</p>
         ${studies.length
           ? `
             <div class="table-wrap screening-wrap study-arms-table-wrap">
@@ -4501,10 +4499,11 @@
     `;
   }
 
-  function comparisonSection(comparisonArtifact, pico, cochraneComparisonAlignment = {}) {
+  function comparisonSection(comparisonArtifact, pico, cochraneComparisonAlignment = {}, studyArmsArtifact = {}) {
     const artifact = comparisonArtifact || {};
     const comparison = artifact.comparison || {};
     const comparisonAlignment = cochraneComparisonAlignment || {};
+    const mappedStudyArms = studyArmsSection(studyArmsArtifact, { embedded: true, title: "Study arms by publication" });
     const initialComparison = String((pico || {}).comparison || "").trim();
     const placeholderValues = new Set([
       "n/a",
@@ -4596,38 +4595,45 @@
       `;
     }
 
-    if (!comparisonLabel && !fields.length) {
+    if (!comparisonLabel && !fields.length && !mappedStudyArms) {
       return "";
     }
 
     return `
       <div class="detail-card" id="comparison" style="margin-top:14px;">
         <h3>Comparison</h3>
-        <p class="note">This comparison was refined after screening so the extraction template can map study arms more consistently across studies.</p>
-        <div class="outcome-panel-list">
-          <div class="outcome-panel comparison-panel">
-            <div class="outcome-panel-head comparison-panel-head">
-              <div>
-                <div class="insight-title">Target Comparison</div>
-                <h4>${sentence(comparisonLabel || "Target comparison")}</h4>
+        <p class="note">Study arms are mapped from each included study first. The agent then summarizes those mapped arms into a review-level comparison used for extraction and synthesis.</p>
+        ${mappedStudyArms}
+        ${comparisonLabel || fields.length
+          ? `
+            <div class="outcome-panel-list">
+              <div class="outcome-panel comparison-panel">
+                <div class="outcome-panel-head comparison-panel-head">
+                  <div>
+                    <div class="insight-title">Comparison Decision</div>
+                    <h4>${sentence(comparisonLabel || "Target comparison")}</h4>
+                    <p class="note">Review-level comparison framing inferred from the mapped arms and original PICO.</p>
+                  </div>
+                </div>
+                ${fields.length
+                  ? `
+                    <div class="artifact-field-list comparison-detail-panel">
+                      ${fields.map(([label, value]) => `
+                        <div class="artifact-field-row">
+                          <div class="artifact-field-key">${escapeHtml(label)}</div>
+                          <div class="artifact-field-value">${sentence(value || "—")}</div>
+                        </div>
+                      `).join("")}
+                    </div>
+                  `
+                  : `<p class="note">No additional comparison details were generated for this run.</p>`
+                }
+                ${renderComparisonEvaluation()}
               </div>
             </div>
-            ${fields.length
-              ? `
-                <div class="artifact-field-list comparison-detail-panel">
-                  ${fields.map(([label, value]) => `
-                    <div class="artifact-field-row">
-                      <div class="artifact-field-key">${escapeHtml(label)}</div>
-                      <div class="artifact-field-value">${sentence(value || "—")}</div>
-                    </div>
-                  `).join("")}
-                </div>
-              `
-              : `<p class="note">No additional comparison details were generated for this run.</p>`
-            }
-            ${renderComparisonEvaluation()}
-          </div>
-        </div>
+          `
+          : `<p class="note">No comparison decision artifact was generated for this run.</p>`
+        }
       </div>
     `;
   }
@@ -8068,7 +8074,6 @@
 	    app.innerHTML = `
 	    ${renderLeftRail(current, {
 	        hasEvaluationArtifacts,
-	        hasStudyArms: Boolean(Array.isArray(studyArms.studies) && studyArms.studies.length),
 	      })}
 	    ${hasEvaluationArtifacts ? renderEvaluationVisibilityBanner() : ""}
 		    <section class="step-card" id="step-1">
@@ -8204,8 +8209,7 @@
 		        ${fulltextEligibilitySection(perStudyOutputs) || `<p class="note">No full-text screening rows were found for this run.</p>`}
 		      </details>
 			      ${outcomesSection(outcomes, pico, outcomeSignalInventory, cochraneOutcomeAlignment, outcomeSourceContribution)}
-		      ${studyArmsSection(studyArms)}
-		      ${comparisonSection(comparison, pico, cochraneComparisonAlignment)}
+		      ${comparisonSection(comparison, pico, cochraneComparisonAlignment, studyArms)}
 		      ${publicationLinkageSection(publicationLinkage, publicationLinkageEvidence, screening.screened_studies || [])}
 		      ${subgroupPlanSection(subgroupPlan)}
 		    </section>
