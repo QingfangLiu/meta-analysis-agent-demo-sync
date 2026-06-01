@@ -2291,6 +2291,128 @@ th {
   transform: translateY(0);
 }
 
+.study-arms-summary h3 {
+  margin: 0;
+}
+
+.study-arms-table {
+  min-width: 980px;
+  table-layout: fixed;
+}
+
+.study-arms-table th:nth-child(1),
+.study-arms-table td:nth-child(1) {
+  width: 130px;
+}
+
+.study-arms-table th:nth-child(2),
+.study-arms-table td:nth-child(2) {
+  width: 220px;
+}
+
+.study-arms-table th:nth-child(3),
+.study-arms-table td:nth-child(3),
+.study-arms-table th:nth-child(4),
+.study-arms-table td:nth-child(4) {
+  width: 235px;
+}
+
+.study-arms-table th:nth-child(5),
+.study-arms-table td:nth-child(5) {
+  width: 190px;
+}
+
+.study-arms-extra-col,
+.study-arm-note,
+.study-arm-list li {
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+.study-arm-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.study-arm-list li + li {
+  margin-top: 0;
+}
+
+.study-arm-list li {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  padding: 4px 8px;
+  border: 1px solid rgba(86, 100, 106, 0.16);
+  border-radius: 999px;
+  background: rgba(24, 33, 38, 0.025);
+  line-height: 1.35;
+}
+
+.study-arm-note {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: var(--text-xs);
+  line-height: 1.4;
+}
+
+.study-arm-fallback {
+  display: grid;
+  gap: 4px;
+}
+
+.study-arms-omitted {
+  margin-top: 14px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.study-arms-omitted summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.study-arms-omitted summary::-webkit-details-marker {
+  display: none;
+}
+
+.study-arms-omitted summary::before {
+  content: "+";
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.study-arms-omitted[open] summary::before {
+  content: "−";
+}
+
+.study-arms-omitted .note {
+  margin-top: 8px;
+}
+
+.study-arms-omitted-wrap {
+  margin-top: 10px;
+}
+
+.study-arm-omitted-reason {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
 .extracted-outcome-tooltip-title {
   margin-bottom: 8px;
   font-size: 0.72rem;

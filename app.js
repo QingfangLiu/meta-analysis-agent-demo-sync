@@ -2242,6 +2242,7 @@
 
   function renderSideNavigation(options = {}) {
     const hasEvaluationArtifacts = options.hasEvaluationArtifacts === true;
+    const hasStudyArms = options.hasStudyArms === true;
     const groups = [
       {
         label: "Review setup",
@@ -2269,6 +2270,7 @@
           ["NCT linkage", "#nct-linkage"],
           ["Full text screening", "#fulltext-screening"],
           ["Outcomes", "#outcomes"],
+          hasStudyArms && ["Study arms", "#study-arms"],
           ["Comparison", "#comparison"],
           ["Publication linkage", "#publication-linkage"],
           ["Heterogeneity factors", "#subgroup-plan"],
@@ -4354,6 +4356,147 @@
         <div class="outcome-panel-list subgroup-plan-list">
           ${dimensions.map(renderDimension).join("")}
         </div>
+      </details>
+    `;
+  }
+
+  function studyArmsSection(studyArmsArtifact) {
+    const artifact = studyArmsArtifact || {};
+    const allStudies = Array.isArray(artifact.studies) ? artifact.studies.filter(Boolean) : [];
+    if (!allStudies.length && !Object.keys(artifact).length) {
+      return "";
+    }
+    const counts = artifact.counts || {};
+
+    function armList(values) {
+      const items = uniqueTextList(values);
+      if (!items.length) {
+        return `<span class="muted">—</span>`;
+      }
+      return `
+        <ul class="study-arm-list">
+          ${items.map((value) => `<li>${sentence(value)}</li>`).join("")}
+        </ul>
+      `;
+    }
+
+    function compactArmDetails(study) {
+      const arms = Array.isArray(study.study_arms) ? study.study_arms.filter(Boolean) : [];
+      const labels = arms
+        .map((arm) => [arm.arm_label, arm.description].filter(Boolean).join(": "))
+        .filter(Boolean);
+      return labels.length ? labels : [];
+    }
+
+    function hasArmContent(study) {
+      return Boolean(
+        uniqueTextList(study.intervention_arms).length
+        || uniqueTextList(study.comparator_arms).length
+        || uniqueTextList(study.extra_or_irrelevant_arms).length
+        || compactArmDetails(study).length
+        || cleanText(study.multi_arm_handling_note)
+      );
+    }
+
+    function pubInfoCell(study) {
+      const label = cleanText(study.study_label);
+      const journal = cleanText(study.journal);
+      const title = cleanText(study.title);
+      const tooltip = [label, journal, title].filter(Boolean).join("\n");
+      return `
+        <div class="screen-study-cell"${tooltip ? ` title="${escapeHtml(tooltip)}"` : ""}>
+          <div class="screen-study-primary">${label ? sentence(label) : "No author/year."}</div>
+          ${journal ? `<div class="screen-study-journal">${sentence(journal)}</div>` : ""}
+        </div>
+      `;
+    }
+
+    const studies = allStudies.filter(hasArmContent);
+    const omittedStudies = allStudies.filter((study) => !hasArmContent(study));
+
+    function omittedStudiesBlock() {
+      if (!omittedStudies.length) {
+        return "";
+      }
+      return `
+        <details class="study-arms-omitted">
+          <summary>
+            <span>Studies without mapped arm details</span>
+            <span class="mono">${number(omittedStudies.length)}</span>
+          </summary>
+          <p class="note">No intervention, comparator, extra arm, or study-arm detail was saved in study_arms.json.</p>
+          <div class="table-wrap screening-wrap study-arms-omitted-wrap">
+            <table class="screening-table extraction-study-summary-table">
+              <thead>
+                <tr>
+                  <th>PMID</th>
+                  <th>Pub. Info</th>
+                  <th>Reason</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${omittedStudies.map((study) => `
+                  <tr>
+                    <td class="screen-col-pmid mono">${renderPmidLink(study)}</td>
+                    <td class="screen-col-title">${pubInfoCell(study)}</td>
+                    <td class="study-arm-omitted-reason">No mapped arm detail saved.</td>
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+          </div>
+        </details>
+      `;
+    }
+
+    return `
+      <details class="detail-card study-arms-section" id="study-arms" style="margin-top:14px;">
+        <summary class="collapsible-table-summary study-arms-summary">
+          <h3>Study arms</h3>
+          <span class="mono">${number(studies.length)} shown</span>
+        </summary>
+        <p class="note">Intervention and comparator arms are projected from saved study tables for candidates not excluded by full-text screening.</p>
+        ${studies.length
+          ? `
+            <div class="table-wrap screening-wrap study-arms-table-wrap">
+              <table class="screening-table study-arms-table">
+                <thead>
+                  <tr>
+                    <th>PMID</th>
+                    <th>Pub. Info</th>
+                    <th>Intervention arms</th>
+                    <th>Comparator arms</th>
+                    <th>Extra arms / handling note</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${studies.map((study) => {
+                    const extraArms = uniqueTextList(study.extra_or_irrelevant_arms);
+                    const handlingNote = cleanText(study.multi_arm_handling_note);
+                    const fallbackArms = !uniqueTextList(study.intervention_arms).length && !uniqueTextList(study.comparator_arms).length
+                      ? compactArmDetails(study)
+                      : [];
+                    return `
+                      <tr>
+                        <td class="screen-col-pmid mono">${renderPmidLink(study)}</td>
+                        <td class="screen-col-title">${pubInfoCell(study)}</td>
+                        <td>${armList(study.intervention_arms)}</td>
+                        <td>${armList(study.comparator_arms)}</td>
+                        <td class="study-arms-extra-col">
+                          ${extraArms.length ? armList(extraArms) : ""}
+                          ${fallbackArms.length ? `<div class="study-arm-fallback"><span class="stat-label">Study arms</span>${armList(fallbackArms)}</div>` : ""}
+                          ${handlingNote ? `<p class="study-arm-note">${sentence(handlingNote)}</p>` : (!extraArms.length && !fallbackArms.length ? `<span class="muted">—</span>` : "")}
+                        </td>
+                      </tr>
+                    `;
+                  }).join("")}
+                </tbody>
+              </table>
+            </div>
+          `
+          : `<p class="note">No study-arm rows were saved for this run.</p>`
+        }
+        ${omittedStudiesBlock()}
       </details>
     `;
   }
@@ -7894,6 +8037,7 @@
     );
     const outcomeSourceContribution = current.outcome_source_contribution || {};
     const comparison = current.comparison || {};
+    const studyArms = current.study_arms || {};
     const subgroupPlan = current.subgroup_plan || {};
     const publicationLinkage = current.publication_linkage || {};
     const publicationLinkageEvidence = current.publication_linkage_evidence || {};
@@ -7922,8 +8066,9 @@
     renderHero(current);
 
 	    app.innerHTML = `
-		    ${renderLeftRail(current, {
+	    ${renderLeftRail(current, {
 	        hasEvaluationArtifacts,
+	        hasStudyArms: Boolean(Array.isArray(studyArms.studies) && studyArms.studies.length),
 	      })}
 	    ${hasEvaluationArtifacts ? renderEvaluationVisibilityBanner() : ""}
 		    <section class="step-card" id="step-1">
@@ -8059,6 +8204,7 @@
 		        ${fulltextEligibilitySection(perStudyOutputs) || `<p class="note">No full-text screening rows were found for this run.</p>`}
 		      </details>
 			      ${outcomesSection(outcomes, pico, outcomeSignalInventory, cochraneOutcomeAlignment, outcomeSourceContribution)}
+		      ${studyArmsSection(studyArms)}
 		      ${comparisonSection(comparison, pico, cochraneComparisonAlignment)}
 		      ${publicationLinkageSection(publicationLinkage, publicationLinkageEvidence, screening.screened_studies || [])}
 		      ${subgroupPlanSection(subgroupPlan)}
