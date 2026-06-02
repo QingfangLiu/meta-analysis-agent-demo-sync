@@ -7562,6 +7562,66 @@
     `;
   }
 
+  function renderSynthesisExcludedFieldList(row) {
+    const fields = Array.isArray(row?.available_effect_fields) ? row.available_effect_fields : [];
+    if (!fields.length) {
+      return "—";
+    }
+    return fields.map((item) => {
+      const field = String(item?.field || "").trim();
+      const value = String(item?.value ?? "").trim();
+      if (!field || !value) {
+        return "";
+      }
+      return `<div><span class="mono">${escapeHtml(field)}</span>: ${escapeHtml(value)}</div>`;
+    }).filter(Boolean).join("") || "—";
+  }
+
+  function renderSynthesisExcludedRowsPanel(rows) {
+    const excludedRows = Array.isArray(rows) ? rows : [];
+    if (!excludedRows.length) {
+      return "";
+    }
+
+    return `
+      <details class="synthesis-exclusion-panel synthesis-subgroup-section">
+        <summary class="synthesis-subgroup-head">
+          <h5>Extracted but not included in this effect-measure analysis (${number(excludedRows.length)})</h5>
+        </summary>
+        <div class="synthesis-subgroup-list">
+          <div class="table-wrap screening-wrap">
+            <table class="screening-table synthesis-exclusion-table study-sticky-table">
+              <thead>
+                <tr>
+                  <th class="screen-col-index">#</th>
+                  <th class="screen-col-study">Study</th>
+                  <th>effect_measure_reported</th>
+                  <th>effect_measure_reported_raw</th>
+                  <th>synthesis_effect_measure</th>
+                  <th>analysis_exclusion_reason</th>
+                  <th>available effect fields</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${excludedRows.map((row, index) => `
+                  <tr>
+                    <td class="screen-col-index mono">${index + 1}</td>
+                    <td class="screen-col-study">${compactStudyCell(row)}</td>
+                    <td class="mono">${escapeHtml(row?.effect_measure_reported || "—")}</td>
+                    <td class="mono">${escapeHtml(row?.effect_measure_reported_raw || "—")}</td>
+                    <td class="mono">${escapeHtml(row?.synthesis_effect_measure || "—")}</td>
+                    <td class="mono">${escapeHtml(row?.analysis_exclusion_reason || "—")}</td>
+                    <td>${renderSynthesisExcludedFieldList(row)}</td>
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </details>
+    `;
+  }
+
   function renderSynthesisStudyDesignBranches(analysis, entry, comparisonPayload, subgroupPlan) {
     if (!isMixedStudyDesignSynthesis(analysis)) {
       return "";
@@ -8248,6 +8308,7 @@
                         comparisonPayload,
                         subgroupPlan
                       )}
+                      ${renderSynthesisExcludedRowsPanel(analysis.results?.synthesis_excluded_rows)}
                       ${renderSynthesisSubgroupAnalyses(
                         nonDesignSubgroupAnalyses,
                         entry,

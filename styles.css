@@ -1644,6 +1644,19 @@ main {
   border-top: 1px solid var(--line);
 }
 
+.synthesis-exclusion-panel {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  contain: inline-size;
+}
+
+.synthesis-exclusion-panel .table-wrap {
+  max-height: min(420px, 46vh);
+  overflow: auto;
+  scrollbar-gutter: stable;
+}
+
 .synthesis-subgroup-group {
   border-bottom: 1px solid var(--line);
 }
