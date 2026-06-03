@@ -4819,6 +4819,10 @@
   function sourceLabel(value) {
     const key = String(value || "").trim();
     const labels = {
+      full_text_study_table_task_focus: "Focused full text",
+      full_text_supplement_study_table_task_focus: "Focused full text + supplement",
+      full_text_candidate_map_task_focus: "Focused full text",
+      full_text_supplement_candidate_map_task_focus: "Focused full text + supplement",
       full_text: "Full text",
       full_text_supplement: "Full text + supplement",
       full_text_multimodal: "Full text + images",
@@ -5719,6 +5723,23 @@
       return fields.filter((field) => !EXTRACTION_DISPLAY_FIELD_EXCLUDE.has(field));
     }
 
+    function formatExtractableFieldLabel(field) {
+      return String(field || "")
+        .split("_")
+        .filter(Boolean)
+        .map((token, index) => {
+          const lower = token.toLowerCase();
+          if (["ci", "sd", "se"].includes(lower)) {
+            return lower.toUpperCase();
+          }
+          if (["n", "p"].includes(lower)) {
+            return lower.toUpperCase();
+          }
+          return index === 0 ? lower.charAt(0).toUpperCase() + lower.slice(1) : lower;
+        })
+        .join(" ");
+    }
+
     function renderExtractedValueCell(row, field, evidenceByField) {
       const value = row[field];
       const evidence = evidenceByField?.[field];
@@ -5797,7 +5818,7 @@
                   <th class="screen-col-index">#</th>
                   <th class="screen-col-study">Study</th>
                   <th class="extract-source-col">Source</th>
-                  ${fields.map((field) => `<th class="mono extract-value-col">${escapeHtml(field)}</th>`).join("")}
+                  ${fields.map((field) => `<th class="extract-value-col" title="${escapeHtml(field)}">${escapeHtml(formatExtractableFieldLabel(field))}</th>`).join("")}
                 </tr>
               </thead>
               <tbody>

@@ -2230,6 +2230,11 @@ th {
   table-layout: fixed;
 }
 
+.extractable-table th.extract-value-col {
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+
 .study-sticky-table .screen-col-study {
   width: 150px;
   min-width: 150px;
