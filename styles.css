@@ -3209,6 +3209,13 @@ details[open] > .collapsible-table-summary::before,
   text-transform: none;
 }
 
+.fulltext-missing-note {
+  margin: -2px 0 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  line-height: var(--leading-body);
+}
+
 .fulltext-missing-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));

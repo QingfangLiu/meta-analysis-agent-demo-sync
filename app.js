@@ -5425,6 +5425,22 @@
     }
     bindSourceTraceToggle(actionsNode, bodyNode, payload, showAllEvidence);
     bodyNode.innerHTML = sourceTraceBodyHtml(payload, showAllEvidence);
+    scheduleSourceTraceHighlightScroll(bodyNode);
+  }
+
+  function scheduleSourceTraceHighlightScroll(bodyNode) {
+    const scrollToHighlight = () => {
+      const highlight = bodyNode?.querySelector(".source-trace-highlight");
+      if (!highlight) {
+        return;
+      }
+      highlight.scrollIntoView({ block: "center", inline: "nearest" });
+    };
+    if (typeof window !== "undefined" && typeof window.requestAnimationFrame === "function") {
+      window.requestAnimationFrame(scrollToHighlight);
+    } else {
+      scrollToHighlight();
+    }
   }
 
   function sourceTraceDrawer() {
@@ -5913,6 +5929,7 @@
           <div class="fulltext-missing-title">
             <span>No full text available</span>
           </div>
+          <p class="fulltext-missing-note">Retained for downstream tasks using available non-full-text sources.</p>
           <div class="fulltext-missing-list">
             ${missingRows.map((row) => {
               const reason = row.reason ? sentence(row.reason) : "Full text unavailable.";
