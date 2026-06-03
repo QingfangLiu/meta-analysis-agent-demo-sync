@@ -4253,14 +4253,23 @@
     `;
   }
 
-  function subgroupPlanSection(subgroupPlanArtifact) {
+  function subgroupPlanSection(subgroupPlanArtifact, studyLevelSubgroupValues = []) {
     const artifact = subgroupPlanArtifact || {};
     const dimensions = Array.isArray(artifact.subgroup_dimensions)
       ? artifact.subgroup_dimensions.filter(Boolean)
       : [];
+    const invalidDimensions = Array.isArray(artifact.invalid_subgroup_dimensions)
+      ? artifact.invalid_subgroup_dimensions.filter(Boolean)
+      : [];
+    const warnings = Array.isArray(artifact.warnings)
+      ? artifact.warnings.filter((item) => String(item || "").trim())
+      : [];
+    const studyLevelRows = Array.isArray(studyLevelSubgroupValues)
+      ? studyLevelSubgroupValues.filter(Boolean)
+      : [];
     const status = artifact.status || "";
 
-    if (!dimensions.length) {
+    if (!dimensions.length && !invalidDimensions.length) {
       if (!Object.keys(artifact).length) {
         return "";
       }
@@ -4277,6 +4286,54 @@
       `;
     }
 
+    function normalizedSubgroupSourceLevel(dimension) {
+      const direct = String(dimension?.source_level || "").trim().toLowerCase().replaceAll("-", "_").replaceAll(" ", "_");
+      if (["study", "study_level", "study_table"].includes(direct)) {
+        return "study_level";
+      }
+      if (["result", "result_level", "outcome", "outcome_level"].includes(direct)) {
+        return "result_level";
+      }
+      const rawSource = dimension?.source_levels || dimension?.scope;
+      const raw = Array.isArray(rawSource) ? rawSource : rawSource ? [rawSource] : [];
+      const levels = [];
+      raw.forEach((value) => {
+        const normalized = String(value || "").trim().toLowerCase().replaceAll("-", "_").replaceAll(" ", "_");
+        if (["study", "study_level", "study_table"].includes(normalized)) {
+          if (!levels.includes("study_level")) {
+            levels.push("study_level");
+          }
+        } else if (["result", "result_level", "outcome", "outcome_level"].includes(normalized)) {
+          if (!levels.includes("result_level")) {
+            levels.push("result_level");
+          }
+        }
+      });
+      return levels.length === 1 ? levels[0] : "";
+    }
+
+    function subgroupScopeLabel(level) {
+      if (level === "study_level") {
+        return "Study-level";
+      }
+      if (level === "result_level") {
+        return "Result-level";
+      }
+      return humanizeMetric(level || "Scope");
+    }
+
+    function renderScopeChip(dimension) {
+      const level = normalizedSubgroupSourceLevel(dimension);
+      if (!level) {
+        return "";
+      }
+      return `
+        <div class="subgroup-scope-list">
+          <span class="subgroup-scope-chip subgroup-scope-${escapeHtml(level)}">${escapeHtml(subgroupScopeLabel(level))}</span>
+        </div>
+      `;
+    }
+
     function renderCategory(category) {
       const value = String(category.value || "").trim();
       const label = String(category.label || "").trim();
@@ -4284,6 +4341,96 @@
         <span class="subgroup-category-chip">
           ${escapeHtml(label || value || "Unlabeled")}
         </span>
+      `;
+    }
+
+    function studyLevelSubgroupFields(rows) {
+      const excluded = new Set(["pmid", "study_label", "year"]);
+      const fields = [];
+      const seen = new Set();
+      rows.forEach((row) => {
+        Object.entries(row || {}).forEach(([key, value]) => {
+          if (excluded.has(key) || seen.has(key) || !String(value || "").trim()) {
+            return;
+          }
+          seen.add(key);
+          fields.push(key);
+        });
+      });
+      return fields;
+    }
+
+    function renderStudyLevelSubgroupValues(rows) {
+      const fields = studyLevelSubgroupFields(rows);
+      if (!rows.length || !fields.length) {
+        return "";
+      }
+      return `
+        <details class="collapsible-table-panel subgroup-study-values-panel">
+          <summary class="collapsible-table-summary">
+            <h4>Study-level subgroup values (${number(rows.length)})</h4>
+          </summary>
+          <div class="table-wrap screening-wrap">
+            <table class="screening-table subgroup-study-values-table study-sticky-table">
+              <thead>
+                <tr>
+                  <th class="screen-col-index">#</th>
+                  <th class="screen-col-study">Study</th>
+                  ${fields.map((field) => `<th class="mono">${escapeHtml(field)}</th>`).join("")}
+                </tr>
+              </thead>
+              <tbody>
+                ${rows.map((row, index) => `
+                  <tr>
+                    <td class="screen-col-index mono">${index + 1}</td>
+                    <td class="screen-col-study">${compactStudyCell(row)}</td>
+                    ${fields.map((field) => `<td class="mono">${escapeHtml(row?.[field] || "—")}</td>`).join("")}
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+          </div>
+        </details>
+      `;
+    }
+
+    function renderOutcomeScope(dimension) {
+      const level = normalizedSubgroupSourceLevel(dimension);
+      const outcomeNames = Array.isArray(dimension.outcome_names)
+        ? dimension.outcome_names.map((item) => String(item || "").trim()).filter(Boolean)
+        : [];
+      if (level !== "result_level" || !outcomeNames.length) {
+        return "";
+      }
+      return `
+        <div class="subgroup-outcome-scope">
+          <div class="artifact-field-key mono">Relevant outcomes</div>
+          <div class="subgroup-outcome-list">
+            ${outcomeNames.map((name) => `<span class="subgroup-outcome-chip">${escapeHtml(name)}</span>`).join("")}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderInvalidSubgroupWarnings() {
+      if (!warnings.length && !invalidDimensions.length) {
+        return "";
+      }
+      const rows = invalidDimensions.map((dimension) => {
+        const label = String(dimension.label || dimension.field_name || "Unlabeled factor").trim();
+        const reason = String(dimension.reason || "Invalid subgroup source level.").trim();
+        return `<li><span class="mono">${escapeHtml(label)}</span>: ${escapeHtml(reason)}</li>`;
+      });
+      return `
+        <details class="subgroup-invalid-panel">
+          <summary class="collapsible-table-summary">
+            <h4>Invalid subgroup factors (${number(invalidDimensions.length || warnings.length)})</h4>
+          </summary>
+          ${rows.length
+            ? `<ul>${rows.join("")}</ul>`
+            : `<p class="note">${escapeHtml(warnings.join(" "))}</p>`
+          }
+        </details>
       `;
     }
 
@@ -4300,6 +4447,7 @@
           <div class="outcome-panel-head subgroup-plan-head">
             <div>
               <h4>${number(index + 1)}. ${sentence(label)}</h4>
+              ${renderScopeChip(dimension)}
             </div>
           </div>
           ${categories.length
@@ -4312,6 +4460,7 @@
             `
             : ""
           }
+          ${renderOutcomeScope(dimension)}
           ${fields.length
             ? `
               <div class="subgroup-detail-panel">
@@ -4343,6 +4492,8 @@
         <div class="outcome-panel-list subgroup-plan-list">
           ${dimensions.map(renderDimension).join("")}
         </div>
+        ${renderInvalidSubgroupWarnings()}
+        ${renderStudyLevelSubgroupValues(studyLevelRows)}
       </details>
     `;
   }
@@ -7577,7 +7728,7 @@
     }).filter(Boolean).join("") || "—";
   }
 
-  function renderSynthesisExcludedRowsPanel(rows) {
+  function renderOutcomeSynthesisExcludedRowsPanel(rows) {
     const excludedRows = Array.isArray(rows) ? rows : [];
     if (!excludedRows.length) {
       return "";
@@ -7586,7 +7737,7 @@
     return `
       <details class="synthesis-exclusion-panel synthesis-subgroup-section">
         <summary class="synthesis-subgroup-head">
-          <h5>Extracted but not included in this effect-measure analysis (${number(excludedRows.length)})</h5>
+          <h5>Extracted but not synthesized for this outcome (${number(excludedRows.length)})</h5>
         </summary>
         <div class="synthesis-subgroup-list">
           <div class="table-wrap screening-wrap">
@@ -7597,8 +7748,7 @@
                   <th class="screen-col-study">Study</th>
                   <th>effect_measure_reported</th>
                   <th>effect_measure_reported_raw</th>
-                  <th>synthesis_effect_measure</th>
-                  <th>analysis_exclusion_reason</th>
+                  <th>analysis_exclusion_reasons</th>
                   <th>available effect fields</th>
                 </tr>
               </thead>
@@ -7609,8 +7759,7 @@
                     <td class="screen-col-study">${compactStudyCell(row)}</td>
                     <td class="mono">${escapeHtml(row?.effect_measure_reported || "—")}</td>
                     <td class="mono">${escapeHtml(row?.effect_measure_reported_raw || "—")}</td>
-                    <td class="mono">${escapeHtml(row?.synthesis_effect_measure || "—")}</td>
-                    <td class="mono">${escapeHtml(row?.analysis_exclusion_reason || "—")}</td>
+                    <td class="mono">${escapeHtml((row?.analysis_exclusion_reasons || []).join("; ") || row?.analysis_exclusion_reason || "—")}</td>
                     <td>${renderSynthesisExcludedFieldList(row)}</td>
                   </tr>
                 `).join("")}
@@ -8308,7 +8457,6 @@
                         comparisonPayload,
                         subgroupPlan
                       )}
-                      ${renderSynthesisExcludedRowsPanel(analysis.results?.synthesis_excluded_rows)}
                       ${renderSynthesisSubgroupAnalyses(
                         nonDesignSubgroupAnalyses,
                         entry,
@@ -8320,6 +8468,7 @@
                     </div>
                   `;
                 }).join("")}
+              ${renderOutcomeSynthesisExcludedRowsPanel(entry.results?.outcome_synthesis_excluded_rows)}
             </details>
           `;
         }).join("")}
@@ -8585,7 +8734,7 @@
 			      ${outcomesSection(outcomes, pico, outcomeSignalInventory, cochraneOutcomeAlignment, outcomeSourceContribution)}
 		      ${comparisonSection(comparison, pico, cochraneComparisonAlignment, studyArms)}
 		      ${publicationLinkageSection(publicationLinkage, publicationLinkageEvidence, screening.screened_studies || [])}
-		      ${subgroupPlanSection(subgroupPlan)}
+		      ${subgroupPlanSection(subgroupPlan, current.study_level_subgroup_values || [])}
 		    </section>
 
 	    <section class="step-card" id="step-5">
