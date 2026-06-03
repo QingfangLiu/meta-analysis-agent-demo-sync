@@ -5791,7 +5791,56 @@
       return fulltextIndicatorCell(label, "unclear", `${label}: ${row.reason || row.status || "No full-text decision found."}`);
     }
 
+    function fulltextSourceKind(source) {
+      const method = cleanText(source?.method);
+      if (method === "user_uploaded_pdf") {
+        return "user-pdf";
+      }
+      if (method === "pmc_aws_xml" || method === "oai_xml" || method === "bioc_json" || method === "bioc_xml" || method === "html") {
+        return "pmc";
+      }
+      return method ? "other" : "missing";
+    }
+
+    function fulltextSourceChip(row) {
+      const detail = fulltextTraceSourceDetail(row.source);
+      if (!detail.detail) {
+        return "";
+      }
+      const kind = fulltextSourceKind(row.source);
+      return `<span class="fulltext-source-chip fulltext-source-chip-${escapeHtml(kind)}" title="${escapeHtml(detail.title || detail.detail)}">${escapeHtml(detail.detail)}</span>`;
+    }
+
+    function fulltextStudyCell(row) {
+      const sourceChip = fulltextSourceChip(row);
+      return `
+        <div class="fulltext-study-source-cell">
+          ${compactStudyCell(row)}
+          ${sourceChip}
+        </div>
+      `;
+    }
+
     const counts = fulltextScreeningDecisionCounts(rows);
+    const sourceCounts = filteredRows.reduce((acc, row) => {
+      if (row.decisionCategory === "no full text") {
+        return acc;
+      }
+      const kind = fulltextSourceKind(row.source);
+      if (kind === "user-pdf") {
+        acc.userPdf += 1;
+      } else if (kind === "pmc") {
+        acc.pmc += 1;
+      } else {
+        acc.other += 1;
+      }
+      return acc;
+    }, { pmc: 0, userPdf: 0, other: 0 });
+    const sourceSummaryItems = [
+      sourceCounts.pmc ? { key: "pmc", label: "PMC full text", value: sourceCounts.pmc } : null,
+      sourceCounts.userPdf ? { key: "user-pdf", label: "User-uploaded PDF", value: sourceCounts.userPdf } : null,
+      sourceCounts.other ? { key: "other", label: "Other", value: sourceCounts.other } : null,
+    ].filter(Boolean);
     const obtainedRows = shownRows.filter((row) => row.decisionCategory !== "no full text");
     const missingRows = shownRows.filter((row) => row.decisionCategory === "no full text");
     const inclusionCriteria = [];
@@ -5882,6 +5931,13 @@
       <div class="fulltext-eligibility-panel">
         <div class="matrix-toolbar fulltext-screening-toolbar">
           <p class="note">Full-text screening is applied to title/abstract records marked "include" or "not enough info". Hover over dots for the saved reason.</p>
+          ${sourceSummaryItems.length ? `
+            <div class="fulltext-source-summary" aria-label="Full-text source counts">
+              ${sourceSummaryItems.map((item) => `
+                <span class="fulltext-source-summary-item fulltext-source-summary-item-${escapeHtml(item.key)}"><span>${escapeHtml(item.label)}</span><strong>${number(item.value)}</strong></span>
+              `).join("")}
+            </div>
+          ` : ""}
           <div class="matrix-controls">
             <div class="matrix-filter-group" role="group" aria-label="Full-text screening decisions">
               <span class="matrix-control-label">Decision</span>
@@ -5924,7 +5980,7 @@
               ${obtainedRows.map((row, index) => `
                 <tr>
                   <td class="screen-col-index mono">${index + 1}</td>
-                  <td class="screen-col-study">${compactStudyCell(row)}</td>
+                  <td class="screen-col-study">${fulltextStudyCell(row)}</td>
                   ${inclusionCriteria.map((criterion) => `<td class="fulltext-criterion-col">${criterionDecisionCell(row, criterion, "inclusion")}</td>`).join("")}
                   ${exclusionCriteria.map((criterion, criterionIndex) => `<td class="fulltext-criterion-col${criterionIndex === 0 ? " screen-col-section-start" : ""}">${criterionDecisionCell(row, criterion, "exclusion")}</td>`).join("")}
                   <td class="screen-col-decision screen-col-overall">${eligibilityDecisionCell(row)}</td>

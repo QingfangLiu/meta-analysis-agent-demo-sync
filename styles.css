@@ -3037,7 +3037,107 @@ details[open] > .collapsible-table-summary::before,
 }
 
 .fulltext-screening-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "note controls"
+    "sources controls";
+  align-items: start;
   margin-top: 10px;
+}
+
+.fulltext-screening-toolbar .note {
+  grid-area: note;
+  max-width: 720px;
+}
+
+.fulltext-screening-toolbar .matrix-controls {
+  grid-area: controls;
+}
+
+.fulltext-source-summary {
+  grid-area: sources;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.fulltext-source-summary-item {
+  display: inline-flex;
+  gap: 5px;
+  align-items: baseline;
+  padding: 3px 7px;
+  border: 1px solid rgba(71, 85, 105, 0.12);
+  border-radius: 5px;
+  background: rgba(248, 250, 252, 0.58);
+  color: rgba(71, 85, 105, 0.78);
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.fulltext-source-summary-item strong {
+  color: rgba(38, 50, 65, 0.74);
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.fulltext-source-summary-item-pmc {
+  border-color: rgba(70, 87, 111, 0.15);
+  background: rgba(70, 87, 111, 0.05);
+  color: rgba(70, 87, 111, 0.78);
+}
+
+.fulltext-source-summary-item-user-pdf {
+  border-color: rgba(109, 90, 125, 0.15);
+  background: rgba(109, 90, 125, 0.055);
+  color: rgba(95, 79, 112, 0.78);
+}
+
+.fulltext-source-summary-item-other {
+  border-color: rgba(91, 99, 114, 0.14);
+  background: rgba(91, 99, 114, 0.05);
+  color: rgba(75, 85, 99, 0.76);
+}
+
+.fulltext-study-source-cell {
+  display: grid;
+  gap: 5px;
+  justify-items: start;
+}
+
+.fulltext-source-chip {
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  padding: 2px 6px;
+  border: 1px solid rgba(24, 33, 38, 0.09);
+  border-radius: 5px;
+  background: rgba(255, 252, 246, 0.50);
+  color: rgba(88, 102, 110, 0.70);
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: normal;
+}
+
+.fulltext-source-chip-pmc {
+  border-color: rgba(70, 87, 111, 0.16);
+  background: rgba(70, 87, 111, 0.055);
+  color: rgba(70, 87, 111, 0.72);
+}
+
+.fulltext-source-chip-user-pdf {
+  border-color: rgba(109, 90, 125, 0.17);
+  background: rgba(109, 90, 125, 0.06);
+  color: rgba(95, 79, 112, 0.72);
+}
+
+.fulltext-source-chip-other {
+  border-color: rgba(91, 99, 114, 0.15);
+  background: rgba(91, 99, 114, 0.055);
+  color: rgba(75, 85, 99, 0.70);
 }
 
 .title-abstract-screening-panel .matrix-toolbar {
@@ -5961,6 +6061,14 @@ body.source-trace-open .left-rail {
   .matrix-toolbar {
     flex-direction: column;
     align-items: start;
+  }
+
+  .fulltext-screening-toolbar {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "note"
+      "sources"
+      "controls";
   }
 
   .matrix-controls,
