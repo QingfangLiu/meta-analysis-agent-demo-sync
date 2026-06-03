@@ -4998,6 +4998,20 @@
     return lines.length ? `${field}\n${lines.join("\n")}` : "";
   }
 
+  function sourceTraceFieldLabel(field) {
+    return String(field || "")
+      .split("_")
+      .filter(Boolean)
+      .map((token, index) => {
+        const lower = token.toLowerCase();
+        if (["ci", "sd", "se", "n", "p"].includes(lower)) {
+          return lower.toUpperCase();
+        }
+        return index === 0 ? lower.charAt(0).toUpperCase() + lower.slice(1) : lower;
+      })
+      .join(" ") || "Field";
+  }
+
   function sourceTraceEvidenceCandidates(evidence) {
     const candidates = [];
     const addCandidate = (value) => {
@@ -5018,11 +5032,71 @@
     return candidates;
   }
 
-  function sourceTraceRowEvidenceCandidates(row) {
+  function sourceTraceEvidenceCardHtml(payload) {
+    const evidence = payload?.evidence;
+    const isStructured = evidence && typeof evidence === "object" && !Array.isArray(evidence);
+    const source = isStructured ? evidenceText(evidence.source) : "";
+    const quote = isStructured
+      ? evidenceText(evidence.evidence || evidence.quote || evidence.evidence_text || evidence.text)
+      : evidenceText(evidence);
+    const notes = isStructured ? evidenceText(evidence.notes) : "";
+    const visualAssets = isStructured ? evidenceText(evidence.visual_asset_ids) : "";
+    return `
+      <section class="source-trace-evidence-card" aria-label="Saved extraction evidence">
+        <div class="source-trace-evidence-head">
+          <span>${escapeHtml(sourceTraceFieldLabel(payload?.field))}</span>
+          ${hasValue(payload?.value) ? `<span class="source-trace-evidence-value">${sentence(payload.value)}</span>` : ""}
+        </div>
+        <div class="source-trace-evidence-grid">
+          ${source ? `
+            <div class="source-trace-evidence-label">Source</div>
+            <div>${escapeHtml(source)}</div>
+          ` : ""}
+          ${quote ? `
+            <div class="source-trace-evidence-label">Evidence</div>
+            <blockquote>${escapeHtml(quote)}</blockquote>
+          ` : ""}
+          ${notes ? `
+            <div class="source-trace-evidence-label">Notes</div>
+            <div>${escapeHtml(notes)}</div>
+          ` : ""}
+          ${visualAssets ? `
+            <div class="source-trace-evidence-label">Visuals</div>
+            <div>${escapeHtml(visualAssets)}</div>
+          ` : ""}
+        </div>
+      </section>
+    `;
+  }
+
+  function sourceTraceKindForEvidence(row, evidence) {
+    const source = cleanText(evidence?.source).toLowerCase();
+    const textSource = cleanText(row?.extraction_text_source).toLowerCase();
+    if (source.includes("abstract")) {
+      return "abstract";
+    }
+    if (source.includes("nct")) {
+      return "";
+    }
+    if (
+      source.includes("full")
+      || source.includes("article")
+      || source.includes("table")
+      || textSource.includes("full")
+    ) {
+      return "full_text";
+    }
+    if (textSource === "abstract") {
+      return "abstract";
+    }
+    return "";
+  }
+
+  function sourceTraceRowEvidenceCandidates(row, sourceKind) {
     const evidenceByField = parseFieldEvidence(row);
     const candidates = [];
     Object.values(evidenceByField || {}).forEach((evidence) => {
-      if (!isAbstractSourceEvidence(row, evidence)) {
+      if (sourceTraceKindForEvidence(row, evidence) !== sourceKind) {
         return;
       }
       sourceTraceEvidenceCandidates(evidence).forEach((candidate) => {
@@ -5034,21 +5108,12 @@
     return candidates;
   }
 
-  function isAbstractSourceEvidence(row, evidence) {
-    const source = cleanText(evidence?.source).toLowerCase();
-    const textSource = cleanText(row?.extraction_text_source).toLowerCase();
-    if (source.includes("abstract")) {
-      return true;
-    }
-    return textSource === "abstract" && !source.includes("nct") && !source.includes("full");
-  }
-
-  function isAbstractSourceTraceCell(row, evidence) {
-    return isAbstractSourceEvidence(row, evidence)
+  function isSourceTraceCell(row, evidence) {
+    return Boolean(sourceTraceKindForEvidence(row, evidence))
       && sourceTraceEvidenceCandidates(evidence).length > 0;
   }
 
-  function currentPerStudyMetadataByPmid(pmid) {
+  function currentPerStudyOutputByPmid(pmid) {
     const current = findRun(currentRunId);
     const target = String(pmid || "").trim();
     if (!target) {
@@ -5058,7 +5123,59 @@
       const entryPmid = String(item?.pmid || item?.metadata?.pmid || "").trim();
       return entryPmid === target;
     });
-    return entry?.metadata || {};
+    return entry || {};
+  }
+
+  function currentPerStudyMetadataByPmid(pmid) {
+    return currentPerStudyOutputByPmid(pmid)?.metadata || {};
+  }
+
+  function fulltextTraceSourceDetail(fulltextSource) {
+    const source = fulltextSource && typeof fulltextSource === "object" ? fulltextSource : {};
+    const method = cleanText(source.method);
+    if (!method) {
+      return { detail: "", title: "" };
+    }
+    if (method === "user_uploaded_pdf") {
+      const filename = cleanText(source.uploaded_pdf_filename);
+      return {
+        detail: "User-uploaded PDF",
+        title: filename ? `User-uploaded PDF: ${filename}` : "User-uploaded PDF",
+      };
+    }
+    const methodLabels = {
+      pmc_aws_xml: "PMC AWS XML",
+      oai_xml: "PMC OAI XML",
+      bioc_json: "PMC BioC JSON",
+      bioc_xml: "PMC BioC XML",
+      html: "PMC HTML",
+    };
+    const methodLabel = methodLabels[method] || method.replaceAll("_", " ");
+    const pmcid = cleanText(source.pmcid);
+    return {
+      detail: "PMC full text",
+      title: [methodLabel, pmcid].filter(Boolean).join(" · "),
+    };
+  }
+
+  function sourceTraceSourceForKind(pmid, sourceKind) {
+    const entry = currentPerStudyOutputByPmid(pmid);
+    const sourceTexts = entry?.source_texts || {};
+    if (sourceKind === "full_text") {
+      const sourceDetail = fulltextTraceSourceDetail(entry?.fulltext_source);
+      return {
+        label: cleanText(sourceTexts.full_text?.label) || "Full text",
+        detail: sourceDetail.detail,
+        detailTitle: sourceDetail.title,
+        text: cleanText(sourceTexts.full_text?.text),
+      };
+    }
+    return {
+      label: cleanText(sourceTexts.abstract?.label) || "PubMed abstract",
+      detail: "",
+      detailTitle: "",
+      text: cleanText(sourceTexts.abstract?.text || entry?.metadata?.abstract),
+    };
   }
 
   function currentExtractionRowForCell(cell) {
@@ -5091,10 +5208,12 @@
       return null;
     }
     const evidence = parseFieldEvidence(row)?.[field];
-    if (!isAbstractSourceTraceCell(row, evidence)) {
+    const sourceKind = sourceTraceKindForEvidence(row, evidence);
+    if (!isSourceTraceCell(row, evidence)) {
       return null;
     }
     const metadata = currentPerStudyMetadataByPmid(row.pmid);
+    const source = sourceTraceSourceForKind(row.pmid || metadata.pmid, sourceKind);
     const pubInfo = extractionPubInfoParts({ ...row, metadata });
     return {
       row,
@@ -5102,12 +5221,77 @@
       value: row[field],
       evidence,
       evidenceCandidates: sourceTraceEvidenceCandidates(evidence),
-      allEvidenceCandidates: sourceTraceRowEvidenceCandidates(row),
-      abstract: cleanText(metadata.abstract),
+      allEvidenceCandidates: sourceTraceRowEvidenceCandidates(row, sourceKind),
+      sourceKind,
+      sourceLabel: source.label,
+      sourceDetail: source.detail,
+      sourceDetailTitle: source.detailTitle,
+      sourceText: source.text,
       pmid: cleanText(row.pmid || metadata.pmid),
       pubInfo,
       outcomeName: cleanText(table?.outcome_name || table?.label || "Outcome"),
     };
+  }
+
+  function normalizedSearchText(value) {
+    const text = String(value || "");
+    const chars = [];
+    const map = [];
+
+    function normalizedChar(char) {
+      if (/[\u2010-\u2015\u2212]/.test(char)) {
+        return "-";
+      }
+      if (/\s/.test(char)) {
+        return " ";
+      }
+      return char.toLowerCase();
+    }
+
+    for (let index = 0; index < text.length; index += 1) {
+      const char = normalizedChar(text[index]);
+      if (char === " ") {
+        const previous = chars[chars.length - 1] || "";
+        let next = "";
+        for (let nextIndex = index + 1; nextIndex < text.length; nextIndex += 1) {
+          next = normalizedChar(text[nextIndex]);
+          if (next !== " ") {
+            break;
+          }
+        }
+        if (!previous || previous === " " || previous === "-" || next === "-") {
+          continue;
+        }
+      }
+      chars.push(char);
+      map.push(index);
+    }
+
+    return { text: chars.join(""), map };
+  }
+
+  function sourceTextCandidateRange(sourceText, candidate) {
+    const text = String(sourceText || "");
+    const exactIndex = text.indexOf(candidate);
+    if (exactIndex >= 0) {
+      return { start: exactIndex, end: exactIndex + candidate.length };
+    }
+
+    const normalizedSource = normalizedSearchText(text);
+    const normalizedCandidate = normalizedSearchText(candidate).text;
+    if (!normalizedCandidate) {
+      return null;
+    }
+    const normalizedIndex = normalizedSource.text.indexOf(normalizedCandidate);
+    if (normalizedIndex < 0) {
+      return null;
+    }
+    const start = normalizedSource.map[normalizedIndex];
+    const endIndex = normalizedIndex + normalizedCandidate.length - 1;
+    const end = (normalizedSource.map[endIndex] ?? start) + 1;
+    return Number.isFinite(start) && Number.isFinite(end) && end > start
+      ? { start, end }
+      : null;
   }
 
   function highlightedSourceText(sourceText, evidenceCandidates, { all = false } = {}) {
@@ -5117,8 +5301,8 @@
       .filter((candidate, index, list) => candidate && list.indexOf(candidate) === index);
     if (!all) {
       for (const candidate of candidates) {
-        const index = text.indexOf(candidate);
-        if (index < 0) {
+        const range = sourceTextCandidateRange(text, candidate);
+        if (!range) {
           continue;
         }
         return {
@@ -5126,9 +5310,9 @@
           matchedCount: 1,
           totalCandidates: candidates.length,
           html: [
-            escapeHtml(text.slice(0, index)),
-            `<mark class="source-trace-highlight">${escapeHtml(candidate)}</mark>`,
-            escapeHtml(text.slice(index + candidate.length)),
+            escapeHtml(text.slice(0, range.start)),
+            `<mark class="source-trace-highlight">${escapeHtml(text.slice(range.start, range.end))}</mark>`,
+            escapeHtml(text.slice(range.end)),
           ].join(""),
         };
       }
@@ -5141,19 +5325,13 @@
       .slice()
       .sort((a, b) => b.length - a.length)
       .forEach((candidate) => {
-        let start = 0;
-        while (start < text.length) {
-          const index = text.indexOf(candidate, start);
-          if (index < 0) {
-            break;
-          }
-          const end = index + candidate.length;
-          const overlaps = ranges.some((range) => index < range.end && end > range.start);
+        const range = sourceTextCandidateRange(text, candidate);
+        if (range) {
+          const overlaps = ranges.some((existing) => range.start < existing.end && range.end > existing.start);
           if (!overlaps) {
-            ranges.push({ start: index, end, text: candidate });
+            ranges.push({ start: range.start, end: range.end, text: candidate });
             matchedCandidates.add(candidate);
           }
-          start = end;
         }
       });
 
@@ -5185,8 +5363,8 @@
   }
 
   function sourceTraceWarningHtml(payload, highlighted, showAllEvidence) {
-    if (!payload.abstract) {
-      return `<p class="source-trace-warning">No abstract text was saved for this study.</p>`;
+    if (!payload.sourceText) {
+      return `<p class="source-trace-warning">No ${escapeHtml((payload.sourceLabel || "source").toLowerCase())} text was saved for this study.</p>`;
     }
     if (!highlighted.matched) {
       return `<p class="source-trace-warning">Exact source highlight not found.</p>`;
@@ -5207,14 +5385,25 @@
 
   function sourceTraceBodyHtml(payload, showAllEvidence) {
     const candidates = showAllEvidence ? payload.allEvidenceCandidates : payload.evidenceCandidates;
-    const highlighted = payload.abstract
-      ? highlightedSourceText(payload.abstract, candidates, { all: showAllEvidence })
+    const highlighted = payload.sourceText
+      ? highlightedSourceText(payload.sourceText, candidates, { all: showAllEvidence })
       : { matched: false, matchedCount: 0, totalCandidates: candidates.length, html: "" };
     return `
+      ${sourceTraceEvidenceCardHtml(payload)}
       ${sourceTraceWarningHtml(payload, highlighted, showAllEvidence)}
-      ${payload.abstract ? `
+      ${payload.sourceText ? `
         <div class="source-trace-source">
-          <h4>PubMed abstract</h4>
+          <div class="source-trace-source-heading">
+            <h4>${escapeHtml(payload.sourceLabel || "Source text")}</h4>
+            ${payload.sourceDetail ? `
+              <span
+                class="source-trace-source-detail"
+                ${payload.sourceDetailTitle ? `title="${escapeHtml(payload.sourceDetailTitle)}"` : ""}
+              >
+                ${escapeHtml(payload.sourceDetail)}
+              </span>
+            ` : ""}
+          </div>
           <div class="source-trace-text">${highlighted.html}</div>
         </div>
       ` : ""}
@@ -5222,7 +5411,7 @@
   }
 
   function bindSourceTraceToggle(actionsNode, bodyNode, payload, showAllEvidence) {
-    actionsNode.innerHTML = payload.abstract && hasExtraSourceTraceEvidence(payload)
+    actionsNode.innerHTML = payload.sourceText && hasExtraSourceTraceEvidence(payload)
       ? sourceTraceToggleButton(showAllEvidence)
       : "";
     actionsNode.querySelector("[data-source-trace-toggle-all]")?.addEventListener("click", () => {
@@ -5821,11 +6010,11 @@
       const value = row[field];
       const evidence = evidenceByField?.[field];
       const tooltip = fieldEvidenceTooltip(field, evidenceByField);
-      const hasSourceTrace = isAbstractSourceTraceCell(row, evidence);
+      const hasSourceTrace = isSourceTraceCell(row, evidence);
       const evidenceAttrs = [
         tooltip && !hasSourceTrace ? `title="${escapeHtml(tooltip)}"` : "",
         tooltip && !hasSourceTrace ? `aria-label="${escapeHtml(tooltip)}"` : "",
-        hasSourceTrace ? `aria-label="${escapeHtml(`Open abstract source trace for ${field}`)}"` : "",
+        hasSourceTrace ? `aria-label="${escapeHtml(`Open source trace for ${field}`)}"` : "",
         hasSourceTrace ? `data-source-trace-cell data-extraction-field="${escapeHtml(field)}" role="button" tabindex="0"` : "",
       ].filter(Boolean).join(" ");
       const evidenceClass = [
