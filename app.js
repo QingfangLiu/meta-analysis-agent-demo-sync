@@ -116,6 +116,8 @@
   let currentScreeningLimit = 20;
   let currentScreeningDecisions = ["include", "exclude", "not enough info"];
   let currentScreeningBenchmarkOnly = false;
+  let currentFulltextScreeningLimit = 20;
+  let currentFulltextScreeningDecisions = ["include", "exclude", "no full text"];
   let currentNonExtractableLimit = 5;
   let currentExtractableOpen = false;
   let currentNonExtractableOpen = false;
@@ -169,6 +171,8 @@
       currentScreeningLimit,
       currentScreeningDecisions,
       currentScreeningBenchmarkOnly,
+      currentFulltextScreeningLimit,
+      currentFulltextScreeningDecisions,
       currentNonExtractableLimit,
       currentExtractableOpen,
       currentNonExtractableOpen,
@@ -193,6 +197,10 @@
       ? saved.currentScreeningDecisions
       : currentScreeningDecisions;
     currentScreeningBenchmarkOnly = Boolean(saved.currentScreeningBenchmarkOnly);
+    currentFulltextScreeningLimit = saved.currentFulltextScreeningLimit ?? currentFulltextScreeningLimit;
+    currentFulltextScreeningDecisions = Array.isArray(saved.currentFulltextScreeningDecisions) && saved.currentFulltextScreeningDecisions.length
+      ? saved.currentFulltextScreeningDecisions
+      : currentFulltextScreeningDecisions;
     currentNonExtractableLimit = saved.currentNonExtractableLimit ?? currentNonExtractableLimit;
     currentExtractableOpen = Boolean(saved.currentExtractableOpen);
     currentNonExtractableOpen = Boolean(saved.currentNonExtractableOpen);
@@ -211,6 +219,8 @@
     currentScreeningLimit = 20;
     currentScreeningDecisions = ["include", "exclude", "not enough info"];
     currentScreeningBenchmarkOnly = false;
+    currentFulltextScreeningLimit = 20;
+    currentFulltextScreeningDecisions = ["include", "exclude", "no full text"];
     currentNonExtractableLimit = 5;
     currentExtractableOpen = false;
     currentNonExtractableOpen = false;
@@ -1844,18 +1854,39 @@
     `;
   }
 
-  function screeningDecisionCounts(screening) {
+  const SOURCE_AVAILABILITY_EXCLUSION_TOOLTIP = "Excluded because no abstract, linked NCT text, or retrievable full text was available to resolve eligibility.";
+
+  function sourceAvailabilityDroppedPmidSet(sourceAvailabilityGate = {}) {
+    return new Set([
+      ...(Array.isArray(sourceAvailabilityGate.dropped_pmids) ? sourceAvailabilityGate.dropped_pmids : []),
+      ...(Array.isArray(sourceAvailabilityGate.dropped_records)
+        ? sourceAvailabilityGate.dropped_records.map((record) => record?.pmid)
+        : []),
+    ].map((pmid) => cleanText(pmid)).filter(Boolean));
+  }
+
+  function effectiveScreenDecision(study, droppedSourcePmids = new Set()) {
+    const pmid = cleanText(study?.pmid);
+    if (pmid && droppedSourcePmids.has(pmid)) {
+      return "exclude";
+    }
+    return String(study?.screen_decision || "not enough info").trim().toLowerCase();
+  }
+
+  function screeningDecisionCounts(screening, sourceAvailabilityGate = {}) {
     const studies = Array.isArray(screening?.screened_studies) ? screening.screened_studies : [];
+    const droppedSourcePmids = sourceAvailabilityDroppedPmidSet(sourceAvailabilityGate);
     if (!studies.length) {
+      const droppedCount = Number(sourceAvailabilityGate?.counts?.n_dropped_no_source_text) || droppedSourcePmids.size;
       return {
         total: Number(screening?.n_total) || 0,
         include: Number(screening?.n_include) || 0,
-        notEnoughInfo: Number(screening?.n_not_enough_info) || 0,
-        exclude: Number(screening?.n_exclude) || 0,
+        notEnoughInfo: Math.max(0, (Number(screening?.n_not_enough_info) || 0) - droppedCount),
+        exclude: (Number(screening?.n_exclude) || 0) + droppedCount,
       };
     }
     return studies.reduce((counts, study) => {
-      const decision = String(study?.screen_decision || "not enough info").trim().toLowerCase();
+      const decision = effectiveScreenDecision(study, droppedSourcePmids);
       counts.total += 1;
       if (decision === "include") {
         counts.include += 1;
@@ -2271,15 +2302,14 @@
         label: "Screening",
         items: [
           ["Criteria", "#screening-criteria"],
-          ["Screening results", "#screening-results"],
+          ["Title/abstract screening", "#screening-results"],
+          ["Full text screening", "#fulltext-screening"],
         ],
       },
       {
         label: "Planning",
         items: [
           ["NCT linkage", "#nct-linkage"],
-          ["Full text screening", "#fulltext-screening"],
-          ["Source availability", "#source-availability-gate"],
           ["Outcomes", "#outcomes"],
           ["Comparison", "#comparison"],
           ["Publication linkage", "#publication-linkage"],
@@ -3211,13 +3241,14 @@
     `;
   }
 
-  function screeningMatrix(review, screening, limit, allowedDecisions, searchMetrics = {}, benchmarkOnly = false) {
+  function screeningMatrix(review, screening, limit, allowedDecisions, searchMetrics = {}, benchmarkOnly = false, sourceAvailabilityGate = {}) {
     const allStudies = screening.screened_studies || [];
     const benchmarkIndexedPmids = screeningBenchmarkPmidSet(searchMetrics);
     const applyBenchmarkFilter = currentEvaluationVisible && benchmarkOnly && benchmarkIndexedPmids.size;
     const decisionSet = new Set((allowedDecisions || []).map((value) => String(value || "").trim().toLowerCase()));
+    const droppedSourcePmids = sourceAvailabilityDroppedPmidSet(sourceAvailabilityGate);
     const filteredStudies = allStudies.filter((study) =>
-      decisionSet.has(String(study.screen_decision || "not enough info").trim().toLowerCase())
+      decisionSet.has(effectiveScreenDecision(study, droppedSourcePmids))
       && (!applyBenchmarkFilter || benchmarkIndexedPmids.has(String(study?.pmid || "").trim()))
     );
     const normalizedLimit = String(limit) === "all" ? "all" : Number(limit) || 20;
@@ -3262,7 +3293,11 @@
     }
 
     function decisionCell(study) {
-      const decision = String(study.screen_decision || "not enough info").trim().toLowerCase();
+      const pmid = cleanText(study?.pmid);
+      if (pmid && droppedSourcePmids.has(pmid)) {
+        return screeningIndicatorCell("Exclude", "fail", SOURCE_AVAILABILITY_EXCLUSION_TOOLTIP);
+      }
+      const decision = effectiveScreenDecision(study, droppedSourcePmids);
       const tone = decision === "include" ? "pass" : decision === "exclude" ? "fail" : "unclear";
       const readable = decision === "include" ? "Include" : decision === "exclude" ? "Exclude" : "Not enough info";
       return screeningIndicatorCell(readable, tone, `${readable}: ${study.screen_reason || readable}`);
@@ -3270,7 +3305,7 @@
 
     function benchmarkStatusCell(study) {
       const pmid = String(study?.pmid || "").trim();
-      const decision = String(study?.screen_decision || "not enough info").trim().toLowerCase();
+      const decision = effectiveScreenDecision(study, droppedSourcePmids);
       const screenPositive = decision === "include" || decision === "not enough info";
       let label = "Not indexed";
       let tone = "unknown";
@@ -3300,8 +3335,8 @@
     }
 
     return `
-      <div class="table-wrap screening-wrap">
-        <table class="screening-table screening-results-table study-sticky-table">
+      <div class="table-wrap screening-wrap eligibility-table-wrap title-abstract-screening-wrap">
+        <table class="screening-table screening-results-table eligibility-screening-table title-abstract-screening-table study-sticky-table">
           <thead>
             <tr>
               <th class="screen-col-index">#</th>
@@ -5406,7 +5441,10 @@
     return `
       <details class="detail-card nct-linkage-panel" id="nct-linkage">
         <summary class="collapsible-table-summary nct-linkage-summary">
-          <h3>NCT Linkage <span class="inline-section-count">(x ${number(entries.length)})</span></h3>
+          <div>
+            <h3>NCT Linkage <span class="inline-section-count">(x ${number(entries.length)})</span></h3>
+            <p class="summary-note">Links exact NCT IDs found in PubMed abstracts to ClinicalTrials.gov records.</p>
+          </div>
         </summary>
         <p class="note">Exact NCT IDs found in PubMed abstracts are linked to ClinicalTrials.gov records. This deterministic linkage is generated after screening and can support publication linkage and abstract+NCT extraction. Trial labels are shown when the abstract names the trial near the NCT ID or the ClinicalTrials.gov record provides an acronym. Posted Results counts how many linked NCT records have posted results on ClinicalTrials.gov.</p>
         ${entries.length ? `
@@ -5452,11 +5490,78 @@
     `;
   }
 
-  function fulltextEligibilitySection(perStudyOutputs) {
+  function fulltextScreeningRows(perStudyOutputs, sourceAvailabilityGate = {}) {
     const entries = Array.isArray(perStudyOutputs) ? perStudyOutputs : [];
-    if (!entries.length) {
+    const droppedSourcePmids = sourceAvailabilityDroppedPmidSet(sourceAvailabilityGate);
+    return entries.map((entry) => {
+      const metadata = entry?.metadata && typeof entry.metadata === "object" ? entry.metadata : {};
+      const source = entry?.fulltext_source && typeof entry.fulltext_source === "object" ? entry.fulltext_source : {};
+      const eligibility = entry?.fulltext_eligibility && typeof entry.fulltext_eligibility === "object" ? entry.fulltext_eligibility : {};
+      const fulltextObtained = source.fulltext_obtained === true;
+      const decision = cleanText(eligibility.decision || source.fulltext_eligibility_decision);
+      const normalizedDecision = decision.toLowerCase();
+      return {
+        pmid: cleanText(entry?.pmid) || cleanText(metadata.pmid),
+        first_author_last_name: cleanText(metadata.first_author_last_name),
+        year: cleanText(metadata.year),
+        metadata,
+        source,
+        eligibility,
+        status: cleanText(eligibility.status),
+        decision,
+        decisionCategory: fulltextObtained && ["include", "exclude"].includes(normalizedDecision)
+          ? normalizedDecision
+          : "no full text",
+        reason: cleanText(eligibility.reason || source.fulltext_eligibility_reason || source.skip_reason),
+      };
+    }).filter((row) => !droppedSourcePmids.has(row.pmid));
+  }
+
+  function fulltextScreeningDecisionCounts(rows) {
+    return (Array.isArray(rows) ? rows : []).reduce((counts, row) => {
+      if (row.decisionCategory === "include") {
+        counts.include += 1;
+      } else if (row.decisionCategory === "exclude") {
+        counts.exclude += 1;
+      } else {
+        counts.noFullText += 1;
+      }
+      return counts;
+    }, { include: 0, exclude: 0, noFullText: 0 });
+  }
+
+  function fulltextEligibilitySection(
+    perStudyOutputs,
+    sourceAvailabilityGate = {},
+    limit = 20,
+    allowedDecisions = ["include", "exclude", "no full text"]
+  ) {
+    const rows = fulltextScreeningRows(perStudyOutputs, sourceAvailabilityGate);
+    if (!rows.length) {
       return "";
     }
+    const decisionSet = new Set((allowedDecisions || []).map((value) => cleanText(value).toLowerCase()));
+    const filteredRows = rows.filter((row) => decisionSet.has(row.decisionCategory));
+    const numericLimitOptions = [10, 20, 30, 50, 100].filter((option) => option <= filteredRows.length);
+    if (!numericLimitOptions.length && filteredRows.length > 0) {
+      numericLimitOptions.push(filteredRows.length);
+    }
+    const limitOptions = [...numericLimitOptions, "all"];
+    const requestedLimit = String(limit) === "all" ? "all" : Number(limit) || 20;
+    let selectedLimit = requestedLimit;
+    if (!filteredRows.length) {
+      selectedLimit = "all";
+    } else if (selectedLimit !== "all") {
+      if (selectedLimit >= filteredRows.length) {
+        selectedLimit = numericLimitOptions.includes(filteredRows.length) ? filteredRows.length : "all";
+      } else if (!numericLimitOptions.includes(selectedLimit)) {
+        const lowerLimitOptions = numericLimitOptions.filter((option) => option <= selectedLimit);
+        selectedLimit = lowerLimitOptions.length
+          ? lowerLimitOptions[lowerLimitOptions.length - 1]
+          : numericLimitOptions[0];
+      }
+    }
+    const shownRows = selectedLimit === "all" ? filteredRows : filteredRows.slice(0, selectedLimit);
 
     function eligibilityJudgmentMeta(judgment, criterionType) {
       const normalized = cleanText(judgment).toLowerCase().replace(/[\s-]+/g, "_");
@@ -5497,26 +5602,9 @@
       return fulltextIndicatorCell(label, "unclear", `${label}: ${row.reason || row.status || "No full-text decision found."}`);
     }
 
-    const rows = entries.map((entry) => {
-      const metadata = entry?.metadata && typeof entry.metadata === "object" ? entry.metadata : {};
-      const source = entry?.fulltext_source && typeof entry.fulltext_source === "object" ? entry.fulltext_source : {};
-      const eligibility = entry?.fulltext_eligibility && typeof entry.fulltext_eligibility === "object" ? entry.fulltext_eligibility : {};
-      return {
-        pmid: cleanText(entry?.pmid) || cleanText(metadata.pmid),
-        first_author_last_name: cleanText(metadata.first_author_last_name),
-        year: cleanText(metadata.year),
-        metadata,
-        source,
-        eligibility,
-        status: cleanText(eligibility.status),
-        decision: cleanText(eligibility.decision || source.fulltext_eligibility_decision),
-        reason: cleanText(eligibility.reason || source.fulltext_eligibility_reason || source.skip_reason),
-      };
-    });
-    const obtainedRows = rows.filter((row) => row.source.fulltext_obtained === true);
-    const missingRows = rows.filter((row) => row.source.fulltext_obtained !== true);
-    const included = obtainedRows.filter((row) => row.decision.toLowerCase() === "include").length;
-    const excluded = obtainedRows.filter((row) => row.decision.toLowerCase() === "exclude").length;
+    const counts = fulltextScreeningDecisionCounts(rows);
+    const obtainedRows = shownRows.filter((row) => row.decisionCategory !== "no full text");
+    const missingRows = shownRows.filter((row) => row.decisionCategory === "no full text");
     const inclusionCriteria = [];
     const exclusionCriteria = [];
 
@@ -5586,7 +5674,6 @@
         <div class="fulltext-missing-panel">
           <div class="fulltext-missing-title">
             <span>No full text available</span>
-            <span class="mono">${number(missingRows.length)} candidates</span>
           </div>
           <div class="fulltext-missing-list">
             ${missingRows.map((row) => {
@@ -5605,18 +5692,36 @@
     return `
       <div class="fulltext-eligibility-panel">
         <div class="matrix-toolbar fulltext-screening-toolbar">
-          <p class="note">Showing ${number(obtainedRows.length)} full-text-screened records (${number(rows.length)} title/abstract candidates). Criterion headers map to the full-text inclusion and exclusion criteria; hover over dots for the saved reason.</p>
+          <p class="note">Full-text screening is applied to title/abstract records marked "include" or "not enough info". Hover over dots for the saved reason.</p>
           <div class="matrix-controls">
             <div class="matrix-filter-group" role="group" aria-label="Full-text screening decisions">
               <span class="matrix-control-label">Decision</span>
-              <span class="matrix-check matrix-check-include"><span>${number(included)} include</span></span>
-              <span class="matrix-check matrix-check-exclude"><span>${number(excluded)} exclude</span></span>
+              <label class="matrix-check matrix-check-include">
+                <input type="checkbox" value="include" data-fulltext-screening-decision ${allowedDecisions.includes("include") ? "checked" : ""}>
+                <span>${number(counts.include)} include</span>
+              </label>
+              <label class="matrix-check matrix-check-exclude">
+                <input type="checkbox" value="exclude" data-fulltext-screening-decision ${allowedDecisions.includes("exclude") ? "checked" : ""}>
+                <span>${number(counts.exclude)} exclude</span>
+              </label>
+              <label class="matrix-check matrix-check-unclear">
+                <input type="checkbox" value="no full text" data-fulltext-screening-decision ${allowedDecisions.includes("no full text") ? "checked" : ""}>
+                <span>${number(counts.noFullText)} no full text</span>
+              </label>
             </div>
+            <label class="matrix-control" for="fulltext-screening-limit">
+              <span class="matrix-control-label">Show</span>
+              <select class="matrix-select" id="fulltext-screening-limit" data-fulltext-screening-limit>
+                ${limitOptions.map((option) => `
+                  <option value="${option}" ${String(option) === String(selectedLimit) ? "selected" : ""}>${option === "all" ? "All" : option}</option>
+                `).join("")}
+              </select>
+            </label>
           </div>
         </div>
         ${obtainedRows.length ? `
-          <div class="table-wrap screening-wrap">
-          <table class="screening-table screening-results-table fulltext-eligibility-table study-sticky-table">
+          <div class="table-wrap screening-wrap eligibility-table-wrap fulltext-screening-wrap">
+          <table class="screening-table screening-results-table eligibility-screening-table fulltext-eligibility-table study-sticky-table">
             <thead>
               <tr>
                 <th class="screen-col-index">#</th>
@@ -5639,52 +5744,26 @@
             </tbody>
           </table>
           </div>
-        ` : `<p class="note fulltext-empty-note">No candidate full text was available for eligibility screening.</p>`}
+        ` : missingRows.length ? "" : `<p class="note fulltext-empty-note">No candidate full text was available for eligibility screening.</p>`}
         ${missingFullTextList()}
       </div>
     `;
   }
 
-  function sourceAvailabilityGateSection(gate) {
-    if (!gate || typeof gate !== "object" || !Object.keys(gate).length) {
-      return "";
-    }
-    const counts = gate.counts && typeof gate.counts === "object" ? gate.counts : {};
-    const droppedRecords = Array.isArray(gate.dropped_records) ? gate.dropped_records : [];
-    const droppedCount = Number(counts.n_dropped_no_source_text ?? droppedRecords.length) || 0;
-    const retainedCount = Number(counts.n_retained ?? 0) || 0;
-
+  function fulltextScreeningPanel(
+    perStudyOutputs,
+    sourceAvailabilityGate = {},
+    limit = 20,
+    allowedDecisions = ["include", "exclude", "no full text"]
+  ) {
     return `
-      <details class="detail-card source-availability-panel" id="source-availability-gate" style="margin-top:14px;">
-        <summary class="collapsible-table-summary source-availability-summary">
+      <details class="detail-card fulltext-screening-panel" id="fulltext-screening" style="margin-top:14px;" open>
+        <summary class="collapsible-table-summary fulltext-screening-summary">
           <div>
-            <h3>Source availability gate <span class="inline-section-count">(x ${number(droppedCount)})</span></h3>
-            <p class="summary-note">Drops only not-enough-info candidates with no abstract, linked NCT text, or full text.</p>
+            <h3>Full text screening</h3>
           </div>
         </summary>
-        <p class="note">${number(retainedCount)} candidates retained after this deterministic gate.</p>
-        ${droppedRecords.length ? `
-          <div class="table-wrap screening-wrap">
-            <table class="screening-table extraction-study-summary-table source-availability-table study-sticky-table">
-              <thead>
-                <tr>
-                  <th class="screen-col-index">#</th>
-                  <th class="screen-col-study">Study</th>
-                  <th>Reason</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${droppedRecords.map((record, index) => `
-                  <tr>
-                    <td class="screen-col-index mono">${index + 1}</td>
-                    <td class="screen-col-study">${compactStudyCell(record)}</td>
-                    <td>${sentence(record.reason || "No usable source text was available.")}</td>
-                  </tr>
-                `).join("")}
-              </tbody>
-            </table>
-          </div>
-        ` : `<p class="note">No candidates were dropped by this gate.</p>`}
+        ${fulltextEligibilitySection(perStudyOutputs, sourceAvailabilityGate, limit, allowedDecisions) || `<p class="note">No full-text screening rows were found for this run.</p>`}
       </details>
     `;
   }
@@ -5692,7 +5771,6 @@
   function extractionAttemptSection(
     outcomeTables,
     nonExtractableLimit,
-    publicationLinkageArtifact,
     extractionOverview,
     extractionTemplates,
     cochraneOutcomeAlignment = {}
@@ -5702,7 +5780,6 @@
       return `<p class="note">No outcome extraction CSV files were found for this run.</p>`;
     }
 
-    const linkageByPmid = publicationLinkageDisplayMap(publicationLinkageArtifact);
     const maxNonExtractableRows = Math.max(
       0,
       ...tables.map((table) => Number(table.non_extractable_count) || 0)
@@ -5759,26 +5836,11 @@
       return `<td class="${className}"${evidenceAttrs ? ` ${evidenceAttrs}` : ""}>${hasValue(value) ? sentence(value) : "—"}</td>`;
     }
 
-    function linkageRowParts(row) {
-      const pmid = String(row.pmid || "").trim();
-      const linkage = linkageByPmid.get(pmid);
-      if (!linkage) {
-        return { className: "", style: "", title: "" };
-      }
-      return {
-        className: "extraction-linkage-row",
-        style: ` style="--linkage-color:${escapeHtml(linkage.color)}; --linkage-bg:${escapeHtml(hexToRgba(linkage.color, 0.08))}; --linkage-border:${escapeHtml(hexToRgba(linkage.color, 0.55))};"`,
-        title: "",
-      };
-    }
-
     function extractionRowAttributes(row, table, tableIndex) {
       const pmid = String(row.pmid || "").trim();
-      const linkage = linkageRowParts(row);
       const fallbackNote = varianceFallbackNote(row);
       const classes = [
         "extraction-target-row",
-        linkage.className,
         fallbackNote ? "synthesis-derived-row" : "",
       ].filter(Boolean).join(" ");
       const outcomeKey = extractionOutcomeKey(table, tableIndex);
@@ -5788,14 +5850,7 @@
       const fallbackAttrs = fallbackNote
         ? ` title="${escapeHtml(fallbackNote)}" aria-label="${escapeHtml(fallbackNote)}"`
         : "";
-      return ` class="${classes}"${linkage.style}${linkage.title}${fallbackAttrs}${targetAttrs} data-extraction-row tabindex="0"`;
-    }
-
-    function linkageRowAttributes(row) {
-      const linkage = linkageRowParts(row);
-      return linkage.className
-        ? ` class="${linkage.className}"${linkage.style}${linkage.title}`
-        : "";
+      return ` class="${classes}"${fallbackAttrs}${targetAttrs} data-extraction-row tabindex="0"`;
     }
 
     function renderExtractableTable(rows, table, tableIndex) {
@@ -5875,7 +5930,7 @@
               ${visibleRows.map((row, index) => {
                 const note = String(row.non_extractable_reason || "").trim();
                 return `
-                  <tr${linkageRowAttributes(row)}>
+                  <tr>
                     <td class="screen-col-index mono">${index + 1}</td>
                     <td class="screen-col-study">${compactStudyCell(row)}</td>
                     <td>${sentence(sourceLabel(row.extraction_text_source))}</td>
@@ -8594,23 +8649,18 @@
     const finalReportMarkdown = current.final_report_markdown || "";
     const completedRobReviewCount = (Array.isArray(robDisplay.assessment_groups) ? robDisplay.assessment_groups : [])
       .reduce((total, group) => total + Number(group.n_completed_assessments || 0), 0);
-    const screeningCounts = screeningDecisionCounts(screening);
-    const totalScreenedStudies = screeningCounts.total;
+    const sourceAvailabilityDroppedPmids = sourceAvailabilityDroppedPmidSet(sourceAvailabilityGate);
+    const screeningCounts = screeningDecisionCounts(screening, sourceAvailabilityGate);
     const screeningBenchmarkPmids = screeningBenchmarkPmidSet(cochraneSearchScreeningMetrics);
     const showScreeningBenchmarkFilter = currentEvaluationVisible && screeningBenchmarkPmids.size > 0;
     const applyScreeningBenchmarkFilter = showScreeningBenchmarkFilter && currentScreeningBenchmarkOnly;
     const filteredScreeningStudies = (screening.screened_studies || []).filter((study) =>
-      currentScreeningDecisions.includes(String(study.screen_decision || "not enough info").trim().toLowerCase())
+      currentScreeningDecisions.includes(effectiveScreenDecision(study, sourceAvailabilityDroppedPmids))
       && (!applyScreeningBenchmarkFilter || screeningBenchmarkPmids.has(String(study?.pmid || "").trim()))
     );
     const screeningLimitOptions = [10, 20, 30, 50, 100, "all"].filter(
       (option, index) => option === "all" || option <= filteredScreeningStudies.length || index < 2
     );
-    const shownScreeningCount = String(currentScreeningLimit) === "all"
-      ? filteredScreeningStudies.length
-      : Math.min(Number(currentScreeningLimit) || 20, filteredScreeningStudies.length);
-    const fulltextScreenedCount = (Array.isArray(perStudyOutputs) ? perStudyOutputs : [])
-      .filter((entry) => entry?.fulltext_source?.fulltext_obtained === true).length;
     const synthesisPlotSummary = synthesisForestPlotSummary(synthesis, assets);
     renderHero(current);
 
@@ -8677,40 +8727,30 @@
           ${criteriaTable(review.exclusion_criteria || [], "E")}
         </div>
       </div>
-      <div class="stats-grid" style="margin-top:14px;">
-        <div class="stat-card screening-summary-card screening-summary-include">
-          <div class="stat-label">Include</div>
-          <div class="stat-value">${number(screeningCounts.include)}</div>
-        </div>
-        <div class="stat-card screening-summary-card screening-summary-unclear">
-          <div class="stat-label">Not Enough Info</div>
-          <div class="stat-value">${number(screeningCounts.notEnoughInfo)}</div>
-        </div>
-        <div class="stat-card screening-summary-card screening-summary-exclude">
-          <div class="stat-label">Exclude</div>
-          <div class="stat-value">${number(screeningCounts.exclude)}</div>
-        </div>
-      </div>
-	      <div class="detail-card" id="screening-results" style="margin-top:14px;">
-	        <h3>Screening Results</h3>
-        <div class="matrix-toolbar">
-          <p class="note">Showing ${number(shownScreeningCount)} of ${number(filteredScreeningStudies.length)} filtered records (${number(totalScreenedStudies)} total) from this run. Screening is based on title and abstract only. Criterion headers map to the inclusion and exclusion criteria listed above.</p>
+		      <details class="detail-card title-abstract-screening-panel" id="screening-results" style="margin-top:14px;" open>
+		        <summary class="collapsible-table-summary title-abstract-screening-summary">
+		          <div>
+		            <h3>Title and abstract screening</h3>
+		          </div>
+		        </summary>
+	        <div class="matrix-toolbar">
+          <p class="note">Hover over dots for the saved reason.</p>
           <div class="matrix-controls">
             <div class="matrix-filter-group" role="group" aria-label="Screening decisions">
               <span class="matrix-control-label">Decision</span>
               <label class="matrix-check matrix-check-include">
-                <input type="checkbox" value="include" ${currentScreeningDecisions.includes("include") ? "checked" : ""}>
-                <span>include</span>
+                <input type="checkbox" value="include" data-screening-decision ${currentScreeningDecisions.includes("include") ? "checked" : ""}>
+                <span>${number(screeningCounts.include)} include</span>
               </label>
               <label class="matrix-check matrix-check-exclude">
-                <input type="checkbox" value="exclude" ${currentScreeningDecisions.includes("exclude") ? "checked" : ""}>
-                <span>exclude</span>
+                <input type="checkbox" value="exclude" data-screening-decision ${currentScreeningDecisions.includes("exclude") ? "checked" : ""}>
+                <span>${number(screeningCounts.exclude)} exclude</span>
               </label>
 	              <label class="matrix-check matrix-check-unclear">
-	                <input type="checkbox" value="not enough info" ${currentScreeningDecisions.includes("not enough info") ? "checked" : ""}>
-	                <span>not enough info</span>
+	                <input type="checkbox" value="not enough info" data-screening-decision ${currentScreeningDecisions.includes("not enough info") ? "checked" : ""}>
+	                <span>${number(screeningCounts.notEnoughInfo)} not enough info</span>
 	              </label>
-	            </div>
+		            </div>
 	            ${showScreeningBenchmarkFilter ? `
 	              <button
 	                class="matrix-toggle-button ${currentScreeningBenchmarkOnly ? "is-active" : ""}"
@@ -8732,10 +8772,16 @@
             </label>
           </div>
 	      </div>
-				        ${screeningMatrix(review, screening, currentScreeningLimit, currentScreeningDecisions, cochraneSearchScreeningMetrics, currentScreeningBenchmarkOnly)}
-			        ${renderScreeningEvaluation(cochraneSearchScreeningMetrics)}
-			      </div>
-		    </section>
+					        ${screeningMatrix(review, screening, currentScreeningLimit, currentScreeningDecisions, cochraneSearchScreeningMetrics, currentScreeningBenchmarkOnly, sourceAvailabilityGate)}
+					        ${renderScreeningEvaluation(cochraneSearchScreeningMetrics)}
+					      </details>
+						        ${fulltextScreeningPanel(
+	                    perStudyOutputs,
+	                    sourceAvailabilityGate,
+	                    currentFulltextScreeningLimit,
+	                    currentFulltextScreeningDecisions
+                  )}
+			    </section>
 
 		    <section class="step-card" id="step-4">
 	      <div class="step-header">
@@ -8744,14 +8790,7 @@
 		          <h2>Planning</h2>
 		        </div>
 		      </div>
-		      ${nctLinkageSection(nctLinkageRows)}
-		      <details class="detail-card fulltext-screening-panel" id="fulltext-screening" style="margin-top:14px;">
-		        <summary class="collapsible-table-summary fulltext-screening-summary">
-		          <h3>Full text screening <span class="inline-section-count">(x ${number(fulltextScreenedCount)})</span></h3>
-		        </summary>
-		        ${fulltextEligibilitySection(perStudyOutputs) || `<p class="note">No full-text screening rows were found for this run.</p>`}
-		      </details>
-		      ${sourceAvailabilityGateSection(sourceAvailabilityGate)}
+			      ${nctLinkageSection(nctLinkageRows)}
 			      ${outcomesSection(outcomes, pico, outcomeSignalInventory, cochraneOutcomeAlignment, outcomeSourceContribution)}
 		      ${comparisonSection(comparison, pico, cochraneComparisonAlignment, studyArms)}
 		      ${publicationLinkageSection(publicationLinkage, publicationLinkageEvidence, screening.screened_studies || [])}
@@ -8769,7 +8808,7 @@
 	      <div class="detail-card" id="extraction-results" style="margin-top:14px;">
 	        <h3>Study extraction results</h3>
 	        <p class="note">This section summarizes outcome-specific extraction rows. With full text, extraction and RoB are produced together; without full text, extraction uses abstract plus exact linked NCT records when available, otherwise the abstract alone, and RoB is skipped.</p>
-	        ${extractionAttemptSection(outcomeExtractionTables, currentNonExtractableLimit, publicationLinkage, extractionOverview, extractionTemplates, cochraneOutcomeAlignment)}
+	        ${extractionAttemptSection(outcomeExtractionTables, currentNonExtractableLimit, extractionOverview, extractionTemplates, cochraneOutcomeAlignment)}
 	      </div>
 	      ${studyTypeRoutingSection(robDisplay)}
 	      <div class="detail-card" id="rob-assessments" style="margin-top:14px;">
@@ -8807,13 +8846,22 @@
 
     renderStepper(hasEvaluationArtifacts ? steps : steps.filter((step) => step.kind !== "evaluation"));
 
-	    const screeningLimitSelect = document.getElementById("screening-limit");
-	    if (screeningLimitSelect) {
-	      screeningLimitSelect.addEventListener("change", (event) => {
-	        currentScreeningLimit = event.target.value;
-	        render();
-	      });
-	    }
+		    const screeningLimitSelect = document.getElementById("screening-limit");
+		    if (screeningLimitSelect) {
+		      screeningLimitSelect.addEventListener("change", (event) => {
+		        currentScreeningLimit = event.target.value;
+		        render();
+		      });
+		    }
+
+        const fulltextScreeningLimitSelect = document.getElementById("fulltext-screening-limit");
+        if (fulltextScreeningLimitSelect) {
+          fulltextScreeningLimitSelect.addEventListener("change", (event) => {
+            currentFulltextScreeningLimit = event.target.value;
+            saveDemoUiState();
+            renderPreservingScrollPosition();
+          });
+        }
 
 	    app.querySelectorAll("[data-screening-benchmark-only]").forEach((button) => {
 	      button.addEventListener("click", () => {
@@ -9111,17 +9159,30 @@
       });
     }
 
-    app.querySelectorAll('.matrix-filter-group input[type="checkbox"]').forEach((input) => {
-      input.addEventListener("change", () => {
-        const selected = Array.from(
-          app.querySelectorAll('.matrix-filter-group input[type="checkbox"]:checked')
-        ).map((node) => node.value);
-        currentScreeningDecisions = selected.length
-          ? selected
-          : ["include", "exclude", "not enough info"];
-        render();
+	    app.querySelectorAll('input[data-screening-decision]').forEach((input) => {
+	      input.addEventListener("change", () => {
+	        const selected = Array.from(
+	          app.querySelectorAll('input[data-screening-decision]:checked')
+	        ).map((node) => node.value);
+	        currentScreeningDecisions = selected.length
+	          ? selected
+	          : ["include", "exclude", "not enough info"];
+	        render();
+	      });
+	    });
+
+      app.querySelectorAll('input[data-fulltext-screening-decision]').forEach((input) => {
+        input.addEventListener("change", () => {
+          const selected = Array.from(
+            app.querySelectorAll('input[data-fulltext-screening-decision]:checked')
+          ).map((node) => node.value);
+          currentFulltextScreeningDecisions = selected.length
+            ? selected
+            : ["include", "exclude", "no full text"];
+          saveDemoUiState();
+          renderPreservingScrollPosition();
+        });
       });
-    });
 
     const jumpTopButton = document.getElementById("jump-top");
     if (jumpTopButton) {
