@@ -2807,15 +2807,15 @@ details[open] > .collapsible-table-summary::before,
 
 .source-trace-drawer {
   position: fixed;
-  top: 96px;
-  right: 22px;
-  bottom: 22px;
+  top: 0;
+  right: 0;
+  bottom: 0;
   z-index: 80;
   display: grid;
   grid-template-rows: auto 1fr;
   width: min(var(--source-trace-pane-width), calc(100vw - 32px));
   border: 1px solid rgba(15, 118, 110, 0.22);
-  border-radius: 20px;
+  border-radius: 0;
   background: var(--panel);
   box-shadow: 0 22px 70px rgba(24, 33, 38, 0.22);
   overflow: hidden;
@@ -2951,6 +2951,83 @@ details[open] > .collapsible-table-summary::before,
 .source-trace-evidence-card blockquote {
   margin: 0;
   overflow-wrap: anywhere;
+}
+
+.source-trace-visuals {
+  margin-top: 14px;
+}
+
+.source-trace-visuals h4 {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: var(--text-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.source-trace-visual-list {
+  display: grid;
+  gap: 12px;
+}
+
+.source-trace-visual-card {
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel-strong);
+}
+
+.source-trace-visual-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.source-trace-visual-meta span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 3px 7px;
+  border: 1px solid rgba(81, 93, 98, 0.18);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.62);
+  color: var(--muted);
+  font-size: var(--text-xs);
+  font-weight: 800;
+  line-height: 1;
+}
+
+.source-trace-visual-link {
+  display: block;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.source-trace-visual-link img {
+  display: block;
+  width: 100%;
+  max-height: 520px;
+  object-fit: contain;
+}
+
+.source-trace-visual-caption {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: var(--text-xs);
+  line-height: var(--leading-body);
+}
+
+.source-trace-visual-mentions {
+  margin: 6px 0 0;
+  padding-top: 6px;
+  border-top: 1px solid rgba(81, 93, 98, 0.14);
+  color: rgba(81, 93, 98, 0.76);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.35;
 }
 
 .source-trace-source-heading {

@@ -4975,6 +4975,28 @@
     return String(value || "").trim();
   }
 
+  function sourceTraceVisualAssetIds(evidence) {
+    if (!evidence || typeof evidence !== "object" || Array.isArray(evidence)) {
+      return [];
+    }
+    const text = evidenceText(evidence.visual_asset_ids);
+    if (!text) {
+      return [];
+    }
+    const matches = text.match(/\b(?:pdf_)?visual_\d+\b/gi);
+    const rawIds = matches && matches.length ? matches : text.split(/[;,]/);
+    const seen = new Set();
+    return rawIds
+      .map((item) => cleanText(item).toLowerCase())
+      .filter((item) => {
+        if (!item || seen.has(item)) {
+          return false;
+        }
+        seen.add(item);
+        return true;
+      });
+  }
+
   function fieldEvidenceTooltip(field, evidenceByField) {
     const evidence = evidenceByField?.[field];
     if (!evidence) {
@@ -5178,6 +5200,65 @@
     };
   }
 
+  function sourceTraceVisualAssetsForEvidence(pmid, evidence) {
+    const entry = currentPerStudyOutputByPmid(pmid);
+    const assetsById = entry?.visual_assets_by_id || {};
+    const assets = [];
+    const seen = new Set();
+    sourceTraceVisualAssetIds(evidence).forEach((assetId) => {
+      const candidates = assetsById[assetId] || assetsById[assetId.toUpperCase()] || [];
+      const list = Array.isArray(candidates) ? candidates : [candidates];
+      const asset = list.find((item) => hasValue(item?.image_url)) || list[0];
+      if (!asset) {
+        return;
+      }
+      const key = cleanText(asset.image_url) || `${assetId}:${assets.length}`;
+      if (seen.has(key)) {
+        return;
+      }
+      seen.add(key);
+      assets.push({ ...asset, requested_asset_id: assetId });
+    });
+    return assets;
+  }
+
+  function sourceTraceVisualAssetsHtml(payload) {
+    const assets = Array.isArray(payload?.visualAssets) ? payload.visualAssets : [];
+    if (!assets.length) {
+      return "";
+    }
+    const cards = assets.map((asset) => {
+      const assetId = cleanText(asset.requested_asset_id || asset.asset_id);
+      const label = cleanText(asset.label);
+      const page = cleanText(asset.page);
+      const contextLabel = cleanText(asset.context_label);
+      const caption = cleanText(asset.caption);
+      const imageUrl = cleanText(asset.image_url);
+      const metaParts = [
+        assetId ? `<span>${escapeHtml(assetId)}</span>` : "",
+        page ? `<span>Page ${escapeHtml(page)}</span>` : "",
+        contextLabel ? `<span>${escapeHtml(contextLabel)}</span>` : "",
+      ].filter(Boolean).join("");
+      const altText = [assetId, label, page ? `page ${page}` : ""].filter(Boolean).join(", ") || "Visual evidence";
+      return `
+        <article class="source-trace-visual-card">
+          <div class="source-trace-visual-meta">${metaParts}</div>
+          <a class="source-trace-visual-link" href="${escapeHtml(imageUrl)}" target="_blank" rel="noopener">
+            <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(altText)}" loading="lazy">
+          </a>
+          ${caption ? `<p class="source-trace-visual-caption">${escapeHtml(caption)}</p>` : ""}
+          ${label ? `<p class="source-trace-visual-mentions">Also detected on this visual: ${escapeHtml(label)}</p>` : ""}
+        </article>
+      `;
+    }).join("");
+    return `
+      <section class="source-trace-visuals" aria-label="Visual extraction evidence">
+        <h4>Visual evidence</h4>
+        <div class="source-trace-visual-list">${cards}</div>
+      </section>
+    `;
+  }
+
   function currentExtractionRowForCell(cell) {
     const rowNode = cell?.closest("[data-extraction-row]");
     const pmid = rowNode?.getAttribute("data-extraction-pmid") || "";
@@ -5222,6 +5303,7 @@
       evidence,
       evidenceCandidates: sourceTraceEvidenceCandidates(evidence),
       allEvidenceCandidates: sourceTraceRowEvidenceCandidates(row, sourceKind),
+      visualAssets: sourceTraceVisualAssetsForEvidence(row.pmid || metadata.pmid, evidence),
       sourceKind,
       sourceLabel: source.label,
       sourceDetail: source.detail,
@@ -5390,6 +5472,7 @@
       : { matched: false, matchedCount: 0, totalCandidates: candidates.length, html: "" };
     return `
       ${sourceTraceEvidenceCardHtml(payload)}
+      ${sourceTraceVisualAssetsHtml(payload)}
       ${sourceTraceWarningHtml(payload, highlighted, showAllEvidence)}
       ${payload.sourceText ? `
         <div class="source-trace-source">
