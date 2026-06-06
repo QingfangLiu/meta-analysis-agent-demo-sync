@@ -660,6 +660,15 @@ main {
   font-weight: 700;
 }
 
+.run-timing-invocation {
+  display: inline-block;
+  margin-left: 6px;
+  color: var(--muted);
+  font-size: var(--text-xs);
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
 .run-timing-bar-track {
   height: 12px;
   border-radius: 999px;

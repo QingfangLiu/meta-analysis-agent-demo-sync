@@ -1937,6 +1937,13 @@
   function runTimingSection(timing, runSummary) {
     const payload = timing && typeof timing === "object" ? timing : {};
     const stages = Array.isArray(payload.stages) ? payload.stages : [];
+    const invocations = Array.isArray(payload.invocations) ? payload.invocations : [];
+    const invocationCount = Math.max(
+      Number(payload.invocation_count) || 0,
+      invocations.length,
+      new Set(stages.map((stage) => stage.invocation_index).filter(Boolean)).size,
+      stages.length ? 1 : 0
+    );
     const stageTotal = stages.reduce((sum, stage) => sum + Math.max(0, Number(stage.elapsed_seconds) || 0), 0);
     const totalSeconds = Number(payload.total_elapsed_seconds ?? runSummary?.total_elapsed_seconds ?? stageTotal);
     const totalForScale = Number.isFinite(totalSeconds) && totalSeconds > 0 ? totalSeconds : stageTotal;
@@ -1962,7 +1969,7 @@
           <h3>Run Timing</h3>
           <div class="run-timing-total">${formatDuration(totalSeconds, payload.total_elapsed_time)}</div>
         </summary>
-        <p class="note">Elapsed runtime saved by the pipeline for this selected run. Resume runs may show only the resumed stages.</p>
+        <p class="note">Elapsed runtime saved by the pipeline for this selected run. Resumed runs are cumulative in timing.json, with each invocation preserved in timing_history.json.</p>
         <div class="run-timing-stats">
           <div class="synthesis-mini-stat run-timing-stat">
             <div class="stat-label">Total Runtime</div>
@@ -1973,8 +1980,8 @@
             <div class="stat-value run-timing-status">${escapeHtml(payload.status || "unknown")}</div>
           </div>
           <div class="synthesis-mini-stat run-timing-stat">
-            <div class="stat-label">Stages Recorded</div>
-            <div class="stat-value">${number(stages.length)}</div>
+            <div class="stat-label">Invocations</div>
+            <div class="stat-value">${number(invocationCount)}</div>
           </div>
           <div class="synthesis-mini-stat run-timing-stat">
             <div class="stat-label">Longest Stage</div>
@@ -1986,10 +1993,14 @@
             ${stages.map((stage) => {
               const elapsed = Math.max(0, Number(stage.elapsed_seconds) || 0);
               const pct = totalForScale > 0 ? Math.max(2, Math.min(100, (elapsed / totalForScale) * 100)) : 0;
+              const stageInvocation = Number(stage.invocation_index);
+              const invocationLabel = invocationCount > 1 && Number.isFinite(stageInvocation) && stageInvocation > 0
+                ? `<span class="run-timing-invocation">run ${stageInvocation}</span>`
+                : "";
               return `
                 <div class="run-timing-row">
                   <div class="run-timing-stage">
-                    <span>${escapeHtml(timingStageLabel(stage.stage))}</span>
+                    <span>${escapeHtml(timingStageLabel(stage.stage))}${invocationLabel}</span>
                     <span class="mono">${formatDuration(elapsed, stage.elapsed_time)}</span>
                   </div>
                   <div class="run-timing-bar-track">
