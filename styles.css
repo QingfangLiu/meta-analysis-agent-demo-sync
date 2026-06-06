@@ -673,6 +673,19 @@ main {
   background: linear-gradient(90deg, var(--accent), #1d4ed8);
 }
 
+.llm-usage-total {
+  white-space: nowrap;
+}
+
+.llm-usage-table th:not(:first-child),
+.llm-usage-table td.num {
+  text-align: right;
+}
+
+.llm-usage-table td:first-child {
+  font-weight: 700;
+}
+
 .pill-row {
   display: flex;
   flex-wrap: wrap;

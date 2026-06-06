@@ -2004,6 +2004,95 @@
     `;
   }
 
+  function tokenNumber(value) {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) {
+      return number(value);
+    }
+    return fmt.format(Math.round(numeric));
+  }
+
+  function llmTokenUsageSection(usageSummary, stageRows, runSummary) {
+    const payload = usageSummary && typeof usageSummary === "object" ? usageSummary : {};
+    const total = payload.total && typeof payload.total === "object"
+      ? payload.total
+      : (runSummary?.llm_usage_total || {});
+    const summaryStages = Array.isArray(payload.stages) ? payload.stages : [];
+    const rows = (Array.isArray(stageRows) && stageRows.length ? stageRows : summaryStages)
+      .filter((row) => row && typeof row === "object")
+      .slice()
+      .sort((a, b) => (Number(b.total_tokens) || 0) - (Number(a.total_tokens) || 0));
+    const totalTokens = Number(total.total_tokens);
+    const hasUsage = (Number.isFinite(totalTokens) && totalTokens > 0) || rows.length > 0;
+
+    if (!hasUsage) {
+      return `
+        <details class="detail-card run-timing-panel llm-usage-panel" id="llm-token-usage">
+          <summary class="collapsible-table-summary run-timing-summary">
+            <h3>LLM Token Usage</h3>
+          </summary>
+          <p class="note">No LLM usage artifact was saved for this run.</p>
+        </details>
+      `;
+    }
+
+    return `
+      <details class="detail-card run-timing-panel llm-usage-panel" id="llm-token-usage">
+        <summary class="collapsible-table-summary run-timing-summary">
+          <h3>LLM Token Usage</h3>
+          <div class="run-timing-total llm-usage-total">${tokenNumber(total.total_tokens)} tokens</div>
+        </summary>
+        <p class="note">Provider-reported token usage by structured LLM call stage. JSON repair retries are counted as API calls and grouped with their logical call.</p>
+        <div class="run-timing-stats llm-usage-stats">
+          <div class="synthesis-mini-stat run-timing-stat">
+            <div class="stat-label">Total Tokens</div>
+            <div class="stat-value">${tokenNumber(total.total_tokens)}</div>
+          </div>
+          <div class="synthesis-mini-stat run-timing-stat">
+            <div class="stat-label">API Calls</div>
+            <div class="stat-value">${tokenNumber(total.api_calls)}</div>
+          </div>
+          <div class="synthesis-mini-stat run-timing-stat">
+            <div class="stat-label">Logical Calls</div>
+            <div class="stat-value">${tokenNumber(total.logical_calls)}</div>
+          </div>
+          <div class="synthesis-mini-stat run-timing-stat">
+            <div class="stat-label">Repair Calls</div>
+            <div class="stat-value">${tokenNumber(total.json_repair_calls)}</div>
+          </div>
+        </div>
+        ${rows.length ? `
+          <div class="table-wrap screening-wrap">
+            <table class="screening-table llm-usage-table">
+              <thead>
+                <tr>
+                  <th>Stage</th>
+                  <th>API calls</th>
+                  <th>Logical calls</th>
+                  <th>Prompt tokens</th>
+                  <th>Completion tokens</th>
+                  <th>Total tokens</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rows.map((row) => `
+                  <tr>
+                    <td>${escapeHtml(timingStageLabel(row.stage || "unknown"))}</td>
+                    <td class="num">${tokenNumber(row.api_calls)}</td>
+                    <td class="num">${tokenNumber(row.logical_calls)}</td>
+                    <td class="num">${tokenNumber(row.prompt_tokens)}</td>
+                    <td class="num">${tokenNumber(row.completion_tokens)}</td>
+                    <td class="num"><strong>${tokenNumber(row.total_tokens)}</strong></td>
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+          </div>
+        ` : `<p class="note">No per-stage token breakdown was saved for this run.</p>`}
+      </details>
+    `;
+  }
+
   function varianceFallbackNote(row) {
     const source = String(row?.synthesis_effect_size_source || row?.effect_size_source || "").trim();
     const note = String(row?.synthesis_effect_size_source_note || row?.effect_size_source_note || "").trim();
@@ -2342,6 +2431,7 @@
         label: "Run",
         items: [
           ["Run timing", "#run-timing"],
+          ["LLM token usage", "#llm-token-usage"],
         ],
       },
     ].filter(Boolean);
@@ -9180,6 +9270,8 @@
     const extractionOverview = current.extraction_overview || {};
     const nctLinkageRows = current.nct_linkage_rows || [];
     const timing = current.timing || {};
+    const llmUsageSummary = current.llm_usage_summary || {};
+    const llmUsageByStageRows = current.llm_usage_by_stage_rows || [];
     const finalReportMarkdown = current.final_report_markdown || "";
     const completedRobReviewCount = (Array.isArray(robDisplay.assessment_groups) ? robDisplay.assessment_groups : [])
       .reduce((total, group) => total + Number(group.n_completed_assessments || 0), 0);
@@ -9371,6 +9463,7 @@
 
 			    ${renderEvaluationSummary(cochraneSearchScreeningMetrics, cochraneOutcomeAlignment, cochraneComparisonAlignment, cochraneSynthesisCiOverlap, synthesisPlotSummary)}
 			    ${runTimingSection(timing, run)}
+			    ${llmTokenUsageSection(llmUsageSummary, llmUsageByStageRows, run)}
 			    ${sourceTraceDrawer()}
 
 			    <div class="page-jump-controls" aria-label="Page navigation">
