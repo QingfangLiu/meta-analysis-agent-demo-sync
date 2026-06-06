@@ -2321,6 +2321,7 @@
         items: [
           ["Extraction results", "#extraction-results"],
           ["RoB tool selection", "#rob-routing"],
+          ["RoB tool details", "#rob-tool-details"],
           ["RoB assessments", "#rob-assessments"],
         ],
       },
@@ -2841,10 +2842,88 @@
     const rows = Array.isArray((robDisplay || {}).study_type_rows) ? robDisplay.study_type_rows : [];
     const routingLogic = Array.isArray((robDisplay || {}).routing_logic) ? robDisplay.routing_logic : [];
 
+    function readableRoutingValue(value, fallback = "—") {
+      const text = String(value || "").trim();
+      if (!text) {
+        return fallback;
+      }
+      const spaced = text.replace(/_/g, " ").replace(/\s+/g, " ").trim();
+      return spaced ? spaced.charAt(0).toUpperCase() + spaced.slice(1) : fallback;
+    }
+
+    function routingChip(value, tone = "muted", fallback = "—") {
+      const text = String(value || "").trim();
+      const label = text ? readableRoutingValue(text) : fallback;
+      return `<span class="rob-routing-chip rob-routing-chip-${escapeHtml(tone)}">${escapeHtml(label)}</span>`;
+    }
+
+    function routingTone(value) {
+      const text = String(value || "").trim().toLowerCase();
+      if (!text) {
+        return "muted";
+      }
+      if (text === "ready" || text.startsWith("implemented")) {
+        return "ready";
+      }
+      if (
+        text === "planned"
+        || text.includes("not_implemented")
+        || text.includes("not_routable")
+        || text.includes("no_applicable")
+        || text.includes("missing")
+        || text.includes("uncertain")
+      ) {
+        return "warning";
+      }
+      if (text.includes("exclude") || text.includes("unavailable") || text.includes("skipped")) {
+        return "muted";
+      }
+      return "neutral";
+    }
+
+    function designCell(row) {
+      const design = String(row.study_design_type || "").trim();
+      const subtype = String(row.study_design_subtype || "").trim();
+      const confidence = String(row.study_design_confidence || "").trim();
+      return `
+        <div class="rob-routing-cell-stack">
+          <div class="rob-routing-primary">${escapeHtml(readableRoutingValue(design, "Unclassified"))}</div>
+          <div class="rob-routing-chip-row">
+            ${subtype ? routingChip(subtype, "neutral") : ""}
+            ${confidence ? routingChip(confidence, confidence === "high" ? "ready" : "neutral") : ""}
+          </div>
+        </div>
+      `;
+    }
+
+    function toolSelectionCell(row) {
+      const recommendedId = String(row.recommended_rob_tool_id || "").trim();
+      const recommendedName = String(row.recommended_rob_tool_name || "").trim();
+      const implementationStatus = String(row.recommended_tool_implementation_status || "").trim();
+      const routingStatus = String(row.rob_routing_status || "").trim();
+      if (!recommendedId) {
+        return `
+          <div class="rob-routing-cell-stack">
+            <div class="rob-routing-primary muted">No tool routed</div>
+            <div class="rob-routing-chip-row">${routingChip(routingStatus || "not_routable", routingTone(routingStatus))}</div>
+          </div>
+        `;
+      }
+      return `
+        <div class="rob-routing-cell-stack">
+          <div class="rob-routing-primary mono" title="${escapeHtml(recommendedName || recommendedId)}">${escapeHtml(recommendedId)}</div>
+          <div class="rob-routing-chip-row">
+            ${implementationStatus ? routingChip(implementationStatus, routingTone(implementationStatus)) : ""}
+            ${routingStatus ? routingChip(routingStatus, routingTone(routingStatus)) : ""}
+          </div>
+        </div>
+      `;
+    }
+
     function routingEvidenceSummary(row) {
       const evidence = Array.isArray(row.routing_evidence) ? row.routing_evidence : [];
       if (!evidence.length) {
-        return "—";
+        return "";
       }
       return evidence
         .slice(0, 2)
@@ -2854,8 +2933,17 @@
           return [signal, quote].filter(Boolean).join(": ");
         })
         .filter(Boolean)
-        .map(sentence)
-        .join("<br>") || "—";
+        .map((item) => `<div class="rob-routing-evidence-item">${sentence(item)}</div>`)
+        .join("") || "";
+    }
+
+    function reasonEvidenceCell(row) {
+      const reason = String(row.rob_routing_reason || "").trim();
+      const evidence = routingEvidenceSummary(row);
+      return `
+        <div class="rob-routing-reason-main">${reason ? sentence(reason) : "—"}</div>
+        ${evidence ? `<div class="rob-routing-evidence-list">${evidence}</div>` : ""}
+      `;
     }
 
     if (!rows.length) {
@@ -2872,47 +2960,34 @@
     return `
       <details class="detail-card collapsible-table-panel rob-routing-panel" id="rob-routing">
         <summary class="collapsible-table-summary">
-          <h3>RoB tool selection</h3>
+          <div class="collapsible-summary-text">
+            <h3>RoB tool selection</h3>
+            <span>Study design routing and recommended risk-of-bias tool for each full-text study.</span>
+          </div>
           <span class="collapsible-table-count mono">${number(rows.length)} studies</span>
         </summary>
-        <p class="note">This table is rendered from the saved RoB routing summary. It shows the design classification, recommended tool, local implementation status, and whether a tool was actually administered.</p>
+        <p class="note">Rendered from <span class="mono">summary/rob_summary.json</span>; routing rows originate from saved per-study RoB routing artifacts.</p>
         <div class="table-wrap screening-wrap">
-          <table class="screening-table rob-routing-table">
+          <table class="screening-table rob-routing-table study-sticky-table">
             <thead>
               <tr>
-                <th>#</th>
-                <th>PMID</th>
-                <th>Pub. Info</th>
-                <th>Study Type</th>
-                <th>Subtype</th>
-                <th>Confidence</th>
-                <th>Recommended Tool</th>
-                <th>Local Status</th>
-                <th>Administered Tool</th>
-                <th>Routing Status</th>
-                <th>Reason / Evidence</th>
+                <th class="screen-col-index">#</th>
+                <th class="screen-col-study">Study</th>
+                <th class="rob-routing-design-col">Design</th>
+                <th class="rob-routing-tool-col">Tool Selection</th>
+                <th class="rob-routing-reason-col">Reason / Evidence</th>
               </tr>
             </thead>
             <tbody>
-              ${rows.map((row, index) => {
-                const reason = String(row.rob_routing_reason || "").trim();
-                const evidence = routingEvidenceSummary(row);
-                return `
-                  <tr>
-                    <td class="screen-col-index mono">${index + 1}</td>
-                    <td class="screen-col-pmid mono">${renderPmidLink({ pmid: row.pmid })}</td>
-                    <td class="screen-col-title">${extractionPubInfoCell(row)}</td>
-                    <td>${sentence(row.study_design_type || "—")}</td>
-                    <td>${sentence(row.study_design_subtype || "—")}</td>
-                    <td>${sentence(row.study_design_confidence || "—")}</td>
-                    <td class="mono">${escapeHtml(row.recommended_rob_tool_id || "—")}</td>
-                    <td>${sentence(row.recommended_tool_implementation_status || "—")}</td>
-                    <td class="mono">${escapeHtml(row.administered_rob_tool_id || "—")}</td>
-                    <td>${sentence(row.rob_routing_status || "—")}</td>
-                    <td class="rob-routing-reason">${reason ? sentence(reason) : "—"}${evidence !== "—" ? `<div class="small">${evidence}</div>` : ""}</td>
-                  </tr>
-                `;
-              }).join("")}
+              ${rows.map((row, index) => `
+                <tr>
+                  <td class="screen-col-index mono">${index + 1}</td>
+                  <td class="screen-col-study">${compactStudyCell(row)}</td>
+                  <td class="rob-routing-design-col">${designCell(row)}</td>
+                  <td class="rob-routing-tool-col">${toolSelectionCell(row)}</td>
+                  <td class="rob-routing-reason rob-routing-reason-col">${reasonEvidenceCell(row)}</td>
+                </tr>
+              `).join("")}
             </tbody>
           </table>
         </div>
@@ -2931,6 +3006,126 @@
             </ol>
           </details>
         ` : ""}
+      </details>
+    `;
+  }
+
+  function robToolDetailsSection(robDisplay) {
+    const sources = Array.isArray((robDisplay || {}).tool_sources) ? robDisplay.tool_sources : [];
+    const tools = sources.filter((source) => {
+      const status = String((source || {}).implementation_status || "").trim();
+      return Boolean(source && source.has_local_template && (!status || status.startsWith("implemented")));
+    });
+
+    function templateFor(source) {
+      return source && typeof source.template === "object" && source.template ? source.template : {};
+    }
+
+    function templateDomains(source) {
+      const template = templateFor(source);
+      const domains = Array.isArray(template.domains) ? template.domains : [];
+      if (domains.length) {
+        return domains;
+      }
+      return (Array.isArray(source.native_labels) ? source.native_labels : [])
+        .map((name) => ({
+          name,
+          description: "",
+          signalling_question_summary: [],
+        }));
+    }
+
+    function valueChips(label, values) {
+      const items = (Array.isArray(values) ? values : [])
+        .map((value) => String(value || "").trim())
+        .filter(Boolean);
+      if (!items.length) {
+        return "";
+      }
+      return `
+        <div class="rob-tool-value-chip-line">
+          <span>${escapeHtml(label)}</span>
+          <div class="rob-tool-value-chip-row">
+            ${items.map((value) => `<span class="rob-routing-chip rob-routing-chip-neutral">${escapeHtml(value)}</span>`).join("")}
+          </div>
+        </div>
+      `;
+    }
+
+    function sourceDocumentLine(source, template) {
+      const templateSource = String(template.source_document || "").trim();
+      const sourceDocs = Array.isArray(source.local_source_documents) ? source.local_source_documents : [];
+      const doc = templateSource || String(sourceDocs[0] || "").trim();
+      if (!doc) {
+        return "";
+      }
+      return `<div class="rob-tool-meta-line"><span>Source</span><span class="mono">${escapeHtml(doc)}</span></div>`;
+    }
+
+    function domainDetails(domain, index) {
+      const name = String((domain || {}).name || "").trim();
+      const description = String((domain || {}).description || "").trim();
+      const signals = Array.isArray((domain || {}).signalling_question_summary)
+        ? domain.signalling_question_summary
+            .map((item) => String(item || "").trim())
+            .filter(Boolean)
+        : [];
+      return `
+        <li class="rob-tool-domain-item">
+          <div class="rob-tool-domain-title">
+            <span class="mono">D${index + 1}</span>
+            <span>${sentence(name || `Domain ${index + 1}`)}</span>
+          </div>
+          ${description ? `<p>${sentence(description)}</p>` : ""}
+          ${signals.length ? `
+            <ul class="rob-tool-signal-list">
+              ${signals.map((item) => `<li>${sentence(item)}</li>`).join("")}
+            </ul>
+          ` : ""}
+        </li>
+      `;
+    }
+
+    if (!tools.length) {
+      return "";
+    }
+
+    return `
+      <details class="detail-card collapsible-table-panel rob-tool-details-panel" id="rob-tool-details">
+        <summary class="collapsible-table-summary">
+          <h3>RoB tool details</h3>
+          <span class="collapsible-table-count mono">${number(tools.length)} implemented</span>
+        </summary>
+        <p class="note">Rendered from local RoB tool source metadata and implemented <span class="mono">template.json</span> files packaged into the demo bundle.</p>
+        <div class="rob-tool-detail-list">
+          ${tools.map((source) => {
+            const template = templateFor(source);
+            const domains = templateDomains(source);
+            const title = template.framework_label || source.tool_name || source.tool_id || "RoB tool";
+            const subtitle = [source.tool_id, source.study_or_result_type].filter(Boolean).join(" · ");
+            return `
+              <details class="rob-tool-detail" ${domains.length <= 7 ? "open" : ""}>
+                <summary class="rob-tool-detail-summary">
+                  <div>
+                    <h4>${sentence(title)}</h4>
+                    ${subtitle ? `<div class="rob-tool-detail-subtitle">${sentence(subtitle)}</div>` : ""}
+                  </div>
+                  <span class="collapsible-table-count mono">${number(domains.length)} domains</span>
+                </summary>
+                <div class="rob-tool-detail-body">
+                  ${template.applicability ? `<p class="rob-tool-template-text">${sentence(template.applicability)}</p>` : ""}
+                  ${template.local_implementation_note ? `<p class="rob-tool-template-note">${sentence(template.local_implementation_note)}</p>` : ""}
+                  ${sourceDocumentLine(source, template)}
+                  ${valueChips("Domain values", template.domain_judgment_allowed_values || source.native_judgment_labels)}
+                  ${valueChips("Overall values", template.overall_judgment_allowed_values)}
+                  <ol class="rob-tool-domain-list">
+                    ${domains.map((domain, index) => domainDetails(domain, index)).join("")}
+                  </ol>
+                </div>
+              </details>
+            `;
+          }).join("")}
+        </div>
       </details>
     `;
   }
@@ -2979,12 +3174,12 @@
       const journal = String(study.journal || "").trim();
       const outcome = String(row.outcome_name || row.result_key || row.outcome_role || "").trim();
       const tooltip = [authorYear, journal, title, outcome].filter(Boolean).join("\n\n");
+      const pmid = String(row.pmid || (row.metadata || {}).pmid || "").trim();
       return `
-        <div class="rob-matrix-study" title="${escapeHtml(tooltip)}">
-          <div class="rob-matrix-study-main">${authorYear ? sentence(authorYear) : "No author/year."}</div>
-          <div class="rob-matrix-study-meta mono">${renderPmidLink(row)}</div>
+        <div class="screen-study-cell compact-study-cell rob-matrix-study" title="${escapeHtml(tooltip)}">
+          <div class="screen-study-primary">${authorYear ? sentence(authorYear) : "No author/year."}</div>
+          ${pmid ? `<div class="compact-study-pmid">PMID ${renderPmidLink({ ...row, pmid })}</div>` : ""}
           ${showOutcome ? `<div class="rob-matrix-study-outcome">${sentence(outcome || "Outcome not specified")}</div>` : ""}
-          <div class="rob-matrix-study-title">${sentence(shortTitle(title, 56))}</div>
         </div>
       `;
     }
@@ -9156,11 +9351,12 @@
 	        ${extractionAttemptSection(outcomeExtractionTables, currentNonExtractableLimit, extractionOverview, extractionTemplates, cochraneOutcomeAlignment)}
 	      </div>
 	      ${studyTypeRoutingSection(robDisplay)}
+	      ${robToolDetailsSection(robDisplay)}
 	      <div class="detail-card" id="rob-assessments" style="margin-top:14px;">
-        <h3>RoB Assessments <span class="inline-section-count">(x ${number(completedRobReviewCount)})</span></h3>
-        <p class="note">${number(completedRobReviewCount)} completed study-level RoB assessments are grouped below by the RoB tool that was actually administered. Incomplete or unavailable RoB outputs are omitted from these domain tables but remain visible in the routing table above.</p>
-        ${riskOfBiasTable(robDisplay)}
-      </div>
+	        <h3>RoB Assessments <span class="inline-section-count">(x ${number(completedRobReviewCount)})</span></h3>
+	        <p class="note">${number(completedRobReviewCount)} completed study-level RoB assessments are grouped below by the RoB tool that was actually administered. Incomplete or unavailable RoB outputs are omitted from these domain tables but remain visible in the routing table above.</p>
+	        ${riskOfBiasTable(robDisplay)}
+	      </div>
     </section>
 
 	    <section class="step-card" id="step-6">
