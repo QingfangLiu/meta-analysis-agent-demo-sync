@@ -2884,13 +2884,11 @@
     function designCell(row) {
       const design = String(row.study_design_type || "").trim();
       const subtype = String(row.study_design_subtype || "").trim();
-      const confidence = String(row.study_design_confidence || "").trim();
       return `
         <div class="rob-routing-cell-stack">
           <div class="rob-routing-primary">${escapeHtml(readableRoutingValue(design, "Unclassified"))}</div>
           <div class="rob-routing-chip-row">
             ${subtype ? routingChip(subtype, "neutral") : ""}
-            ${confidence ? routingChip(confidence, confidence === "high" ? "ready" : "neutral") : ""}
           </div>
         </div>
       `;
@@ -2927,11 +2925,7 @@
       }
       return evidence
         .slice(0, 2)
-        .map((item) => {
-          const signal = String(item.signal || "").trim();
-          const quote = String(item.quote || "").trim();
-          return [signal, quote].filter(Boolean).join(": ");
-        })
+        .map((item) => (typeof item === "string" ? item.trim() : ""))
         .filter(Boolean)
         .map((item) => `<div class="rob-routing-evidence-item">${sentence(item)}</div>`)
         .join("") || "";
@@ -2993,8 +2987,8 @@
         </div>
         ${routingLogic.length ? `
           <details class="subgroup-detail-panel rob-routing-logic-panel">
-            <summary class="subgroup-plan-head">
-              <h4>Routing Logic</h4>
+            <summary class="rob-routing-logic-trigger">
+              <span>Want to know how the RoB tool is selected?</span>
             </summary>
             <ol class="rob-routing-logic-list">
               ${routingLogic.map((item) => `
