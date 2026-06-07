@@ -686,6 +686,10 @@ main {
   white-space: nowrap;
 }
 
+.llm-usage-stats {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
 .llm-usage-table th:not(:first-child),
 .llm-usage-table td.num {
   text-align: right;
@@ -5781,6 +5785,16 @@ summary.outcome-panel-head {
   color: var(--muted);
   font-size: var(--text-xs);
   line-height: 1.35;
+}
+
+.cochrane-branch-note {
+  padding: 8px 10px;
+  border: 1px solid rgba(3, 105, 161, 0.18);
+  border-radius: var(--radius-xs);
+  background: rgba(14, 116, 144, 0.07);
+  color: var(--muted-strong);
+  font-size: var(--text-xs);
+  line-height: 1.4;
 }
 
 .cochrane-plot-version-tabs {

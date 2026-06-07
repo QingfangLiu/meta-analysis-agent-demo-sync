@@ -2069,11 +2069,15 @@
           <h3>LLM Token Usage</h3>
           <div class="run-timing-total llm-usage-total">${tokenNumber(total.total_tokens)} tokens</div>
         </summary>
-        <p class="note">Provider-reported token usage by structured LLM call stage. JSON repair retries are counted as API calls and grouped with their logical call.</p>
+        <p class="note">Provider-reported token usage by structured LLM call stage. Reasoning tokens are a provider-reported subset of completion tokens, not additional tokens. JSON repair retries are counted as API calls and grouped with their logical call.</p>
         <div class="run-timing-stats llm-usage-stats">
           <div class="synthesis-mini-stat run-timing-stat">
             <div class="stat-label">Total Tokens</div>
             <div class="stat-value">${tokenNumber(total.total_tokens)}</div>
+          </div>
+          <div class="synthesis-mini-stat run-timing-stat">
+            <div class="stat-label">Reasoning Tokens</div>
+            <div class="stat-value">${tokenNumber(total.reasoning_tokens || 0)}</div>
           </div>
           <div class="synthesis-mini-stat run-timing-stat">
             <div class="stat-label">API Calls</div>
@@ -2097,7 +2101,9 @@
                   <th>API calls</th>
                   <th>Logical calls</th>
                   <th>Prompt tokens</th>
+                  <th>Cached prompt</th>
                   <th>Completion tokens</th>
+                  <th>Reasoning tokens</th>
                   <th>Total tokens</th>
                 </tr>
               </thead>
@@ -2108,7 +2114,9 @@
                     <td class="num">${tokenNumber(row.api_calls)}</td>
                     <td class="num">${tokenNumber(row.logical_calls)}</td>
                     <td class="num">${tokenNumber(row.prompt_tokens)}</td>
+                    <td class="num">${tokenNumber(row.cached_prompt_tokens || 0)}</td>
                     <td class="num">${tokenNumber(row.completion_tokens)}</td>
+                    <td class="num">${tokenNumber(row.reasoning_tokens || 0)}</td>
                     <td class="num"><strong>${tokenNumber(row.total_tokens)}</strong></td>
                   </tr>
                 `).join("")}
@@ -6534,6 +6542,7 @@
       ))
       : rows;
     const filteredExtractableCount = filteredRows.filter(({ result }) => truthyArtifactValue(result?.data_extractable)).length;
+    const scrollKey = "study-extraction-results-by-study";
 
     function filterModeButton(mode, label) {
       const isActive = filterMode === mode;
@@ -6694,7 +6703,10 @@
           <span class="collapsible-table-count">${number(studyCount)} studies | ${number(extractableCount)}/${number(rows.length)} extracted</span>
         </summary>
         ${filterToolbar()}
-        <div class="table-wrap screening-wrap study-extraction-table-wrap">
+        <div class="table-scroll-proxy screening-wrap" data-scroll-proxy="${escapeHtml(scrollKey)}" aria-label="Horizontal scroll for extracted results by study table">
+          <div class="table-scroll-proxy-inner"></div>
+        </div>
+        <div class="table-wrap screening-wrap study-extraction-table-wrap" data-scroll-body="${escapeHtml(scrollKey)}">
           <table class="screening-table study-extraction-table study-sticky-table">
             <thead>
               <tr>
@@ -8793,7 +8805,7 @@
     `;
   }
 
-  function renderSynthesisStudyDesignBranches(analysis, entry, comparisonPayload, subgroupPlan) {
+  function renderSynthesisStudyDesignBranches(analysis, entry, comparisonPayload, subgroupPlan, evaluationContext = {}) {
     if (!isMixedStudyDesignSynthesis(analysis)) {
       return "";
     }
@@ -8801,6 +8813,13 @@
     const handling = synthesisStudyDesignHandling(analysis);
     const families = Array.isArray(handling.families) ? handling.families : [];
     const primaryResult = analysis?.primaryResult || {};
+    const ciOverlapArtifact = evaluationContext.cochraneSynthesisCiOverlap || {};
+    const ciOverlapRowsByPlotKey = synthesisCiOverlapByPlotKey(ciOverlapArtifact);
+    const cochraneStudySelectionContext = {
+      screeningResults: evaluationContext.screeningResults || {},
+      outcomeExtractionTables: evaluationContext.outcomeExtractionTables || [],
+      extractionSourceSummary: evaluationContext.extractionSourceSummary || {},
+    };
     const message = String(primaryResult.skip_message || "").trim()
       || "Combined synthesis was skipped because analysis-eligible rows contain multiple study-design families.";
     const familySummary = families.map((family) => {
@@ -8827,12 +8846,31 @@
         ${branches.length ? `
           <div class="synthesis-design-branch-list">
             ${branches.map((branch) => {
+              const evaluationRow = ciOverlapRowsByPlotKey[branch.plotKey] || {};
+              const hasEvaluationRow = Boolean(evaluationRow.agent_plot_key || evaluationRow.status || evaluationRow.best_match);
+              const showCochraneReferenceStatuses = hasEvaluationRow && currentEvaluationVisible && currentCochraneReferenceStatusPlots.has(branch.plotKey);
+              const showCochraneReproducedPlot = hasEvaluationRow && currentEvaluationVisible && currentCochraneForestPlotViews.has(branch.plotKey);
+              const cochraneReferenceStatuses = showCochraneReferenceStatuses
+                ? cochraneReferenceStatusesForPlot(ciOverlapArtifact, branch.plotKey)
+                : {};
+              const selectedCochraneStudy = hasEvaluationRow && currentEvaluationVisible
+                ? currentCochraneStudySelections.get(branch.plotKey) || null
+                : null;
+              const comparisonAxisOverride = showCochraneReproducedPlot
+                ? synthesisComparisonAxisOverride(ciOverlapArtifact, branch.plotKey, branch.plotData)
+                : null;
               const interactivePlot = renderInteractiveForestPlot(
                 branch.plotData,
                 branch.plotKey,
                 branch.label || entry.outcome_name || entry.label || entry.key,
                 comparisonPayload,
-                { showTitle: true }
+                {
+                  showTitle: true,
+                  referenceStatuses: cochraneReferenceStatuses,
+                  showReferenceStatuses: showCochraneReferenceStatuses,
+                  selectedStudy: selectedCochraneStudy,
+                  axisOverride: comparisonAxisOverride,
+                }
               );
               const estimateLabel = synthesisEstimateLabel(branch);
               return `
@@ -8846,6 +8884,13 @@
                       </div>
                     </div>
                   </div>
+                  ${interactivePlot && hasEvaluationRow ? renderSynthesisCochraneForestPlotEvaluation(
+                    ciOverlapArtifact,
+                    branch.plotKey,
+                    comparisonPayload,
+                    comparisonAxisOverride,
+                    cochraneStudySelectionContext
+                  ) : ""}
                   <div class="synthesis-plot-card synthesis-forest-result labeled-forest-result agent-synthesis-forest-result" data-forest-source-label="Agent made">
                     ${interactivePlot || `<p class="note">No forest plot was generated for this study-design branch.</p>`}
                     ${renderPublicationOverlapWarnings(
@@ -8853,8 +8898,18 @@
                       || branch.primaryResult?.publication_overlap_warnings
                       || []
                     )}
-                    ${renderSynthesisDiagnostics(branch.primaryResult || {}, null, subgroupPlan, { showSubgroupDifferences: false })}
+                    ${renderSynthesisDiagnostics(branch.primaryResult || {}, null, subgroupPlan, {
+                      showSubgroupDifferences: false,
+                      collapsed: showCochraneReproducedPlot,
+                    })}
                   </div>
+                  ${interactivePlot && hasEvaluationRow ? renderSynthesisCiOverlapEvaluation(
+                    ciOverlapArtifact,
+                    branch.plotKey,
+                    evaluationContext.cochraneOutcomeAlignment || {},
+                    entry.key,
+                    comparisonPayload
+                  ) : ""}
                 </div>
               `;
             }).join("")}
@@ -9087,6 +9142,18 @@
     return selectedVersion?.plot_data || null;
   }
 
+  function cochraneRandomizedBranchNote(row) {
+    const reason = String(row?.agent_plot_selection_reason || "").trim();
+    if (reason !== "all_eligible_missing_used_randomized_trial_branch") {
+      return "";
+    }
+    return `
+      <div class="cochrane-branch-note">
+        This reproduced Cochrane plot is linked to the agent randomized-trial branch because mixed study designs were separated and no combined all-eligible agent plot was created for this outcome.
+      </div>
+    `;
+  }
+
   function synthesisComparisonAxisOverride(ciOverlapArtifact, plotKey, agentPlot) {
     if (!currentCochraneForestPlotViews.has(plotKey)) {
       return null;
@@ -9095,7 +9162,7 @@
     return sharedForestComparisonAxis(agentPlot, cochranePlot);
   }
 
-  function renderCochraneReproducedForestPlot(match, plotKey, comparisonPayload = {}, agentStudies = [], axisOverride = null, selectionContext = {}) {
+  function renderCochraneReproducedForestPlot(match, plotKey, comparisonPayload = {}, agentStudies = [], axisOverride = null, selectionContext = {}, alignmentRow = {}) {
     const versions = cochraneForestPlotVersions(match);
     if (!currentCochraneForestPlotViews.has(plotKey) || !versions.length) {
       return "";
@@ -9109,6 +9176,7 @@
     const plot = selectedVersion.plot_data || {};
     const plotKeyForRows = `${plotKey}:cochrane:${selectedSubset || "plot"}`;
     const hasSharedAxis = finiteNumber(axisOverride?.x_min) !== null && finiteNumber(axisOverride?.x_max) !== null;
+    const branchNote = cochraneRandomizedBranchNote(alignmentRow);
     return `
       <div class="cochrane-reproduced-plot-panel">
         <div class="cochrane-reproduced-plot-head">
@@ -9136,6 +9204,7 @@
             </div>
           ` : ""}
         </div>
+        ${branchNote}
         <div class="synthesis-plot-card synthesis-forest-result labeled-forest-result cochrane-reproduced-forest-result" data-forest-source-label="Cochrane reproduced">
           ${renderInteractiveForestPlot(
             plot,
@@ -9260,7 +9329,8 @@
       comparisonPayload,
       row.agent_studies || [],
       axisOverride,
-      selectionContext
+      selectionContext,
+      row
     );
   }
 
@@ -9477,7 +9547,14 @@
                         analysis,
                         entry,
                         comparisonPayload,
-                        subgroupPlan
+                        subgroupPlan,
+                        {
+                          cochraneSynthesisCiOverlap,
+                          cochraneOutcomeAlignment,
+                          screeningResults,
+                          outcomeExtractionTables,
+                          extractionSourceSummary,
+                        }
                       )}
                       ${renderSynthesisSubgroupAnalyses(
                         nonDesignSubgroupAnalyses,
