@@ -122,6 +122,9 @@
   let currentExtractableOpen = false;
   let currentNonExtractableOpen = false;
   let currentTemplateOpen = false;
+  let currentStudyExtractionOpen = false;
+  let currentStudyExtractionFilterMode = "study";
+  let currentStudyExtractionFilterValue = "";
   let currentEvaluationVisible = false;
   let currentOutcomeBenchmarkView = "off";
   let currentCochraneReferenceStatusPlots = new Set();
@@ -177,6 +180,9 @@
       currentExtractableOpen,
       currentNonExtractableOpen,
       currentTemplateOpen,
+      currentStudyExtractionOpen,
+      currentStudyExtractionFilterMode,
+      currentStudyExtractionFilterValue,
       currentEvaluationVisible,
       currentOutcomeBenchmarkView,
       currentCochraneReferenceStatusPlots: Array.from(currentCochraneReferenceStatusPlots),
@@ -205,6 +211,13 @@
     currentExtractableOpen = Boolean(saved.currentExtractableOpen);
     currentNonExtractableOpen = Boolean(saved.currentNonExtractableOpen);
     currentTemplateOpen = Boolean(saved.currentTemplateOpen);
+    currentStudyExtractionOpen = Boolean(saved.currentStudyExtractionOpen);
+    currentStudyExtractionFilterMode = ["study", "outcome"].includes(saved.currentStudyExtractionFilterMode)
+      ? saved.currentStudyExtractionFilterMode
+      : "study";
+    currentStudyExtractionFilterValue = typeof saved.currentStudyExtractionFilterValue === "string"
+      ? saved.currentStudyExtractionFilterValue
+      : "";
     currentEvaluationVisible = false;
     currentOutcomeBenchmarkView = "off";
     currentCochraneReferenceStatusPlots = new Set();
@@ -225,6 +238,9 @@
     currentExtractableOpen = false;
     currentNonExtractableOpen = false;
     currentTemplateOpen = false;
+    currentStudyExtractionOpen = false;
+    currentStudyExtractionFilterMode = "study";
+    currentStudyExtractionFilterValue = "";
     currentEvaluationVisible = false;
     currentOutcomeBenchmarkView = "off";
     currentCochraneReferenceStatusPlots = new Set();
@@ -5151,6 +5167,7 @@
       full_text: "Full text",
       full_text_supplement: "Full text + supplement",
       full_text_multimodal: "Full text + images",
+      study_table: "Study table",
       abstract_nct: "Abstract + NCT",
       abstract: "Abstract",
     };
@@ -5171,6 +5188,23 @@
 
   function extractionTargetKey(outcomeKey, pmid) {
     return `${outcomeKey}:${pmid}`;
+  }
+
+  function formatExtractionFieldLabel(field) {
+    return String(field || "")
+      .split("_")
+      .filter(Boolean)
+      .map((token, index) => {
+        const lower = token.toLowerCase();
+        if (["ci", "sd", "se"].includes(lower)) {
+          return lower.toUpperCase();
+        }
+        if (["n", "p"].includes(lower)) {
+          return lower.toUpperCase();
+        }
+        return index === 0 ? lower.charAt(0).toUpperCase() + lower.slice(1) : lower;
+      })
+      .join(" ");
   }
 
   function hasValue(value) {
@@ -6403,6 +6437,300 @@
     `;
   }
 
+  function studyExtractionSection(perStudyOutputs) {
+    const rows = [];
+    (Array.isArray(perStudyOutputs) ? perStudyOutputs : []).forEach((study) => {
+      const results = Array.isArray(study?.study_extraction_results) ? study.study_extraction_results : [];
+      results.forEach((result) => {
+        rows.push({ study, result });
+      });
+    });
+
+    if (!rows.length) {
+      return "";
+    }
+
+    const studyCount = new Set(rows.map(({ study }) => String(study?.pmid || study?.metadata?.pmid || "").trim()).filter(Boolean)).size;
+    const extractableCount = rows.filter(({ result }) => truthyArtifactValue(result?.data_extractable)).length;
+
+    function studyRowForFilter(study) {
+      return {
+        ...(study?.metadata || {}),
+        pmid: study?.pmid || study?.metadata?.pmid || "",
+        metadata: study?.metadata || {},
+      };
+    }
+
+    function studyFilterKey(study) {
+      const studyRow = studyRowForFilter(study);
+      return cleanText(studyRow.pmid || studyRow.study_label || extractionPubInfoParts(studyRow).authorYear);
+    }
+
+    function studyFilterLabel(study) {
+      const studyRow = studyRowForFilter(study);
+      const { authorYear } = extractionPubInfoParts(studyRow);
+      const pmid = cleanText(studyRow.pmid || "");
+      return [authorYear || "No author/year", pmid ? `PMID ${pmid}` : ""].filter(Boolean).join(" | ");
+    }
+
+    function readableResultLabel(result) {
+      const resultKey = cleanText(result?.result_key || "");
+      const role = cleanText(result?.outcome_role || "").toLowerCase();
+      const index = cleanText(result?.outcome_index || "");
+      const label = cleanText(result?.outcome_label || resultKey || "Outcome");
+      if (resultKey === "primary" || role === "primary" || label.toLowerCase() === "primary outcome") {
+        return "Primary";
+      }
+      const secondaryMatch = resultKey.match(/^secondary_(\d+)$/) || label.match(/^secondary outcome\s+(\d+)$/i);
+      if (secondaryMatch) {
+        return `Secondary ${secondaryMatch[1]}`;
+      }
+      if (role === "secondary") {
+        return index ? `Secondary ${index}` : "Secondary";
+      }
+      return label;
+    }
+
+    function outcomeFilterKey(result) {
+      const resultKey = cleanText(result?.result_key || "");
+      if (resultKey) {
+        return resultKey;
+      }
+      const role = cleanText(result?.outcome_role || "");
+      const index = cleanText(result?.outcome_index || "");
+      return [role, index].filter(Boolean).join("_") || cleanText(result?.outcome_name || "");
+    }
+
+    function outcomeFilterLabel(result) {
+      const outcomeName = cleanText(result?.outcome_name || "");
+      return [readableResultLabel(result), outcomeName].filter(Boolean).join(" | ");
+    }
+
+    function filterOptionsForMode(mode) {
+      const options = new Map();
+      rows.forEach(({ study, result }) => {
+        const key = mode === "outcome" ? outcomeFilterKey(result) : studyFilterKey(study);
+        if (!key || options.has(key)) {
+          return;
+        }
+        options.set(key, {
+          key,
+          label: mode === "outcome" ? outcomeFilterLabel(result) : studyFilterLabel(study),
+        });
+      });
+      return Array.from(options.values());
+    }
+
+    const filterMode = currentStudyExtractionFilterMode === "outcome" ? "outcome" : "study";
+    const filterOptions = filterOptionsForMode(filterMode);
+    const selectedFilterValue = filterOptions.some((option) => option.key === currentStudyExtractionFilterValue)
+      ? currentStudyExtractionFilterValue
+      : "";
+    const filteredRows = selectedFilterValue
+      ? rows.filter(({ study, result }) => (
+        filterMode === "outcome"
+          ? outcomeFilterKey(result) === selectedFilterValue
+          : studyFilterKey(study) === selectedFilterValue
+      ))
+      : rows;
+    const filteredExtractableCount = filteredRows.filter(({ result }) => truthyArtifactValue(result?.data_extractable)).length;
+
+    function filterModeButton(mode, label) {
+      const isActive = filterMode === mode;
+      return `
+        <button
+          class="matrix-toggle-button study-extraction-filter-button${isActive ? " is-active" : ""}"
+          type="button"
+          data-study-extraction-filter-mode="${escapeHtml(mode)}"
+          aria-pressed="${isActive ? "true" : "false"}"
+        >
+          ${escapeHtml(label)}
+        </button>
+      `;
+    }
+
+    function filterToolbar() {
+      const valueLabel = filterMode === "outcome" ? "Outcome" : "Study";
+      const allLabel = filterMode === "outcome" ? "All outcomes" : "All studies";
+      const showingText = selectedFilterValue
+        ? `Showing ${number(filteredRows.length)} of ${number(rows.length)} result rows.`
+        : `Showing all ${number(rows.length)} result rows.`;
+      return `
+        <div class="matrix-toolbar study-extraction-toolbar">
+          <p class="note">${showingText} ${number(filteredExtractableCount)} are extracted.</p>
+          <div class="matrix-controls">
+            <div class="matrix-filter-group study-extraction-mode-group" role="group" aria-label="Filter extracted results by">
+              <span class="matrix-control-label">Filter by</span>
+              ${filterModeButton("study", "Study")}
+              ${filterModeButton("outcome", "Outcome")}
+            </div>
+            <label class="matrix-control" for="study-extraction-filter-select">
+              <span class="matrix-control-label">${escapeHtml(valueLabel)}</span>
+              <select class="matrix-select study-extraction-filter-select" id="study-extraction-filter-select" data-study-extraction-filter-value>
+                <option value="">${escapeHtml(allLabel)}</option>
+                ${filterOptions.map((option) => `
+                  <option value="${escapeHtml(option.key)}" ${option.key === selectedFilterValue ? "selected" : ""}>${escapeHtml(option.label)}</option>
+                `).join("")}
+              </select>
+            </label>
+            ${selectedFilterValue ? `
+              <button class="matrix-toggle-button study-extraction-clear-filter" type="button" data-study-extraction-filter-clear>Clear filter</button>
+            ` : ""}
+          </div>
+        </div>
+      `;
+    }
+
+    function resultOutcomeCell(result) {
+      const label = readableResultLabel(result);
+      const outcomeName = cleanText(result?.outcome_name || "");
+      return `
+        <div class="study-extraction-cell-stack">
+          <div class="study-extraction-primary">${escapeHtml(label)}</div>
+          ${outcomeName ? `<div class="study-extraction-muted">${escapeHtml(outcomeName)}</div>` : ""}
+        </div>
+      `;
+    }
+
+    function resultStatusCell(result) {
+      const isExtractable = truthyArtifactValue(result?.data_extractable);
+      const tableStatus = cleanText(result?.study_table_report_status || "");
+      return `
+        <div class="rob-routing-chip-row">
+          <span class="rob-routing-chip rob-routing-chip-${isExtractable ? "ready" : "warning"}">${isExtractable ? "Extracted" : "Not extractable"}</span>
+          ${tableStatus ? `<span class="rob-routing-chip rob-routing-chip-neutral">${escapeHtml(tableStatus.replace(/_/g, " "))}</span>` : ""}
+        </div>
+      `;
+    }
+
+    function resultSourceCell(result) {
+      const source = cleanText(result?.text_source_used || result?.extraction_text_source || "");
+      return source ? sentence(sourceLabel(source)) : "—";
+    }
+
+    function resultEstimateCell(result) {
+      const estimate = result?.study_estimate && typeof result.study_estimate === "object" ? result.study_estimate : {};
+      const measure = cleanText(estimate.effect_measure_reported);
+      const value = cleanText(estimate.effect_estimate_value);
+      const ciLower = cleanText(estimate.ci_lower);
+      const ciUpper = cleanText(estimate.ci_upper);
+      const pValue = cleanText(estimate.p_value);
+      const lines = [
+        measure || value
+          ? `<div><span class="mono">${escapeHtml(measure || "effect")}</span>${value ? ` ${escapeHtml(value)}` : ""}</div>`
+          : "",
+        ciLower || ciUpper
+          ? `<div><span class="mono">95% CI</span> ${escapeHtml(ciLower || "—")} to ${escapeHtml(ciUpper || "—")}</div>`
+          : "",
+        pValue ? `<div><span class="mono">P</span> ${escapeHtml(pValue)}</div>` : "",
+      ].filter(Boolean);
+      return lines.length ? lines.join("") : "—";
+    }
+
+    function resultSampleCell(result) {
+      const estimate = result?.study_estimate && typeof result.study_estimate === "object" ? result.study_estimate : {};
+      const n1 = cleanText(estimate.n_arm_1);
+      const n2 = cleanText(estimate.n_arm_2);
+      const events1 = cleanText(estimate.events_arm_1);
+      const events2 = cleanText(estimate.events_arm_2);
+      const lines = [
+        n1 || n2 ? `<div><span class="mono">N</span> ${escapeHtml(n1 || "—")} / ${escapeHtml(n2 || "—")}</div>` : "",
+        events1 || events2 ? `<div><span class="mono">Events</span> ${escapeHtml(events1 || "—")} / ${escapeHtml(events2 || "—")}</div>` : "",
+      ].filter(Boolean);
+      return lines.length ? lines.join("") : "—";
+    }
+
+    function evidenceSnippets(result) {
+      const fieldEvidence = result?.field_evidence && typeof result.field_evidence === "object" && !Array.isArray(result.field_evidence)
+        ? result.field_evidence
+        : {};
+      const preferredFields = [
+        "effect_measure_reported",
+        "effect_estimate_value",
+        "ci_lower",
+        "ci_upper",
+        "p_value",
+        "n_arm_1",
+        "n_arm_2",
+        "events_arm_1",
+        "events_arm_2",
+        "definition_note",
+        "analysis_population",
+      ];
+      return preferredFields
+        .map((field) => {
+          const text = evidenceText(fieldEvidence[field]?.evidence);
+          if (!text) {
+            return "";
+          }
+          return `<div><span class="mono">${escapeHtml(formatExtractionFieldLabel(field))}</span>: ${sentence(text)}</div>`;
+        })
+        .filter(Boolean)
+        .slice(0, 2)
+        .join("");
+    }
+
+    function reasonEvidenceCell(result) {
+      const reason = cleanText(result?.non_extractable_reason || "");
+      const evidence = evidenceSnippets(result);
+      if (!reason && !evidence) {
+        return "—";
+      }
+      return `
+        <div class="study-extraction-reason">
+          ${reason ? `<div>${sentence(reason)}</div>` : ""}
+          ${evidence ? `<div class="study-extraction-evidence">${evidence}</div>` : ""}
+        </div>
+      `;
+    }
+
+    return `
+      <details class="collapsible-table-panel study-extraction-panel" id="extraction-results-by-study" data-study-extraction-panel ${currentStudyExtractionOpen ? "open" : ""}>
+        <summary class="collapsible-table-summary">
+          <div class="collapsible-summary-text">
+            <h3>Extracted results by study</h3>
+            <span>Saved per-study extraction result artifacts arranged by study for quick checking.</span>
+          </div>
+          <span class="collapsible-table-count">${number(studyCount)} studies | ${number(extractableCount)}/${number(rows.length)} extracted</span>
+        </summary>
+        ${filterToolbar()}
+        <div class="table-wrap screening-wrap study-extraction-table-wrap">
+          <table class="screening-table study-extraction-table study-sticky-table">
+            <thead>
+              <tr>
+                <th class="screen-col-index">#</th>
+                <th class="screen-col-study">Study</th>
+                <th class="study-extraction-outcome-col">Outcome</th>
+                <th class="study-extraction-status-col">Status</th>
+                <th class="study-extraction-source-col">Source</th>
+                <th class="study-extraction-estimate-col">Estimate</th>
+                <th class="study-extraction-sample-col">Sample / events</th>
+                <th class="study-extraction-reason-col">Reason / evidence</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filteredRows.map(({ study, result }, index) => {
+                const studyRow = studyRowForFilter(study);
+                return `
+                  <tr>
+                    <td class="screen-col-index mono">${index + 1}</td>
+                    <td class="screen-col-study">${compactStudyCell(studyRow)}</td>
+                    <td class="study-extraction-outcome-col">${resultOutcomeCell(result)}</td>
+                    <td class="study-extraction-status-col">${resultStatusCell(result)}</td>
+                    <td class="study-extraction-source-col">${resultSourceCell(result)}</td>
+                    <td class="study-extraction-estimate-col">${resultEstimateCell(result)}</td>
+                    <td class="study-extraction-sample-col">${resultSampleCell(result)}</td>
+                    <td class="study-extraction-reason-col">${reasonEvidenceCell(result)}</td>
+                  </tr>
+                `;
+              }).join("")}
+            </tbody>
+          </table>
+        </div>
+      </details>
+    `;
+  }
+
   function extractionAttemptSection(
     outcomeTables,
     nonExtractableLimit,
@@ -6433,23 +6761,6 @@
     function extractionDisplayFields(table) {
       const fields = Array.isArray(table.display_fields) ? table.display_fields : [];
       return fields.filter((field) => !EXTRACTION_DISPLAY_FIELD_EXCLUDE.has(field));
-    }
-
-    function formatExtractableFieldLabel(field) {
-      return String(field || "")
-        .split("_")
-        .filter(Boolean)
-        .map((token, index) => {
-          const lower = token.toLowerCase();
-          if (["ci", "sd", "se"].includes(lower)) {
-            return lower.toUpperCase();
-          }
-          if (["n", "p"].includes(lower)) {
-            return lower.toUpperCase();
-          }
-          return index === 0 ? lower.charAt(0).toUpperCase() + lower.slice(1) : lower;
-        })
-        .join(" ");
     }
 
     function renderExtractedValueCell(row, field, evidenceByField) {
@@ -6508,7 +6819,7 @@
                   <th class="screen-col-index">#</th>
                   <th class="screen-col-study">Study</th>
                   <th class="extract-source-col">Source</th>
-                  ${fields.map((field) => `<th class="extract-value-col" title="${escapeHtml(field)}">${escapeHtml(formatExtractableFieldLabel(field))}</th>`).join("")}
+                  ${fields.map((field) => `<th class="extract-value-col" title="${escapeHtml(field)}">${escapeHtml(formatExtractionFieldLabel(field))}</th>`).join("")}
                 </tr>
               </thead>
               <tbody>
@@ -9446,6 +9757,7 @@
 	        <h3>Study extraction results</h3>
 	        <p class="note">This section summarizes outcome-specific extraction rows. With full text, extraction and RoB are produced together; without full text, extraction uses abstract plus exact linked NCT records when available, otherwise the abstract alone, and RoB is skipped.</p>
 	        ${extractionAttemptSection(outcomeExtractionTables, currentNonExtractableLimit, extractionOverview, extractionTemplates, cochraneOutcomeAlignment)}
+	        ${studyExtractionSection(perStudyOutputs)}
 	      </div>
 	      ${studyTypeRoutingSection(robDisplay)}
 	      ${robToolDetailsSection(robDisplay)}
@@ -9527,14 +9839,53 @@
 	      });
 	    });
 
-	    app.querySelectorAll("[data-nonextract-limit]").forEach((nonExtractLimitSelect) => {
-	      nonExtractLimitSelect.addEventListener("change", (event) => {
-	        currentNonExtractableLimit = event.target.value;
-	        render();
-	      });
-	    });
+		    app.querySelectorAll("[data-nonextract-limit]").forEach((nonExtractLimitSelect) => {
+		      nonExtractLimitSelect.addEventListener("change", (event) => {
+		        currentNonExtractableLimit = event.target.value;
+		        render();
+		      });
+		    });
 
-	    app.querySelectorAll("[data-evaluation-visibility-toggle]").forEach((button) => {
+    app.querySelectorAll("[data-study-extraction-filter-mode]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const mode = button.getAttribute("data-study-extraction-filter-mode");
+        if (!["study", "outcome"].includes(mode) || mode === currentStudyExtractionFilterMode) {
+          return;
+        }
+        currentStudyExtractionFilterMode = mode;
+        currentStudyExtractionFilterValue = "";
+        currentStudyExtractionOpen = true;
+        saveDemoUiState();
+        renderPreservingScrollPosition();
+      });
+    });
+
+    app.querySelectorAll("[data-study-extraction-filter-value]").forEach((select) => {
+      select.addEventListener("change", (event) => {
+        currentStudyExtractionFilterValue = event.target.value || "";
+        currentStudyExtractionOpen = true;
+        saveDemoUiState();
+        renderPreservingScrollPosition();
+      });
+    });
+
+    app.querySelectorAll("[data-study-extraction-filter-clear]").forEach((button) => {
+      button.addEventListener("click", () => {
+        currentStudyExtractionFilterValue = "";
+        currentStudyExtractionOpen = true;
+        saveDemoUiState();
+        renderPreservingScrollPosition();
+      });
+    });
+
+    app.querySelectorAll("[data-study-extraction-panel]").forEach((panel) => {
+      panel.addEventListener("toggle", (event) => {
+        currentStudyExtractionOpen = event.target.open;
+        saveDemoUiState();
+      });
+    });
+
+			    app.querySelectorAll("[data-evaluation-visibility-toggle]").forEach((button) => {
 	      button.addEventListener("click", () => {
 	        const value = button.dataset.evaluationVisibilityValue;
 	        if (value === "on" || value === "off") {
