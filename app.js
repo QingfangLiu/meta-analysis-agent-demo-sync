@@ -63,7 +63,7 @@
     "synthesis_effect_size_source_note",
     "rob_attempted",
     "assessment_status",
-    "rob_status_reason",
+    "rob_skip_or_failure_reason",
     "study_design_type",
     "study_design_subtype",
     "recommended_rob_tool_id",
