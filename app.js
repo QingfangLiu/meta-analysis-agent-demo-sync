@@ -8061,6 +8061,27 @@
       || String(status || "").replaceAll("_", " ");
   }
 
+  function renderCochraneReferenceStatusLegend() {
+    if (!currentCochraneReferenceStatusPlots.size) {
+      return "";
+    }
+    const rows = Object.entries(COCHRANE_REFERENCE_STATUS_META).map(([status, meta]) => `
+      <div class="cochrane-reference-legend-row">
+        <span class="cochrane-reference-legend-swatch" style="background:${escapeHtml(meta.color)}"></span>
+        <span>
+          <span class="cochrane-reference-legend-label">${escapeHtml(meta.label)}</span>
+          <span class="cochrane-reference-legend-detail">${escapeHtml(meta.detail)}</span>
+        </span>
+      </div>
+    `).join("");
+    return `
+      <aside class="cochrane-reference-legend" aria-label="Cochrane row status legend">
+        <div class="cochrane-reference-legend-title">Cochrane row status</div>
+        ${rows}
+      </aside>
+    `;
+  }
+
   function cochraneReferenceStatusesForPlot(ciOverlapArtifact, plotKey) {
     const row = synthesisCiOverlapByPlotKey(ciOverlapArtifact)[plotKey] || {};
     const statuses = Array.isArray(row.agent_study_reference_statuses)
@@ -8287,8 +8308,12 @@
             const referenceKey = pmid || (label ? `label:${String(label).trim()}` : "");
             const referenceStatus = showReferenceStatuses && !isPooled && referenceKey ? referenceStatuses[referenceKey] : null;
             const referenceStatusCode = String(referenceStatus?.cochrane_reference_status || "").trim();
+            const exclusionReason = String(referenceStatus?.cochrane_reference?.exclusion_reason || "").trim();
             const referenceStatusTooltip = referenceStatusCode
               ? `\nCochrane reference status: ${referenceStatus?.cochrane_reference_status_label || cochraneReferenceStatusSummaryLabel(referenceStatusCode)}`
+              : "";
+            const referenceReasonTooltip = exclusionReason
+              ? `\nCochrane exclusion reason: ${exclusionReason}`
               : "";
             const cochraneStudyMatchTooltip = cochraneStudyMatchPlotKey && !isPooled
               ? "\nClick to compare this Cochrane study row with the agent plot."
@@ -8308,8 +8333,8 @@
             const transformedTooltip = logValueText && seText ? ` | log(HR)=${logValueText}, SE=${seText}` : "";
             const fallbackNote = varianceFallbackNote(row?.source_row);
             const tooltipText = fallbackNote
-              ? `${forestStudyLabelParts(row).primary}\n${fallbackNote}${referenceStatusTooltip}${cochraneStudyMatchTooltip}`
-              : `${label}: ${valueText}${sampleText}${weightTooltip}${transformedTooltip}${referenceStatusTooltip}${cochraneStudyMatchTooltip}`;
+              ? `${forestStudyLabelParts(row).primary}\n${fallbackNote}${referenceStatusTooltip}${referenceReasonTooltip}${cochraneStudyMatchTooltip}`
+              : `${label}: ${valueText}${sampleText}${weightTooltip}${transformedTooltip}${referenceStatusTooltip}${referenceReasonTooltip}${cochraneStudyMatchTooltip}`;
             const rowClass = [
               "forest-row",
               isPooled ? "forest-row-pooled" : "forest-row-study",
@@ -8850,8 +8875,11 @@
               const hasEvaluationRow = Boolean(evaluationRow.agent_plot_key || evaluationRow.status || evaluationRow.best_match);
               const showCochraneReferenceStatuses = hasEvaluationRow && currentEvaluationVisible && currentCochraneReferenceStatusPlots.has(branch.plotKey);
               const showCochraneReproducedPlot = hasEvaluationRow && currentEvaluationVisible && currentCochraneForestPlotViews.has(branch.plotKey);
-              const cochraneReferenceStatuses = showCochraneReferenceStatuses
+              const cochraneReferenceStatusesForSelection = hasEvaluationRow && currentEvaluationVisible
                 ? cochraneReferenceStatusesForPlot(ciOverlapArtifact, branch.plotKey)
+                : {};
+              const cochraneReferenceStatuses = showCochraneReferenceStatuses
+                ? cochraneReferenceStatusesForSelection
                 : {};
               const selectedCochraneStudy = hasEvaluationRow && currentEvaluationVisible
                 ? currentCochraneStudySelections.get(branch.plotKey) || null
@@ -8889,7 +8917,10 @@
                     branch.plotKey,
                     comparisonPayload,
                     comparisonAxisOverride,
-                    cochraneStudySelectionContext
+                    {
+                      ...cochraneStudySelectionContext,
+                      referenceStatuses: cochraneReferenceStatusesForSelection,
+                    }
                   ) : ""}
                   <div class="synthesis-plot-card synthesis-forest-result labeled-forest-result agent-synthesis-forest-result" data-forest-source-label="Agent made">
                     ${interactivePlot || `<p class="note">No forest plot was generated for this study-design branch.</p>`}
@@ -9005,6 +9036,18 @@
     };
   }
 
+  function cochraneReferenceStatusForSelection(referenceStatuses, selection) {
+    const pmid = String(selection?.pmid || "").trim();
+    if (pmid && referenceStatuses?.[pmid]) {
+      return referenceStatuses[pmid];
+    }
+    const label = String(selection?.label || "").trim();
+    if (label && referenceStatuses?.[`label:${label}`]) {
+      return referenceStatuses[`label:${label}`];
+    }
+    return null;
+  }
+
   function readableScreenDecision(value) {
     const normalized = String(value || "").trim().toLowerCase();
     if (normalized === "include") {
@@ -9033,6 +9076,15 @@
     const extractionReason = String(extractionRow.non_extractable_reason || "").trim();
     const fulltextDecision = String(extractionSourceStudy?.fulltext_eligibility_decision || "").trim();
     const fulltextReason = String(extractionSourceStudy?.fulltext_eligibility_reason || "").trim();
+    const referenceStatus = cochraneReferenceStatusForSelection(context.referenceStatuses || {}, selection);
+    const referenceStatusCode = String(referenceStatus?.cochrane_reference_status || "").trim();
+    const referenceStatusLabel = String(
+      referenceStatus?.cochrane_reference_status_label
+      || cochraneReferenceStatusSummaryLabel(referenceStatusCode)
+      || ""
+    ).trim();
+    const reference = referenceStatus?.cochrane_reference || {};
+    const exclusionReason = String(reference.exclusion_reason || "").trim();
 
     let extractionStatus = "Not reached";
     let extractionTone = "not-reached";
@@ -9077,6 +9129,10 @@
       extractionTextSource,
       fulltextDecision,
       fulltextReason,
+      referenceStatus,
+      referenceStatusCode,
+      referenceStatusLabel,
+      exclusionReason,
     };
   }
 
@@ -9108,8 +9164,14 @@
               ${sentence(trace.extractionDetail)}
             </div>
           </div>
+          ${trace.referenceStatusCode ? `
+            <div class="cochrane-study-trace-card cochrane-study-trace-reference ${trace.referenceStatusCode === "excluded_review" ? "cochrane-study-trace-reference-excluded" : ""}">
+              <div class="cochrane-study-trace-label">Cochrane reference</div>
+              <div class="cochrane-study-trace-value">${escapeHtml(trace.referenceStatusLabel)}</div>
+              ${trace.exclusionReason ? `<div class="cochrane-study-trace-detail">Reason for exclusion: ${sentence(trace.exclusionReason)}</div>` : ""}
+            </div>
+          ` : ""}
         </div>
-        ${trace.fulltextReason ? `<div class="cochrane-study-trace-footnote">Full-text eligibility note: ${sentence(trace.fulltextReason)}</div>` : ""}
       </div>
     `;
   }
@@ -9488,6 +9550,7 @@
                       screeningResults,
                       outcomeExtractionTables,
                       extractionSourceSummary,
+                      referenceStatuses: cochraneReferenceStatuses,
                     };
 	                  const interactivePlot = renderInteractiveForestPlot(
 	                    analysis.plotData,
@@ -9865,6 +9928,7 @@
 			    ${runTimingSection(timing, run)}
 			    ${llmTokenUsageSection(llmUsageSummary, llmUsageByStageRows, run)}
 			    ${sourceTraceDrawer()}
+			    ${renderCochraneReferenceStatusLegend()}
 
 			    <div class="page-jump-controls" aria-label="Page navigation">
       <button class="page-jump-button" id="jump-top" type="button">Top</button>
@@ -10190,6 +10254,7 @@
         }
         if (
           event.target.closest("[data-cochrane-row-status]")
+          || event.target.closest(".cochrane-reference-legend")
           || event.target.closest(".agent-synthesis-forest-result")
         ) {
           return;
