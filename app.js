@@ -4878,11 +4878,32 @@
       return labels.length ? labels : [];
     }
 
+    function armDetailItems(study) {
+      const arms = Array.isArray(study.study_arms) ? study.study_arms.filter(Boolean) : [];
+      return arms
+        .map((arm) => {
+          const label = cleanText(arm.arm_label || arm.arm_name || arm.group_label);
+          const parts = [
+            cleanText(arm.description),
+            cleanText(arm.dose_or_intensity),
+            cleanText(arm.duration_or_cycles),
+            cleanText(arm.n_assigned_or_analyzed),
+            cleanText(arm.notes),
+          ].filter(Boolean);
+          if (!label && !parts.length) {
+            return "";
+          }
+          return label ? `${label}: ${parts.join("; ")}` : parts.join("; ");
+        })
+        .filter(Boolean);
+    }
+
     function hasArmContent(study) {
       return Boolean(
         uniqueTextList(study.intervention_arms).length
         || uniqueTextList(study.comparator_arms).length
         || uniqueTextList(study.extra_or_irrelevant_arms).length
+        || uniqueTextList(study.comparison_context_notes).length
         || compactArmDetails(study).length
         || cleanText(study.multi_arm_handling_note)
       );
@@ -4948,6 +4969,8 @@
                   ${studies.map((study, index) => {
                     const extraArms = uniqueTextList(study.extra_or_irrelevant_arms);
                     const handlingNote = cleanText(study.multi_arm_handling_note);
+                    const comparisonContextNotes = uniqueTextList(study.comparison_context_notes);
+                    const armDetails = armDetailItems(study);
                     const fallbackArms = !uniqueTextList(study.intervention_arms).length && !uniqueTextList(study.comparator_arms).length
                       ? compactArmDetails(study)
                       : [];
@@ -4960,7 +4983,9 @@
                         <td class="study-arms-extra-col">
                           ${extraArms.length ? armList(extraArms) : ""}
                           ${fallbackArms.length ? `<div class="study-arm-fallback"><span class="stat-label">Study arms</span>${armList(fallbackArms)}</div>` : ""}
-                          ${handlingNote ? `<p class="study-arm-note">${sentence(handlingNote)}</p>` : (!extraArms.length && !fallbackArms.length ? `<span class="muted">—</span>` : "")}
+                          ${armDetails.length ? `<div class="study-arm-fallback"><span class="stat-label">Arm details</span>${armList(armDetails)}</div>` : ""}
+                          ${comparisonContextNotes.length ? `<div class="study-arm-fallback"><span class="stat-label">Comparison context</span>${armList(comparisonContextNotes)}</div>` : ""}
+                          ${handlingNote ? `<p class="study-arm-note">${sentence(handlingNote)}</p>` : (!extraArms.length && !fallbackArms.length && !armDetails.length && !comparisonContextNotes.length ? `<span class="muted">—</span>` : "")}
                         </td>
                       </tr>
                     `;
