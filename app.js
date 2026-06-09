@@ -1355,20 +1355,32 @@
       return "";
     }
     const counts = outcomeAlignment.counts || {};
+    const recall = counts.cochrane_analyzed_outcome_recall ?? counts.cochrane_analyzed_outcome_coverage;
+    const precision = counts.agent_outcome_precision_against_analyzed ?? counts.agent_outcome_analyzed_match_rate;
     return `
       <div class="detail-card evaluation-card" style="margin-top:14px;">
         <h3>Outcome Identification Recall</h3>
-        <p class="note">Recall is the percentage of locally curated Cochrane outcomes that have a retained match among the agent's final outcome decisions.</p>
+        <p class="note">Recall is the percentage of locally curated Cochrane analyzed outcomes that have a one-to-one LLM semantic match among the agent's final outcome decisions.</p>
         ${renderEvaluationMetricGrid([
           {
-            label: "Cochrane analyzed outcomes",
-            value: formatPercent(counts.cochrane_analyzed_outcome_coverage),
-            detail: `${number(counts.cochrane_analyzed_outcomes_matched)} of ${number(counts.cochrane_analyzed_outcomes)} analyzed outcomes recalled`,
+            label: "Analyzed outcome recall",
+            value: formatPercent(recall),
+            detail: `${number(counts.true_positive_outcome_matches ?? counts.cochrane_analyzed_outcomes_matched)} of ${number(counts.cochrane_analyzed_outcomes)} Cochrane analyzed outcomes matched`,
           },
           {
-            label: "Cochrane planned outcomes",
-            value: formatPercent(counts.cochrane_planned_outcome_coverage),
-            detail: `${number(counts.cochrane_planned_outcomes_matched)} of ${number(counts.cochrane_planned_outcomes)} planned outcomes recalled`,
+            label: "Agent outcome precision",
+            value: formatPercent(precision),
+            detail: `${number(counts.true_positive_outcome_matches ?? counts.agent_outcomes_matching_analyzed)} of ${number(counts.agent_outcomes)} agent outcomes matched Cochrane analyzed outcomes`,
+          },
+          {
+            label: "Unmatched agent outcomes",
+            value: number(counts.false_positive_agent_outcomes),
+            detail: "Agent final outcomes without a retained Cochrane analyzed-outcome match",
+          },
+          {
+            label: "Unmatched Cochrane outcomes",
+            value: number(counts.false_negative_cochrane_analyzed_outcomes),
+            detail: "Cochrane analyzed outcomes without a retained agent outcome match",
           },
         ])}
       </div>
@@ -1496,8 +1508,8 @@
           ? "Matched agent and Cochrane analysis"
           : "Agent forest plot without a matched Cochrane analysis",
         reason: isMatched
-          ? "Agent forest plot matched a Cochrane analysis by outcome label and effect measure."
-          : "Agent created an evaluated forest plot, but no Cochrane main analysis matched the outcome label and effect measure.",
+          ? "Agent forest plot matched a Cochrane analysis through the one-to-one outcome alignment gate and effect measure."
+          : "Agent created an evaluated forest plot, but no Cochrane main analysis matched through the one-to-one outcome alignment gate and effect measure.",
         cochrane_analysis: isMatched ? {
           analysis_id: match.analysis_id,
           outcome: match.outcome,
@@ -2138,9 +2150,7 @@
   function cochraneOutcomeBenchmarkLabel(mode) {
     const labels = {
       cochrane_analyzed: "Cochrane analyzed",
-      cochrane_planned: "Cochrane planned",
       analyzed: "Cochrane analyzed",
-      planned: "Cochrane planned",
     };
     return labels[mode] || "No Cochrane highlight";
   }
@@ -2148,9 +2158,6 @@
   function cochraneOutcomeBenchmarkKey(mode) {
     if (mode === "cochrane_analyzed" || mode === "analyzed") {
       return "analyzed";
-    }
-    if (mode === "cochrane_planned" || mode === "planned") {
-      return "planned";
     }
     return "";
   }
@@ -2210,7 +2217,7 @@
     const labels = {
       strong: "Strong",
       moderate: "Moderate",
-      weak: "Weak/domain",
+      weak: "Weak",
     };
     return labels[value] || "No match";
   }
@@ -2240,7 +2247,11 @@
         const label = cochraneOutcomeMatchLabel(match);
         const strength = cochraneStrengthLabel(cochraneMatchStrength(match)).toLowerCase();
         const score = formatCochraneMatchScore(match);
-        return `${label} (${strength}, score ${score})`;
+        const relationship = String(match?.relationship || match?.reason || "").trim();
+        const rationale = String(match?.rationale || "").trim();
+        const relationshipText = relationship ? `, ${relationship.replace(/_/g, " ")}` : "";
+        const rationaleText = rationale ? `: ${rationale}` : "";
+        return `${label} (${strength}, confidence ${score}${relationshipText})${rationaleText}`;
       })
       .join("; ");
   }
@@ -4269,22 +4280,23 @@
       const rows = Array.isArray(benchmarkAlignment.agent_outcomes)
         ? benchmarkAlignment.agent_outcomes
         : [];
+      const countsFromArtifact = benchmarkAlignment.counts || {};
       const matchedAgentOutcomes = rows.filter((row) => {
         const matches = (row.matches || {})[benchmarkKey];
         return Array.isArray(matches) && matches.length;
       }).length;
       const totalAgentOutcomes = rows.length;
       const counts = matchStrengthCounts(rows, benchmarkKey);
-      return `${matchedAgentOutcomes}/${totalAgentOutcomes} final outcomes have retained ${benchmarkLabel(activeMode).toLowerCase()} matches: ${counts.strong} strong, ${counts.moderate} moderate, ${counts.weak} weak/domain.`;
+      const cochraneMatched = countsFromArtifact.true_positive_outcome_matches ?? countsFromArtifact.cochrane_analyzed_outcomes_matched;
+      const cochraneTotal = countsFromArtifact.cochrane_analyzed_outcomes;
+      return `${matchedAgentOutcomes}/${totalAgentOutcomes} final outcomes have one-to-one ${benchmarkLabel(activeMode).toLowerCase()} matches; ${number(cochraneMatched)}/${number(cochraneTotal)} Cochrane analyzed outcomes matched: ${counts.strong} strong, ${counts.moderate} moderate, ${counts.weak} weak.`;
     }
 
-    function outcomeCoverageMetric(benchmarkKey) {
+    function outcomeCoverageMetric() {
       const counts = benchmarkAlignment.counts || {};
-      const prefix = benchmarkKey === "planned" ? "cochrane_planned"
-        : "cochrane_analyzed";
-      const total = Number(counts[`${prefix}_outcomes`]);
-      const matched = Number(counts[`${prefix}_outcomes_matched`]);
-      const coverage = counts[`${prefix}_outcome_coverage`];
+      const total = Number(counts.cochrane_analyzed_outcomes);
+      const matched = Number(counts.true_positive_outcome_matches ?? counts.cochrane_analyzed_outcomes_matched);
+      const coverage = counts.cochrane_analyzed_outcome_recall ?? counts.cochrane_analyzed_outcome_coverage;
       if (!Number.isFinite(total) || total <= 0) {
         return null;
       }
@@ -4302,18 +4314,29 @@
       if (benchmarkAlignment.status !== "completed") {
         return "";
       }
-      const analyzed = outcomeCoverageMetric("analyzed");
-      const planned = outcomeCoverageMetric("planned");
+      const counts = benchmarkAlignment.counts || {};
+      const analyzed = outcomeCoverageMetric();
+      const precision = counts.agent_outcome_precision_against_analyzed ?? counts.agent_outcome_analyzed_match_rate;
       return renderEvaluationMetricGrid([
         analyzed && {
-          label: "Cochrane analyzed outcomes created",
+          label: "Cochrane analyzed outcomes matched",
           value: formatPercent(analyzed.coverage),
-          detail: `${number(analyzed.matched)} of ${number(analyzed.total)} analyzed Cochrane outcomes matched final agent outcomes`,
+          detail: `${number(counts.true_positive_outcome_matches ?? analyzed.matched)} of ${number(analyzed.total)} analyzed Cochrane outcomes matched final agent outcomes`,
         },
-        planned && {
-          label: "Cochrane planned outcomes created",
-          value: formatPercent(planned.coverage),
-          detail: `${number(planned.matched)} of ${number(planned.total)} planned Cochrane outcomes matched final agent outcomes`,
+        {
+          label: "Agent outcomes matched",
+          value: formatPercent(precision),
+          detail: `${number(counts.true_positive_outcome_matches ?? counts.agent_outcomes_matching_analyzed)} of ${number(counts.agent_outcomes)} final agent outcomes matched Cochrane analyzed outcomes`,
+        },
+        {
+          label: "Agent unmatched",
+          value: number(counts.false_positive_agent_outcomes),
+          detail: "Final agent outcomes without a retained one-to-one Cochrane analyzed match",
+        },
+        {
+          label: "Cochrane unmatched",
+          value: number(counts.false_negative_cochrane_analyzed_outcomes),
+          detail: "Cochrane analyzed outcomes without a retained one-to-one agent match",
         },
       ], "outcome-evaluation-grid");
     }
@@ -4338,6 +4361,81 @@
       const shown = values.slice(0, maxItems);
       const suffix = values.length > maxItems ? ` +${values.length - maxItems} more` : "";
       return `${shown.join("; ")}${suffix}`;
+    }
+
+    function outcomeMatchRelationshipLabel(value) {
+      return String(value || "")
+        .trim()
+        .replace(/_/g, " ")
+        || "semantic match";
+    }
+
+    function outcomeAlignmentLabelList(items, labelKey) {
+      const values = (Array.isArray(items) ? items : [])
+        .map((item) => String(item?.[labelKey] || item?.name || item?.label || "").trim())
+        .filter(Boolean);
+      if (!values.length) {
+        return `<p class="outcome-source-empty">None.</p>`;
+      }
+      return `
+        <ul class="outcome-alignment-list">
+          ${values.map((value) => `<li>${escapeHtml(value)}</li>`).join("")}
+        </ul>
+      `;
+    }
+
+    function renderOutcomeAlignmentAudit() {
+      if (!currentEvaluationVisible || benchmarkAlignment.status !== "completed") {
+        return "";
+      }
+      const counts = benchmarkAlignment.counts || {};
+      const matches = Array.isArray(benchmarkAlignment.one_to_one_matches)
+        ? benchmarkAlignment.one_to_one_matches
+        : [];
+      const unmatchedAgent = Array.isArray(benchmarkAlignment.unmatched_agent_outcomes)
+        ? benchmarkAlignment.unmatched_agent_outcomes
+        : [];
+      const unmatchedCochrane = Array.isArray(benchmarkAlignment.unmatched_cochrane_analyzed_outcomes)
+        ? benchmarkAlignment.unmatched_cochrane_analyzed_outcomes
+        : [];
+      if (!matches.length && !unmatchedAgent.length && !unmatchedCochrane.length) {
+        return "";
+      }
+      return `
+        <details class="outcome-alignment-audit">
+          <summary>
+            <span>One-to-one Cochrane outcome alignment</span>
+            <strong>${number(counts.true_positive_outcome_matches ?? matches.length)} TP</strong>
+            <strong>${number(counts.false_positive_agent_outcomes ?? unmatchedAgent.length)} agent unmatched</strong>
+            <strong>${number(counts.false_negative_cochrane_analyzed_outcomes ?? unmatchedCochrane.length)} Cochrane unmatched</strong>
+          </summary>
+          <div class="outcome-alignment-audit-grid">
+            <div>
+              <div class="artifact-field-key mono">retained matches</div>
+              ${matches.length ? `
+                <ul class="outcome-alignment-list">
+                  ${matches.map((match) => `
+                    <li>
+                      <strong>${escapeHtml(match.agent_label || match.agent_outcome_key || "Agent outcome")}</strong>
+                      <span> -> ${escapeHtml(match.benchmark_label || match.label || "Cochrane outcome")}</span>
+                      <span class="outcome-alignment-meta">${escapeHtml(outcomeMatchRelationshipLabel(match.relationship || match.reason))}; confidence ${escapeHtml(formatMatchScore(match))}</span>
+                      ${match.rationale ? `<span class="outcome-alignment-rationale">${escapeHtml(match.rationale)}</span>` : ""}
+                    </li>
+                  `).join("")}
+                </ul>
+              ` : `<p class="outcome-source-empty">None.</p>`}
+            </div>
+            <div>
+              <div class="artifact-field-key mono">unmatched agent outcomes</div>
+              ${outcomeAlignmentLabelList(unmatchedAgent, "name")}
+            </div>
+            <div>
+              <div class="artifact-field-key mono">unmatched Cochrane analyzed outcomes</div>
+              ${outcomeAlignmentLabelList(unmatchedCochrane, "label")}
+            </div>
+          </div>
+        </details>
+      `;
     }
 
     function sourceOutcomeList(labels) {
@@ -4406,8 +4504,6 @@
       const analyzedMatched = sourceSummary.cochrane_analyzed_outcomes_matched;
       const analyzedTotal = sourceSummary.cochrane_analyzed_outcomes_total;
       const uniqueAnalyzed = sourceSummary.cochrane_analyzed_outcomes_unique_to_source;
-      const plannedMatched = sourceSummary.cochrane_planned_outcomes_matched;
-      const plannedTotal = sourceSummary.cochrane_planned_outcomes_total;
       const hasContribution = sourceContribution.status === "completed" && Object.keys(sourceSummary).length;
       const showBenchmarkContribution = currentEvaluationVisible && hasContribution;
       return `
@@ -4451,7 +4547,7 @@
             </div>
             ${hasContribution ? `
               <div class="outcome-source-contribution-note">
-                Source-only final outcomes: ${compactLabelList((sourceSummary.unique_final_outcomes || []).map((item) => item.name), 4)}${showBenchmarkContribution ? `; source-only Cochrane analyzed: ${compactLabelList((sourceSummary.unique_cochrane_analyzed_matches || []).map((item) => item.label), 4)}; Cochrane planned in source: ${number(plannedMatched)}/${number(plannedTotal)}.` : "."}
+                Source-only final outcomes: ${compactLabelList((sourceSummary.unique_final_outcomes || []).map((item) => item.name), 4)}${showBenchmarkContribution ? `; source-only Cochrane analyzed: ${compactLabelList((sourceSummary.unique_cochrane_analyzed_matches || []).map((item) => item.label), 4)}.` : "."}
               </div>
             ` : ""}
             <div class="outcome-source-labels">${sourceOutcomeList(labels)}</div>
@@ -4595,6 +4691,7 @@
               ${primary.name ? renderOutcomeCard("Primary Outcome", primary, "primary", 0) : ""}
               ${secondary.map((item, index) => renderOutcomeCard(`Secondary Outcome ${index + 1}`, item, "secondary", index + 1)).join("")}
             </div>
+            ${renderOutcomeAlignmentAudit()}
             ${renderBenchmarkControl()}
           </div>
         </div>
@@ -9332,7 +9429,7 @@
         : cochraneOutcomeMatchLabel(outcomeMatch);
       const relatedMatchText = relatedAnalysis.analysis_id
         ? `${cochraneStrengthLabel(relatedStrength).toLowerCase()}, score ${Number.isFinite(relatedScore) ? relatedScore.toFixed(2) : "—"}`
-        : `${cochraneStrengthLabel(cochraneMatchStrength(outcomeMatch)).toLowerCase()}, score ${formatCochraneMatchScore(outcomeMatch)}`;
+        : `${cochraneStrengthLabel(cochraneMatchStrength(outcomeMatch)).toLowerCase()}, confidence ${formatCochraneMatchScore(outcomeMatch)}`;
       const statusText = row.status === "no_matched_cochrane_analysis"
         ? "No matched Cochrane forest-plot analysis with the same outcome/effect-measure target was found for this synthesized plot."
         : "No Cochrane synthesis-overlap match was available for this synthesized plot.";
