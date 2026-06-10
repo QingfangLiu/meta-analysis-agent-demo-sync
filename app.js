@@ -126,6 +126,8 @@
   let currentStudyExtractionFilterMode = "study";
   let currentStudyExtractionFilterValue = "";
   let currentEvaluationVisible = false;
+  let currentSynthesisStudyRowDetailsOpen = false;
+  let currentSynthesisCiOverlapTarget = "all_studies";
   let currentOutcomeBenchmarkView = "off";
   let currentCochraneReferenceStatusPlots = new Set();
   let currentCochraneForestPlotViews = new Map();
@@ -242,6 +244,8 @@
     currentStudyExtractionFilterMode = "study";
     currentStudyExtractionFilterValue = "";
     currentEvaluationVisible = false;
+    currentSynthesisStudyRowDetailsOpen = false;
+    currentSynthesisCiOverlapTarget = "all_studies";
     currentOutcomeBenchmarkView = "off";
     currentCochraneReferenceStatusPlots = new Set();
     currentCochraneForestPlotViews = new Map();
@@ -813,10 +817,10 @@
     `;
   }
 
-  function renderEvaluationVisibilityBanner() {
+  function renderEvaluationVisibilityDock() {
     return `
-      <div class="evaluation-visibility-banner">
-        <div class="evaluation-visibility-title">Show benchmark evaluation</div>
+      <div class="evaluation-visibility-dock">
+        <div class="evaluation-visibility-title">Evaluation</div>
         ${renderEvaluationVisibilityControl()}
       </div>
     `;
@@ -1571,20 +1575,128 @@
     return `<div class="screen-study-secondary synthesis-study-overlap-line"><strong>${escapeHtml(label)}:</strong> ${escapeHtml(text)}</div>`;
   }
 
-  function renderStudyRowOverlap(overlap) {
+  function studyRowOverlapStats(overlap) {
     if (!overlap) {
-      return `<div class="screen-study-secondary">Not evaluated without a matched Cochrane analysis.</div>`;
+      return null;
     }
     const counts = overlap.counts || {};
     const tp = counts.tp ?? 0;
     const fp = counts.fp ?? 0;
     const fn = counts.fn ?? 0;
+    const precision = finiteNumber(counts.precision);
+    const recall = finiteNumber(counts.recall);
+    const f1 = finiteNumber(counts.f1);
+    return {
+      tp,
+      fp,
+      fn,
+      precision,
+      recall,
+      f1,
+    };
+  }
+
+  function renderStudyRowOverlap(overlap, showDetails = false) {
+    if (!overlap) {
+      return `<div class="screen-study-secondary">Not evaluated without a matched Cochrane analysis.</div>`;
+    }
+    const stats = studyRowOverlapStats(overlap) || {};
     return `
-      <div class="screen-study-primary">TP ${number(tp)} / FP ${number(fp)} / FN ${number(fn)}</div>
-      <div class="screen-study-secondary">Precision ${formatPercent(counts.precision)}; recall ${formatPercent(counts.recall)}</div>
-      ${studyOverlapLine("TP", overlap.true_positive_rows, (row) => cleanStudyRowLabel(row.label))}
-      ${groupedStudyOverlapLine("FP", overlap.false_positive_rows, (row) => row.cochrane_reference_status_label || "not in matched Cochrane analysis")}
-      ${groupedStudyOverlapLine("FN", overlap.false_negative_rows, (row) => row.pmcid_available ? "PMCID available" : "no PMCID")}
+      <div class="screen-study-primary">TP ${number(stats.tp)} / FP ${number(stats.fp)} / FN ${number(stats.fn)}</div>
+      <div class="screen-study-secondary">Precision ${formatPercent(stats.precision)}; recall ${formatPercent(stats.recall)}; F1 ${formatPercent(stats.f1)}</div>
+      ${showDetails ? `
+        ${studyOverlapLine("TP", overlap.true_positive_rows, (row) => cleanStudyRowLabel(row.label))}
+        ${groupedStudyOverlapLine("FP", overlap.false_positive_rows, (row) => row.cochrane_reference_status_label || "not in matched Cochrane analysis")}
+        ${groupedStudyOverlapLine("FN", overlap.false_negative_rows, (row) => row.pmcid_available ? "PMCID available" : "no PMCID")}
+      ` : ""}
+    `;
+  }
+
+  function ciIntervalBounds(lower, upper) {
+    const parsedLower = finiteNumber(lower);
+    const parsedUpper = finiteNumber(upper);
+    if (parsedLower === null || parsedUpper === null) {
+      return null;
+    }
+    return {
+      lower: Math.min(parsedLower, parsedUpper),
+      upper: Math.max(parsedLower, parsedUpper),
+    };
+  }
+
+  function isRatioEffectMeasure(value) {
+    return /(^|_)(risk|odds|hazard|rate)_ratio$|ratio$/.test(String(value || "").trim().toLowerCase());
+  }
+
+  function renderCiOverlapBar(label, bounds, domain, useLogScale, className) {
+    if (!bounds || !domain) {
+      return "";
+    }
+    const transform = (value) => useLogScale ? Math.log(value) : value;
+    const domainLower = transform(domain.lower);
+    const domainUpper = transform(domain.upper);
+    const lower = transform(bounds.lower);
+    const upper = transform(bounds.upper);
+    const span = domainUpper - domainLower;
+    if (!Number.isFinite(span) || span <= 0) {
+      return "";
+    }
+    const left = Math.max(0, Math.min(100, ((lower - domainLower) / span) * 100));
+    const right = Math.max(0, Math.min(100, ((upper - domainLower) / span) * 100));
+    const width = Math.max(2, right - left);
+    const ciText = formatCi(bounds.lower, bounds.upper);
+    return `
+      <div class="ci-overlap-bar-row">
+        <span class="ci-overlap-bar-label">${escapeHtml(label)}</span>
+        <span class="ci-overlap-bar-track" aria-hidden="true">
+          <span class="ci-overlap-bar-range ${escapeHtml(className)}" style="left:${left.toFixed(1)}%;width:${width.toFixed(1)}%;"></span>
+        </span>
+        <span class="ci-overlap-bar-value">${escapeHtml(ciText)}</span>
+      </div>
+    `;
+  }
+
+  function renderCiOverlapBars(agent, overlap, cochrane, target = "all_studies") {
+    const agentBounds = ciIntervalBounds(agent?.ci_lower, agent?.ci_upper);
+    const useCochraneFallback = target === "all_studies";
+    const targetLabel = target === "pmcid_only" ? "PMCID-only" : "All studies";
+    const cochraneBounds = ciIntervalBounds(
+      overlap?.cochrane_ci_lower ?? (useCochraneFallback ? cochrane?.ci_lower : null),
+      overlap?.cochrane_ci_upper ?? (useCochraneFallback ? cochrane?.ci_upper : null)
+    );
+    const availableBounds = [agentBounds, cochraneBounds].filter(Boolean);
+    if (!availableBounds.length) {
+      return "—";
+    }
+    const effectMeasure = agent?.effect_measure || cochrane?.effect_measure || "";
+    const canUseLogScale = (
+      isRatioEffectMeasure(effectMeasure)
+      && availableBounds.every((bounds) => bounds.lower > 0 && bounds.upper > 0)
+    );
+    let domain = {
+      lower: Math.min(...availableBounds.map((bounds) => bounds.lower)),
+      upper: Math.max(...availableBounds.map((bounds) => bounds.upper)),
+    };
+    if (domain.lower === domain.upper) {
+      const pad = Math.max(Math.abs(domain.lower) * 0.05, canUseLogScale ? domain.lower * 0.05 : 1);
+      domain = {
+        lower: canUseLogScale ? Math.max(Number.MIN_VALUE, domain.lower - pad) : domain.lower - pad,
+        upper: domain.upper + pad,
+      };
+    }
+    return `
+      <div class="ci-overlap-visual">
+        <div class="ci-overlap-bar-stack">
+          ${renderCiOverlapBar("Cochrane", cochraneBounds, domain, canUseLogScale, "ci-overlap-bar-cochrane")}
+          ${renderCiOverlapBar("Agent", agentBounds, domain, canUseLogScale, "ci-overlap-bar-agent")}
+        </div>
+        <div class="ci-overlap-score">
+          <span class="ci-overlap-score-label">IoU</span>
+          <span class="ci-overlap-score-value">${formatPercent(overlap?.overlap_ratio)}</span>
+        </div>
+        ${!cochraneBounds ? `<div class="screen-study-secondary ci-overlap-note">No ${escapeHtml(targetLabel)} Cochrane CI</div>` : ""}
+        ${!agentBounds ? `<div class="screen-study-secondary ci-overlap-note">No agent CI</div>` : ""}
+      </div>
     `;
   }
 
@@ -1756,10 +1868,31 @@
       return "";
     }
     const counts = ciOverlapArtifact.counts || {};
+    const synthesisTp = finiteNumber(counts.synthesis_tp) ?? 0;
+    const synthesisFp = finiteNumber(counts.synthesis_fp) ?? 0;
+    const synthesisFn = finiteNumber(counts.synthesis_fn) ?? 0;
+    const synthesisPrecision = finiteNumber(counts.synthesis_precision)
+      ?? (synthesisTp + synthesisFp ? synthesisTp / (synthesisTp + synthesisFp) : null);
+    const synthesisRecall = finiteNumber(counts.synthesis_recall)
+      ?? (synthesisTp + synthesisFn ? synthesisTp / (synthesisTp + synthesisFn) : null);
+    const synthesisF1 = finiteNumber(counts.synthesis_f1);
     const designBranchForestPlots = Number(synthesisDisplayContext.designBranchForestPlots) || 0;
     const ciTarget = ((ciOverlapArtifact.metric_definition || {}).cochrane_ci_target)
       || "locally reproduced Cochrane all-studies CI using all estimable extracted Cochrane forest-plot rows";
     const rows = synthesisConfusionRows(ciOverlapArtifact);
+    const tableRows = rows.filter((row) => String(row.classification || "").toLowerCase() !== "fp");
+    const meanStudyOverlapF1 = finiteNumber(counts.mean_study_row_overlap_f1);
+    const studyOverlapCount = finiteNumber(counts.study_row_overlap_count) ?? 0;
+    const agentOnlyRows = rows.filter((row) => String(row.classification || "").toLowerCase() === "fp");
+    const agentOnlyOutcomeCounts = new Map();
+    agentOnlyRows.forEach((row) => {
+      const agent = row.agent_forest_plot || {};
+      const outcomeName = String(agent.outcome_name || agent.outcome_key || agent.agent_plot_key || "Unnamed agent outcome").trim();
+      agentOnlyOutcomeCounts.set(outcomeName, (agentOnlyOutcomeCounts.get(outcomeName) || 0) + 1);
+    });
+    const agentOnlyOutcomeItems = Array.from(agentOnlyOutcomeCounts.entries()).map(([outcomeName, plotCount]) => (
+      `<li>${escapeHtml(outcomeName)}${plotCount > 1 ? ` <span class="screen-study-secondary">(${number(plotCount)} plots)</span>` : ""}</li>`
+    )).join("");
     return `
       <div class="detail-card evaluation-card" style="margin-top:14px;">
         <h3>Cochrane Analysis Recall</h3>
@@ -1773,51 +1906,71 @@
             detail: `${number(counts.agent_all_eligible_plots)} all-eligible; ${number(counts.agent_randomized_branch_plots)} randomized-trial fallback`,
           },
           {
-            label: "Cochrane analyses recalled",
+            label: "Cochrane plots recalled",
             value: formatPercent(counts.cochrane_analysis_recall),
-            detail: `${number(counts.cochrane_analyses_recalled)} of ${number(counts.cochrane_all_studies_main_analyses)} Cochrane analyses linked to an agent forest plot`,
+            detail: `${number(counts.cochrane_analyses_recalled)} of ${number(counts.cochrane_all_studies_main_analyses)} Cochrane plots linked to an agent forest plot`,
           },
           {
-            label: "TP / FP / FN",
+            label: "Plot TP / FP / FN",
             value: `${number(counts.synthesis_tp)} / ${number(counts.synthesis_fp)} / ${number(counts.synthesis_fn)}`,
-            detail: `Precision ${formatPercent(counts.synthesis_precision)}; recall ${formatPercent(counts.synthesis_recall)}`,
+            detail: `Precision ${formatPercent(synthesisPrecision)}; recall ${formatPercent(synthesisRecall)}; F1 ${formatPercent(synthesisF1)}`,
           },
           {
-            label: "Mean all-estimable CI IoU",
+            label: "Mean study-row F1",
+            value: formatPercent(meanStudyOverlapF1),
+            detail: `${number(studyOverlapCount)} matched ${studyOverlapCount === 1 ? "plot" : "plots"} with study-overlap data`,
+          },
+          {
+            label: "Mean CI IoU",
             value: formatPercent(counts.mean_ci_overlap_ratio),
             detail: `${number(counts.matched_plots)} matched agent forest plots; target: ${ciTarget}`,
           },
           {
-            label: "Mean PMCID-only CI IoU",
+            label: "PMCID-only CI IoU",
             value: formatPercent(counts.mean_pmcid_only_ci_overlap_ratio),
             detail: `${number(counts.pmcid_only_ci_overlap_count)} matched agent forest plots with a reproduced PMCID-only target`,
           },
         ])}
         ${rows.length ? `
+          <div class="synthesis-evaluation-actions">
+            <button
+              class="matrix-toggle-button ${currentSynthesisStudyRowDetailsOpen ? "is-active" : ""}"
+              type="button"
+              data-synthesis-study-row-details-toggle
+              aria-pressed="${currentSynthesisStudyRowDetailsOpen ? "true" : "false"}"
+            >
+              ${currentSynthesisStudyRowDetailsOpen ? "Hide study-row details" : "Show study-row details"}
+            </button>
+            <button
+              class="matrix-toggle-button ${currentSynthesisCiOverlapTarget === "pmcid_only" ? "is-active" : ""}"
+              type="button"
+              data-synthesis-ci-overlap-target-toggle
+              aria-pressed="${currentSynthesisCiOverlapTarget === "pmcid_only" ? "true" : "false"}"
+            >
+              ${currentSynthesisCiOverlapTarget === "pmcid_only" ? "Show all-studies CI" : "Show PMCID-only CI"}
+            </button>
+          </div>
           <div class="table-wrap screening-wrap evaluation-summary-table-wrap">
-            <table class="screening-table evaluation-table evaluation-summary-table">
+            <table class="screening-table evaluation-table evaluation-summary-table synthesis-evaluation-table">
               <thead>
                 <tr>
-                  <th>Match</th>
-                  <th>Cochrane analysis</th>
-                  <th>Agent forest plot</th>
-                  <th>Study rows</th>
-                  <th>Agent CI</th>
-                  <th>IoU</th>
-                  <th>IoU (PMCID-only)</th>
+                  <th>Result</th>
+                  <th>Cochrane outcome</th>
+                  <th>Agent outcome</th>
+                  <th>Study overlap</th>
+                  <th>CI overlap</th>
                 </tr>
               </thead>
               <tbody>
-                ${rows.map((row) => {
+                ${tableRows.map((row) => {
                   const classification = row.classification || "—";
                   const cochrane = row.cochrane_analysis || {};
                   const agent = row.agent_forest_plot || {};
                   const allStudies = row.all_studies_iou || null;
                   const pmcidOnly = row.pmcid_only_iou || null;
-                  const allStudiesCi = allStudies
-                    ? formatCi(allStudies.cochrane_ci_lower, allStudies.cochrane_ci_upper)
-                    : formatCi(cochrane.ci_lower, cochrane.ci_upper);
-                  const pmcidCi = pmcidOnly ? formatCi(pmcidOnly.cochrane_ci_lower, pmcidOnly.cochrane_ci_upper) : "—";
+                  const selectedCiOverlap = currentSynthesisCiOverlapTarget === "pmcid_only"
+                    ? pmcidOnly
+                    : allStudies;
                   return `
                     <tr class="synthesis-confusion-row synthesis-confusion-row-${escapeHtml(String(classification).toLowerCase())}">
                       <td>
@@ -1829,25 +1982,24 @@
                       </td>
                       <td>
                         <div class="screen-study-primary">${escapeHtml(agent.outcome_name || agent.outcome_key || "—")}</div>
-                        ${agent.agent_plot_key ? `<div class="screen-study-secondary">${escapeHtml(displayAgentPlotKey(agent.agent_plot_key))}</div>` : ""}
-                        ${agent.agent_plot_subset ? `<div class="screen-study-secondary">Evaluated: ${escapeHtml(displayAgentPlotSubset(agent.agent_plot_subset))}</div>` : ""}
                       </td>
-                      <td class="synthesis-study-overlap">${renderStudyRowOverlap(row.study_row_overlap)}</td>
-                      <td>${escapeHtml(formatCi(agent.ci_lower, agent.ci_upper))}</td>
-                      <td>
-                        ${formatPercent(allStudies?.overlap_ratio)}
-                        ${allStudiesCi !== "—" ? `<div class="screen-study-secondary">CI ${escapeHtml(allStudiesCi)}</div>` : ""}
-                      </td>
-                      <td>
-                        ${formatPercent(pmcidOnly?.overlap_ratio)}
-                        ${pmcidCi !== "—" ? `<div class="screen-study-secondary">CI ${escapeHtml(pmcidCi)}</div>` : ""}
-                      </td>
+                      <td class="synthesis-study-overlap">${renderStudyRowOverlap(row.study_row_overlap, currentSynthesisStudyRowDetailsOpen)}</td>
+                      <td class="synthesis-ci-overlap-cell">${renderCiOverlapBars(agent, selectedCiOverlap, cochrane, currentSynthesisCiOverlapTarget)}</td>
                     </tr>
                   `;
                 }).join("")}
               </tbody>
             </table>
           </div>
+          ${agentOnlyRows.length ? `
+            <div class="agent-only-outcome-summary">
+              <div class="screen-study-primary">Agent-only outcomes not shown in the table</div>
+              <p class="screen-study-secondary">These evaluated agent forest plots did not match a Cochrane main analysis in the one-to-one outcome/effect-measure evaluation, so they are still counted as false positives.</p>
+              <ul>
+                ${agentOnlyOutcomeItems}
+              </ul>
+            </div>
+          ` : ""}
         ` : `<p class="note evaluation-empty-note">No Cochrane analyses were recalled by matched evaluated agent forest plots.</p>`}
       </div>
     `;
@@ -9878,7 +10030,7 @@
 	    ${renderLeftRail(current, {
 	        hasEvaluationArtifacts,
 	      })}
-	    ${hasEvaluationArtifacts ? renderEvaluationVisibilityBanner() : ""}
+	    ${hasEvaluationArtifacts ? renderEvaluationVisibilityDock() : ""}
 		    <section class="step-card" id="step-1">
 	      <div class="step-header">
 	        <div>
@@ -10148,16 +10300,32 @@
       });
     });
 
-			    app.querySelectorAll("[data-evaluation-visibility-toggle]").forEach((button) => {
-	      button.addEventListener("click", () => {
-	        const value = button.dataset.evaluationVisibilityValue;
-	        if (value === "on" || value === "off") {
-	          setEvaluationVisibility(value === "on");
-	          return;
-	        }
-	        toggleEvaluationVisibility();
-	      });
-	    });
+    app.querySelectorAll("[data-evaluation-visibility-toggle]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const value = button.dataset.evaluationVisibilityValue;
+        if (value === "on" || value === "off") {
+          setEvaluationVisibility(value === "on");
+          return;
+        }
+        toggleEvaluationVisibility();
+      });
+    });
+
+    app.querySelectorAll("[data-synthesis-study-row-details-toggle]").forEach((button) => {
+      button.addEventListener("click", () => {
+        currentSynthesisStudyRowDetailsOpen = !currentSynthesisStudyRowDetailsOpen;
+        renderPreservingScrollPosition();
+      });
+    });
+
+    app.querySelectorAll("[data-synthesis-ci-overlap-target-toggle]").forEach((button) => {
+      button.addEventListener("click", () => {
+        currentSynthesisCiOverlapTarget = currentSynthesisCiOverlapTarget === "pmcid_only"
+          ? "all_studies"
+          : "pmcid_only";
+        renderPreservingScrollPosition();
+      });
+    });
 
 		    app.querySelectorAll("[data-outcome-benchmark-view]").forEach((select) => {
 		      select.addEventListener("change", (event) => {
