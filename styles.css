@@ -5035,13 +5035,13 @@ summary.outcome-panel-head {
   right: max(16px, calc((100vw - var(--content-width)) / 2 - 220px));
   z-index: 30;
   display: grid;
-  gap: 2px;
-  justify-items: end;
-  width: 138px;
-  padding: 4px 7px;
+  gap: 5px;
+  justify-items: center;
+  width: 116px;
+  padding: 7px;
   border: 1px solid var(--evaluation-line);
-  border-radius: var(--radius-sm);
-  background: var(--evaluation-bg);
+  border-radius: 18px;
+  background: rgba(238, 247, 251, 0.9);
   box-shadow: 0 10px 28px rgba(24, 33, 38, 0.1);
   backdrop-filter: blur(12px);
 }
@@ -5052,31 +5052,32 @@ body.source-trace-open .evaluation-visibility-dock {
 
 .evaluation-visibility-title {
   color: var(--evaluation-ink);
-  font-size: var(--text-xs);
+  font-size: 11px;
   font-weight: 900;
   line-height: 1;
-  text-align: right;
+  text-align: center;
+  white-space: nowrap;
 }
 
 .evaluation-visibility-dock .evaluation-visibility-control {
-  display: inline-flex;
+  width: 100%;
 }
 
 .evaluation-visibility-dock .evaluation-visibility-option {
-  min-height: 22px;
-  min-width: 0;
-  padding: 2px 8px;
+  min-height: 24px;
+  min-width: 36px;
+  padding: 3px 9px;
 }
 
 .evaluation-visibility-control {
   display: inline-grid;
-  grid-template-columns: repeat(2, minmax(42px, 1fr));
+  grid-template-columns: repeat(2, minmax(36px, 1fr));
   gap: 2px;
   flex: 0 0 auto;
   padding: 2px;
   border: 1px solid var(--evaluation-line);
   border-radius: 999px;
-  background: var(--surface);
+  background: rgba(255, 255, 255, 0.78);
 }
 
 .evaluation-visibility-option {
@@ -5105,12 +5106,13 @@ body.source-trace-open .evaluation-visibility-dock {
 .evaluation-visibility-option.is-active {
   background: var(--evaluation-ink);
   color: var(--on-dark);
-  box-shadow: var(--shadow-soft);
+  box-shadow: 0 4px 10px rgba(7, 89, 133, 0.16);
 }
 
 .evaluation-visibility-option.is-active[data-evaluation-visibility-value="off"] {
-  background: var(--exclude);
+  background: var(--muted-strong);
   color: var(--on-dark);
+  box-shadow: 0 4px 10px rgba(75, 89, 96, 0.16);
 }
 
 .evaluation-hidden-panel {
@@ -6872,7 +6874,7 @@ body.source-trace-open .left-rail {
 
   .evaluation-visibility-dock {
     right: 14px;
-    width: 132px;
+    width: 116px;
   }
 }
 
@@ -6906,7 +6908,7 @@ body.source-trace-open .left-rail {
   .evaluation-visibility-dock {
     top: 74px;
     right: 14px;
-    width: 132px;
+    width: 116px;
   }
 
   .cochrane-reference-legend {
@@ -6976,7 +6978,8 @@ body.source-trace-open .left-rail {
     top: auto;
     right: 10px;
     bottom: 12px;
-    width: min(150px, calc(100vw - 20px));
+    width: 116px;
+    max-width: calc(100vw - 20px);
   }
 
   .hero-copy,
