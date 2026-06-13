@@ -582,11 +582,12 @@
         kind: "post",
         stage: "Screening-driven query update",
         title: `Post-screening iteration ${iteration?.iteration || index + 1}`,
-        badge: skippedSameQuery ? "Same as final screening query" : "Generated after term audit",
+        badge: skippedSameQuery ? "Same as final screening query" : "",
         query,
         retrieved,
         detail: "",
         transitionDetail: postScreeningQueryTransitionReason(iteration, skippedSameQuery),
+        usedTermVariants: Array.isArray(iteration?.used_term_variants) ? iteration.used_term_variants : [],
       });
     });
     return entries;
@@ -727,7 +728,7 @@
               <div class="query-transition-arrow" aria-hidden="true"></div>
               ${entry.detail ? `
                 <div class="query-transition-note">
-                  <span>Agent query audit and revision</span>
+                  <span>Search reviewed and revised</span>
                   <p>${escapeHtml(entry.detail)}</p>
                 </div>
               ` : ""}
@@ -738,16 +739,47 @@
     `;
   }
 
+  function renderScreeningQueryUpdateTermVariants(termVariants) {
+    const rows = (Array.isArray(termVariants) ? termVariants : [])
+      .map((item) => {
+        const canonicalLabel = String(item?.canonical_label || "").trim();
+        const selectedVariants = Array.isArray(item?.selected_variants)
+          ? item.selected_variants.map((value) => String(value || "").trim()).filter(Boolean)
+          : [];
+        return { canonicalLabel, selectedVariants };
+      })
+      .filter((item) => item.canonicalLabel || item.selectedVariants.length);
+    if (!rows.length) {
+      return "";
+    }
+    const countLabel = `${number(rows.length)} ${rows.length === 1 ? "group" : "groups"}`;
+    return `
+      <details class="query-update-term-variants">
+        <summary>View ${countLabel} of term variants</summary>
+        <div class="query-update-term-variant-list">
+          ${rows.map((row) => `
+            <div class="query-update-term-variant-row">
+              <div class="query-update-term-variant-label">${escapeHtml(row.canonicalLabel || "Unlabeled concept")}</div>
+              <div class="query-update-term-variant-values">${row.selectedVariants.map((variant) => `<span>${escapeHtml(variant)}</span>`).join("")}</div>
+            </div>
+          `).join("")}
+        </div>
+      </details>
+    `;
+  }
+
   function renderScreeningQueryUpdateTransition(entry) {
     if (!entry) {
       return "";
     }
+    const termVariants = renderScreeningQueryUpdateTermVariants(entry.usedTermVariants);
     return `
       <div class="query-transition query-transition-post" aria-label="Reason for post-screening query update">
         <div class="query-transition-arrow" aria-hidden="true"></div>
         <div class="query-transition-note">
-          <span>Agent screening-driven query update</span>
+          <span>Search expanded after screening</span>
           <p>${escapeHtml(entry.transitionDetail || "After initial title/abstract screening, the agent reviewed focused term variants and reran PubMed retrieval when they added useful query coverage.")}</p>
+          ${termVariants}
         </div>
       </div>
     `;
