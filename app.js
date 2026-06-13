@@ -1890,8 +1890,13 @@
       const outcomeName = String(agent.outcome_name || agent.outcome_key || agent.agent_plot_key || "Unnamed agent outcome").trim();
       agentOnlyOutcomeCounts.set(outcomeName, (agentOnlyOutcomeCounts.get(outcomeName) || 0) + 1);
     });
-    const agentOnlyOutcomeItems = Array.from(agentOnlyOutcomeCounts.entries()).map(([outcomeName, plotCount]) => (
-      `<li>${escapeHtml(outcomeName)}${plotCount > 1 ? ` <span class="screen-study-secondary">(${number(plotCount)} plots)</span>` : ""}</li>`
+    const agentOnlyOutcomeEntries = Array.from(agentOnlyOutcomeCounts.entries());
+    const agentOnlyOutcomeCountLabel = `${number(agentOnlyOutcomeEntries.length)} ${agentOnlyOutcomeEntries.length === 1 ? "outcome" : "outcomes"}`;
+    const agentOnlyOutcomeItems = agentOnlyOutcomeEntries.map(([outcomeName, plotCount]) => (
+      `<span class="agent-only-outcome-chip" role="listitem">
+        <span class="agent-only-outcome-name">${escapeHtml(outcomeName)}</span>
+        ${plotCount > 1 ? `<span class="agent-only-outcome-count">${number(plotCount)} plots</span>` : ""}
+      </span>`
     )).join("");
     return `
       <div class="detail-card evaluation-card" style="margin-top:14px;">
@@ -1993,11 +1998,16 @@
           </div>
           ${agentOnlyRows.length ? `
             <div class="agent-only-outcome-summary">
-              <div class="screen-study-primary">Agent-only outcomes not shown in the table</div>
-              <p class="screen-study-secondary">These evaluated agent forest plots did not match a Cochrane main analysis in the one-to-one outcome/effect-measure evaluation, so they are still counted as false positives.</p>
-              <ul>
+              <div class="agent-only-outcome-summary-head">
+                <div>
+                  <div class="screen-study-primary">Agent-only outcomes not shown in the table</div>
+                  <p class="screen-study-secondary">These evaluated agent forest plots did not match a Cochrane main analysis in the one-to-one outcome/effect-measure evaluation, so they are still counted as false positives.</p>
+                </div>
+                <span class="agent-only-outcome-total">${agentOnlyOutcomeCountLabel}</span>
+              </div>
+              <div class="agent-only-outcome-list" role="list">
                 ${agentOnlyOutcomeItems}
-              </ul>
+              </div>
             </div>
           ` : ""}
         ` : `<p class="note evaluation-empty-note">No Cochrane analyses were recalled by matched evaluated agent forest plots.</p>`}
@@ -9926,7 +9936,9 @@
       return `
         <details class="detail-card final-report-panel" id="final-report" style="margin-top:14px;">
           <summary class="collapsible-table-summary final-report-summary">
-            <span>Final Report</span>
+            <div class="collapsible-summary-text">
+              <h3>Final report</h3>
+            </div>
           </summary>
           <p class="note">No final report was saved for this run.</p>
         </details>
@@ -9936,7 +9948,9 @@
     return `
       <details class="detail-card final-report-panel" id="final-report" style="margin-top:14px;">
         <summary class="collapsible-table-summary final-report-summary">
-          <span>Final Report</span>
+          <div class="collapsible-summary-text">
+            <h3>Final report</h3>
+          </div>
         </summary>
         <div class="report-status-banner ${statusClass}">
           <strong>${escapeHtml(statusLabel)}</strong>
