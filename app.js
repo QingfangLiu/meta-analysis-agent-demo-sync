@@ -821,6 +821,7 @@
             <div class="stat-label">${escapeHtml(item.label || "")}</div>
             <div class="evaluation-metric-value">${escapeHtml(item.value || "—")}</div>
             ${item.detail ? `<div class="stat-detail">${escapeHtml(item.detail)}</div>` : ""}
+            ${item.extraHtml || ""}
           </div>
         `).join("")}
       </div>
@@ -1111,18 +1112,7 @@
     const finalLabel = finalRound.query_label || fallbackRow.label || "Final retrieval query";
 
     if (!Number(missedCount) && !missedRows.length) {
-      return `
-        <div class="retrieval-missed-panel">
-          <div class="retrieval-missed-head">
-            <div>
-              <div class="stat-label">Missed by final retrieval round</div>
-              <div class="retrieval-missed-count">0 studies</div>
-            </div>
-            <div class="note">Counted from ${escapeHtml(finalLabel)} only.</div>
-          </div>
-          <p class="note">No Cochrane included-reference PMIDs were missed by the final retrieval round.</p>
-        </div>
-      `;
+      return "";
     }
 
     return `
@@ -1132,7 +1122,6 @@
             <div class="stat-label">Missed by final retrieval round</div>
             <div class="retrieval-missed-count">${number(missedCount)} ${Number(missedCount) === 1 ? "study" : "studies"}</div>
           </div>
-          <div class="note">Counted from ${escapeHtml(finalLabel)} only.</div>
         </div>
         <div class="table-wrap retrieval-missed-wrap">
           <table class="screening-table retrieval-missed-table">
@@ -1171,12 +1160,7 @@
       return "";
     }
     const finalLabel = finalRound.query_label || fallbackRow.label || "Final retrieval query";
-    return renderEvaluationMetricGrid([
-      {
-        label: "Final retrieval round",
-        value: finalLabel,
-        detail: "Only this round is summarized here",
-      },
+    const metricGrid = renderEvaluationMetricGrid([
       {
         label: "Cochrane PMIDs retrieved",
         value: number(finalRound.cochrane_pmids_retrieved ?? fallbackRow.tp),
@@ -1192,7 +1176,13 @@
         value: formatPercent(finalRound.recall ?? fallbackRow.recall),
         detail: "Retrieved Cochrane included PMIDs / all Cochrane included PMIDs",
       },
-    ], "retrieval-final-metric-grid");
+    ],
+      "retrieval-final-metric-grid",
+    );
+    return `
+      <p class="note retrieval-final-round-note">Final retrieval round summarized here: ${escapeHtml(finalLabel)}.</p>
+      ${metricGrid}
+    `;
   }
 
   function renderSearchEvaluation(searchMetrics, ciOverlapArtifact = {}, options = {}) {
@@ -1246,7 +1236,56 @@
     `;
   }
 
-  function renderScreeningEvaluation(searchMetrics) {
+  function titleAbstractScreenPositive(study) {
+    const decision = String(study?.screen_decision || "not enough info").trim().toLowerCase();
+    return decision === "include" || decision === "not enough info" || decision === "unclear";
+  }
+
+  function screeningEvaluationStudyBuckets(screeningResults, searchMetrics) {
+    const studies = Array.isArray(screeningResults?.screened_studies) ? screeningResults.screened_studies : [];
+    const benchmark = searchMetrics?.benchmark || {};
+    const includedPmids = new Set(pmidListFromValue(benchmark.pmids));
+    const excludedPmids = new Set(pmidListFromValue(benchmark.excluded_pmids));
+    return studies.reduce((buckets, study) => {
+      const pmid = String(study?.pmid || "").trim();
+      if (!pmid) {
+        return buckets;
+      }
+      const screenPositive = titleAbstractScreenPositive(study);
+      if (includedPmids.has(pmid)) {
+        buckets[screenPositive ? "tp" : "fn"].push(study);
+      } else if (excludedPmids.has(pmid)) {
+        buckets[screenPositive ? "fp" : "tn"].push(study);
+      }
+      return buckets;
+    }, { tp: [], tn: [], fp: [], fn: [] });
+  }
+
+  function renderScreeningEvaluationStudyList(studies) {
+    const rows = Array.isArray(studies) ? studies : [];
+    const countLabel = `${number(rows.length)} ${rows.length === 1 ? "study" : "studies"}`;
+    return `
+      <details class="screening-evaluation-study-details">
+        <summary>View ${countLabel}</summary>
+        ${rows.length ? `
+          <div class="screening-evaluation-study-list">
+            ${rows.map((study) => {
+              const { authorYear } = extractionPubInfoParts(study);
+              const pmid = String(study?.pmid || "").trim();
+              return `
+                <div class="screening-evaluation-study-item">
+                  <div class="screening-evaluation-study-label">${escapeHtml(authorYear ? sentence(authorYear) : "No author/year")}</div>
+                  ${pmid ? `<div class="screening-evaluation-study-pmid">PMID ${escapeHtml(pmid)}</div>` : ""}
+                </div>
+              `;
+            }).join("")}
+          </div>
+        ` : `<div class="screening-evaluation-study-empty">No studies.</div>`}
+      </details>
+    `;
+  }
+
+  function renderScreeningEvaluation(searchMetrics, screeningResults = {}) {
     if (!currentEvaluationVisible) {
       return "";
     }
@@ -1272,6 +1311,7 @@
     );
     const benchmark = searchMetrics.benchmark || {};
     const hasExcludedBenchmark = Boolean(benchmark.has_excluded_screening_negative_benchmark ?? benchmark.has_excluded_negative_benchmark);
+    const screeningStudyBuckets = screeningEvaluationStudyBuckets(screeningResults, searchMetrics);
     return `
       <div class="detail-card evaluation-card" style="margin-top:14px;">
         <h3>Title/Abstract Screening Evaluation</h3>
@@ -1281,21 +1321,25 @@
 	            label: "TP",
 	            value: number(metrics.tp),
 	            detail: "Cochrane-included kept",
+	            extraHtml: renderScreeningEvaluationStudyList(screeningStudyBuckets.tp),
 	          } : null,
 	          hasExcludedBenchmark ? {
 	            label: "TN",
 	            value: number(metrics.tn),
 	            detail: "Cochrane-excluded removed",
+	            extraHtml: renderScreeningEvaluationStudyList(screeningStudyBuckets.tn),
 	          } : null,
 	          hasExcludedBenchmark ? {
 	            label: "FP",
 	            value: number(metrics.fp),
 	            detail: "Cochrane-excluded kept",
+	            extraHtml: renderScreeningEvaluationStudyList(screeningStudyBuckets.fp),
 	          } : null,
 	          hasExcludedBenchmark ? {
 	            label: "FN",
 	            value: number(metrics.fn),
 	            detail: "Cochrane-included removed",
+	            extraHtml: renderScreeningEvaluationStudyList(screeningStudyBuckets.fn),
 	          } : null,
 	          {
 	            label: "Recall",
@@ -2047,7 +2091,7 @@
     `;
   }
 
-  function renderEvaluationSummary(searchMetrics, outcomeAlignment, comparisonAlignment, ciOverlapArtifact, synthesisDisplayContext = {}) {
+  function renderEvaluationSummary(searchMetrics, outcomeAlignment, comparisonAlignment, ciOverlapArtifact, synthesisDisplayContext = {}, screeningResults = {}) {
     const hasAnyEvaluation = hasBenchmarkEvaluationArtifacts(searchMetrics, outcomeAlignment, comparisonAlignment, ciOverlapArtifact);
     if (!hasAnyEvaluation) {
       return "";
@@ -2063,7 +2107,7 @@
         <p class="note">Evaluation artifacts are generated under <span class="mono">evaluation/</span> and loaded into the demo after the agent run is complete. These metrics are not used by the agent during the run.</p>
         ${currentEvaluationVisible ? `
           ${renderSearchEvaluation(searchMetrics, ciOverlapArtifact, { summaryOnly: true })}
-          ${renderScreeningEvaluation(searchMetrics)}
+          ${renderScreeningEvaluation(searchMetrics, screeningResults)}
           ${renderComparisonIdentificationEvaluationSummary(comparisonAlignment)}
           ${renderOutcomeIdentificationEvaluationSummary(outcomeAlignment)}
           ${renderCochraneAnalysisRecallEvaluation(ciOverlapArtifact, synthesisDisplayContext)}
@@ -10181,7 +10225,7 @@
           </div>
 	      </div>
 					        ${screeningMatrix(review, screening, currentScreeningLimit, currentScreeningDecisions, cochraneSearchScreeningMetrics, currentScreeningBenchmarkOnly, sourceAvailabilityGate)}
-					        ${renderScreeningEvaluation(cochraneSearchScreeningMetrics)}
+					        ${renderScreeningEvaluation(cochraneSearchScreeningMetrics, screening)}
 					      </details>
 						        ${fulltextScreeningPanel(
 	                    perStudyOutputs,
@@ -10244,7 +10288,7 @@
       ${finalReportSection(finalReportMarkdown, current.final_report_verification || current.human_verification || {})}
 	    </section>
 
-			    ${renderEvaluationSummary(cochraneSearchScreeningMetrics, cochraneOutcomeAlignment, cochraneComparisonAlignment, cochraneSynthesisCiOverlap, synthesisPlotSummary)}
+			    ${renderEvaluationSummary(cochraneSearchScreeningMetrics, cochraneOutcomeAlignment, cochraneComparisonAlignment, cochraneSynthesisCiOverlap, synthesisPlotSummary, screening)}
 			    ${runTimingSection(timing, run)}
 			    ${llmTokenUsageSection(llmUsageSummary, llmUsageByStageRows, run)}
 			    ${sourceTraceDrawer()}

@@ -5210,6 +5210,50 @@ body.source-trace-open .evaluation-visibility-dock {
   margin-top: 6px;
 }
 
+.screening-evaluation-study-details {
+  margin-top: 8px;
+  padding-top: 7px;
+  border-top: 1px solid var(--evaluation-line);
+}
+
+.screening-evaluation-study-details summary {
+  width: fit-content;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: var(--text-xs);
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.screening-evaluation-study-list {
+  display: grid;
+  gap: 7px;
+  margin-top: 8px;
+}
+
+.screening-evaluation-study-item {
+  display: grid;
+  gap: 1px;
+}
+
+.screening-evaluation-study-label {
+  color: var(--ink);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.screening-evaluation-study-pmid,
+.screening-evaluation-study-empty {
+  color: var(--muted);
+  font-size: var(--text-xs);
+  line-height: 1.2;
+}
+
+.screening-evaluation-study-empty {
+  margin-top: 6px;
+}
+
 .evaluation-metric-value {
   margin-top: 4px;
   color: var(--ink);
