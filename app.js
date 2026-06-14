@@ -1546,7 +1546,7 @@
   function displayAgentPlotKey(value) {
     return String(value || "")
       .replace(/:all_eligible\b/g, "")
-      .replace(/^(primary|secondary)_\d+:/, "");
+      .replace(/^outcome_\d+:/, "");
   }
 
   function displayAgentPlotSubset(value) {
@@ -3540,7 +3540,7 @@
       const authorYear = firstAuthorYear(study, row);
       const title = String(study.title || "").trim();
       const journal = String(study.journal || "").trim();
-      const outcome = String(row.outcome_name || row.result_key || row.outcome_role || "").trim();
+      const outcome = String(row.outcome_name || row.outcome_key || row.result_key || "").trim();
       const tooltip = [authorYear, journal, title, outcome].filter(Boolean).join("\n\n");
       const pmid = String(row.pmid || (row.metadata || {}).pmid || "").trim();
       return `
@@ -3553,14 +3553,13 @@
     }
 
     function robOutcomeKey(row) {
-      const explicitKey = String(row.result_key || "").trim();
+      const explicitKey = String(row.outcome_key || row.result_key || "").trim();
       if (explicitKey) {
         return explicitKey;
       }
-      const role = String(row.outcome_role || "").trim();
-      const index = String(row.outcome_index || "").trim();
-      if (role && index) {
-        return `${role}_${index}`;
+      const rank = String(row.outcome_rank || "").trim();
+      if (rank) {
+        return `outcome_${rank.padStart(2, "0")}`;
       }
       const outcome = String(row.outcome_name || "").trim();
       return outcome || "outcome_not_specified";
@@ -3773,7 +3772,7 @@
           const domainNames = Array.isArray(group.domain_names) && group.domain_names.length
             ? group.domain_names
             : Array.from(new Set(rows.flatMap((row) => Object.keys((row.rob_assessment || {}).domains || {}))));
-          const hasOutcomeRows = rows.some((row) => row.outcome_name || row.outcome_role || row.result_key);
+          const hasOutcomeRows = rows.some((row) => row.outcome_name || row.outcome_key || row.result_key);
           const outcomeGroups = hasOutcomeRows
             ? robOutcomeGroups(rows)
             : [{ key: "all_assessments", label: "All assessments", rows }];
@@ -4376,10 +4375,8 @@
     outcomeSourceContribution = {}
   ) {
     const artifact = outcomesArtifact || {};
-    const outcomes = artifact.outcomes || {};
+    const outcomes = Array.isArray(artifact.outcomes) ? artifact.outcomes.filter(Boolean) : [];
     const status = artifact.status || "";
-    const primary = outcomes.primary_outcome || {};
-    const secondary = Array.isArray(outcomes.secondary_outcomes) ? outcomes.secondary_outcomes.filter(Boolean) : [];
     const initialOutcome = String((pico || {}).outcome || "").trim();
     const sourceInventory = outcomeSignalInventory || {};
     const benchmarkAlignment = cochraneOutcomeAlignment || {};
@@ -4471,8 +4468,9 @@
       return options.includes(currentOutcomeBenchmarkView) ? currentOutcomeBenchmarkView : "off";
     }
 
-    function outcomeKey(role, index) {
-      return role === "primary" ? "primary" : `secondary_${index}`;
+    function rankedOutcomeKey(item, index) {
+      const rank = Number(item?.rank) || index + 1;
+      return String(item?.outcome_id || `outcome_${String(rank).padStart(2, "0")}`).trim();
     }
 
     function benchmarkMatchesForOutcome(key, activeMode) {
@@ -4843,8 +4841,10 @@
       `;
     }
 
-    function renderOutcomeCard(title, item, role, index) {
-      const key = outcomeKey(role, index);
+    function renderOutcomeCard(item, index) {
+      const rank = Number(item?.rank) || index + 1;
+      const title = `Outcome ${rank}`;
+      const key = rankedOutcomeKey(item, index);
       const activeMode = benchmarkMode();
       const benchmarkMatches = benchmarkMatchesForOutcome(key, activeMode);
       const isBenchmarkMatch = activeMode !== "off" && benchmarkMatches.length;
@@ -4852,6 +4852,7 @@
       const strength = matchStrength(bestMatch);
       const fields = [
         ["outcome type", item.outcome_type],
+        ["importance reason", item.importance_reason],
         ["outcome definition", item.outcome_definition],
         ["preferred timepoint", item.preferred_timepoint],
         ["preferred measure", Array.isArray(item.preferred_effect_measures) ? item.preferred_effect_measures.join(", ") : ""],
@@ -4894,7 +4895,7 @@
       `;
     }
 
-    if (!primary.name && !secondary.length) {
+    if (!outcomes.length) {
       return `
         <div class="detail-card" id="outcomes" style="margin-top:14px;">
           <h3>Outcomes</h3>
@@ -4922,12 +4923,11 @@
                 <div class="insight-title">Final Outcome Decision</div>
                 <p>Canonical outcomes selected for extraction and synthesis after deduplicating aliases, preserving source support, and keeping clinically important component endpoints separate from composites.</p>
               </div>
-              <div class="outcome-final-count mono">${number((primary.name ? 1 : 0) + secondary.length)}</div>
+              <div class="outcome-final-count mono">${number(outcomes.length)}</div>
             </div>
             ${renderOutcomeCoverageSummary()}
             <div class="outcome-panel-list outcome-final-grid">
-              ${primary.name ? renderOutcomeCard("Primary Outcome", primary, "primary", 0) : ""}
-              ${secondary.map((item, index) => renderOutcomeCard(`Secondary Outcome ${index + 1}`, item, "secondary", index + 1)).join("")}
+              ${outcomes.map((item, index) => renderOutcomeCard(item, index)).join("")}
             </div>
             ${renderOutcomeAlignmentAudit()}
             ${renderBenchmarkControl()}
@@ -5511,18 +5511,15 @@
   }
 
   function extractionTemplateForOutcomeTable(table, templateSet) {
-    const role = String(table?.role || "").trim().toLowerCase();
-    if (role === "primary") {
-      return (templateSet || {}).primary_template || {};
-    }
-    if (role === "secondary") {
-      const index = Number(table?.index);
-      const secondaryTemplates = Array.isArray((templateSet || {}).secondary_templates)
-        ? templateSet.secondary_templates
-        : [];
-      return index > 0 ? secondaryTemplates[index - 1] || {} : {};
-    }
-    return {};
+    const outcomeKey = String(table?.outcome_key || "").trim();
+    const templates = Array.isArray((templateSet || {}).outcome_templates)
+      ? templateSet.outcome_templates
+      : [];
+    return templates.find((template, index) => {
+      const targets = template?.review_targets || {};
+      const templateKey = String(targets.outcome_id || `outcome_${String(index + 1).padStart(2, "0")}`).trim();
+      return templateKey === outcomeKey;
+    }) || {};
   }
 
   function sourceLabel(value) {
@@ -5543,15 +5540,11 @@
   }
 
   function extractionOutcomeKey(table, tableIndex = 0) {
-    const role = String(table?.role || "").trim().toLowerCase();
-    const index = Number(table?.index);
-    if (role === "primary") {
-      return "primary";
+    const key = String(table?.outcome_key || table?.key || "").trim();
+    if (key) {
+      return key;
     }
-    if (role === "secondary" && Number.isFinite(index) && index > 0) {
-      return `secondary_${index}`;
-    }
-    return String(table?.key || role || `outcome_${tableIndex}`).trim();
+    return `outcome_${String(tableIndex + 1).padStart(2, "0")}`;
   }
 
   function extractionTargetKey(outcomeKey, pmid) {
@@ -6843,20 +6836,9 @@
 
     function readableResultLabel(result) {
       const resultKey = cleanText(result?.result_key || "");
-      const role = cleanText(result?.outcome_role || "").toLowerCase();
-      const index = cleanText(result?.outcome_index || "");
+      const rank = cleanText(result?.outcome_rank || "");
       const label = cleanText(result?.outcome_label || resultKey || "Outcome");
-      if (resultKey === "primary" || role === "primary" || label.toLowerCase() === "primary outcome") {
-        return "Primary";
-      }
-      const secondaryMatch = resultKey.match(/^secondary_(\d+)$/) || label.match(/^secondary outcome\s+(\d+)$/i);
-      if (secondaryMatch) {
-        return `Secondary ${secondaryMatch[1]}`;
-      }
-      if (role === "secondary") {
-        return index ? `Secondary ${index}` : "Secondary";
-      }
-      return label;
+      return rank ? `Outcome ${rank}` : label;
     }
 
     function outcomeFilterKey(result) {
@@ -6864,9 +6846,12 @@
       if (resultKey) {
         return resultKey;
       }
-      const role = cleanText(result?.outcome_role || "");
-      const index = cleanText(result?.outcome_index || "");
-      return [role, index].filter(Boolean).join("_") || cleanText(result?.outcome_name || "");
+      const outcomeKey = cleanText(result?.outcome_key || "");
+      if (outcomeKey) {
+        return outcomeKey;
+      }
+      const rank = cleanText(result?.outcome_rank || "");
+      return rank ? `outcome_${rank.padStart(2, "0")}` : cleanText(result?.outcome_name || "");
     }
 
     function outcomeFilterLabel(result) {
@@ -7319,14 +7304,8 @@
   }
 
   function synthesisOutcomeSortKey(key) {
-    if (key === "primary") {
-      return [0, 0];
-    }
-    if (String(key).startsWith("secondary_")) {
-      const index = Number(String(key).replace("secondary_", ""));
-      return [1, Number.isFinite(index) ? index : 999];
-    }
-    return [2, String(key)];
+    const match = String(key || "").match(/(\d+)$/);
+    return [match ? Number(match[1]) : 999, String(key || "")];
   }
 
   function synthesisOutcomeEntries(synthesis) {
@@ -7349,11 +7328,7 @@
       if (!table || typeof table !== "object") {
         return false;
       }
-      if (key === "primary" && table.role === "primary") {
-        return true;
-      }
-      const secondaryMatch = key.match(/^secondary_(\d+)$/);
-      if (secondaryMatch && table.role === "secondary" && String(table.index) === secondaryMatch[1]) {
+      if (String(table.outcome_key || "").trim() === key) {
         return true;
       }
       return outcomeName && String(table.outcome_name || "").trim().toLowerCase() === outcomeName;
