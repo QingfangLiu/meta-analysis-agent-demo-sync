@@ -4382,7 +4382,9 @@
     outcomeSourceContribution = {}
   ) {
     const artifact = outcomesArtifact || {};
-    const outcomes = Array.isArray(artifact.outcomes) ? artifact.outcomes.filter(Boolean) : [];
+    const outcomes = Array.isArray(artifact.outcomes?.outcomes)
+      ? artifact.outcomes.outcomes.filter(Boolean)
+      : [];
     const status = artifact.status || "";
     const initialOutcome = String((pico || {}).outcome || "").trim();
     const sourceInventory = outcomeSignalInventory || {};
@@ -4906,7 +4908,7 @@
       return `
         <div class="detail-card" id="outcomes" style="margin-top:14px;">
           <h3>Outcomes</h3>
-          <p class="note">No outcomes artifact was saved for this run${status ? ` (${escapeHtml(status)})` : ""}.</p>
+          <p class="note">No ranked outcomes were saved for this run${status ? ` (${escapeHtml(status)})` : ""}.</p>
         </div>
       `;
     }
@@ -5552,6 +5554,20 @@
       return key;
     }
     return `outcome_${String(tableIndex + 1).padStart(2, "0")}`;
+  }
+
+  function rankedOutcomeNameByKey(outcomesArtifact = {}) {
+    const rankedOutcomes = Array.isArray(outcomesArtifact?.outcomes?.outcomes)
+      ? outcomesArtifact.outcomes.outcomes
+      : [];
+    return rankedOutcomes.reduce((acc, outcome) => {
+      const key = String(outcome?.outcome_id || outcome?.outcome_key || "").trim();
+      const name = String(outcome?.name || outcome?.outcome_name || "").trim();
+      if (key && name) {
+        acc[key] = name;
+      }
+      return acc;
+    }, {});
   }
 
   function extractionTargetKey(outcomeKey, pmid) {
@@ -6262,15 +6278,16 @@
     document.body.classList.remove("source-trace-open");
   }
 
-  function extractionStudyGroupsFromTables(tables) {
+  function extractionStudyGroupsFromTables(tables, outcomeNameByKey = {}) {
     const allStudies = new Map();
     const extractablePmids = new Set();
     const extractableOutcomesByPmid = new Map();
 
-    (Array.isArray(tables) ? tables : []).forEach((table) => {
+    (Array.isArray(tables) ? tables : []).forEach((table, tableIndex) => {
       const extractableRows = Array.isArray(table.extractable_rows) ? table.extractable_rows : [];
       const nonExtractableRows = Array.isArray(table.non_extractable_rows) ? table.non_extractable_rows : [];
-      const outcomeName = cleanText(table.outcome_name || table.label || "Outcome");
+      const outcomeKey = extractionOutcomeKey(table, tableIndex);
+      const outcomeName = cleanText(outcomeNameByKey[outcomeKey] || table.outcome_name || table.label || "Outcome");
       [...extractableRows, ...nonExtractableRows].forEach((row) => {
         const pmid = String(row?.pmid || "").trim();
         if (pmid && !allStudies.has(pmid)) {
@@ -6350,8 +6367,8 @@
     `;
   }
 
-  function extractionResultsOverviewContent(tables) {
-    const { extractable, nonExtractable } = extractionStudyGroupsFromTables(tables);
+  function extractionResultsOverviewContent(tables, outcomeNameByKey = {}) {
+    const { extractable, nonExtractable } = extractionStudyGroupsFromTables(tables, outcomeNameByKey);
     return `
       <div class="extraction-study-summary-grid">
         <div class="extraction-study-summary-card">
@@ -6372,7 +6389,7 @@
     `;
   }
 
-  function extractionOverviewSection(overview, tables) {
+  function extractionOverviewSection(overview, tables, outcomeNameByKey = {}) {
     const hiddenTitles = new Set([
       "linked trial support",
       "full-text retrieval",
@@ -6399,7 +6416,7 @@
               </div>
             </summary>
             ${String(section.title || "").trim().toLowerCase() === "extraction results"
-              ? extractionResultsOverviewContent(tables)
+              ? extractionResultsOverviewContent(tables, outcomeNameByKey)
               : `<div class="extraction-overview-stats">
                   ${(section.stats || []).map((stat) => `
                     <div class="synthesis-mini-stat extraction-overview-stat">
@@ -6805,8 +6822,9 @@
     `;
   }
 
-  function studyExtractionSection(perStudyOutputs) {
+  function studyExtractionSection(perStudyOutputs, outcomesArtifact = {}) {
     const rows = [];
+    const outcomeNameByKey = rankedOutcomeNameByKey(outcomesArtifact);
     (Array.isArray(perStudyOutputs) ? perStudyOutputs : []).forEach((study) => {
       const results = Array.isArray(study?.study_extraction_results) ? study.study_extraction_results : [];
       results.forEach((result) => {
@@ -6861,8 +6879,13 @@
       return rank ? `outcome_${rank.padStart(2, "0")}` : cleanText(result?.outcome_name || "");
     }
 
+    function concreteOutcomeName(result) {
+      const key = outcomeFilterKey(result);
+      return cleanText(outcomeNameByKey[key] || result?.outcome_name || "");
+    }
+
     function outcomeFilterLabel(result) {
-      const outcomeName = cleanText(result?.outcome_name || "");
+      const outcomeName = concreteOutcomeName(result);
       return [readableResultLabel(result), outcomeName].filter(Boolean).join(" | ");
     }
 
@@ -6944,7 +6967,7 @@
 
     function resultOutcomeCell(result) {
       const label = readableResultLabel(result);
-      const outcomeName = cleanText(result?.outcome_name || "");
+      const outcomeName = concreteOutcomeName(result);
       return `
         <div class="study-extraction-cell-stack">
           <div class="study-extraction-primary">${escapeHtml(label)}</div>
@@ -7100,12 +7123,14 @@
     nonExtractableLimit,
     extractionOverview,
     extractionTemplates,
-    cochraneOutcomeAlignment = {}
+    cochraneOutcomeAlignment = {},
+    outcomesArtifact = {}
   ) {
     const tables = Array.isArray(outcomeTables) ? outcomeTables : [];
     if (!tables.length) {
       return `<p class="note">No outcome extraction CSV files were found for this run.</p>`;
     }
+    const outcomeNameByKey = rankedOutcomeNameByKey(outcomesArtifact);
 
     const maxNonExtractableRows = Math.max(
       0,
@@ -7270,8 +7295,8 @@
     function renderOutcomeExtractionPanel(table, tableIndex) {
       const extractableRows = Array.isArray(table.extractable_rows) ? table.extractable_rows : [];
       const nonExtractableRows = Array.isArray(table.non_extractable_rows) ? table.non_extractable_rows : [];
-      const outcomeTitle = String(table.outcome_name || table.label || "Outcome").trim();
       const outcomeKey = extractionOutcomeKey(table, tableIndex);
+      const outcomeTitle = String(outcomeNameByKey[outcomeKey] || table.outcome_name || table.label || "Outcome").trim();
 
       return `
         <details class="outcome-panel" open>
@@ -7303,7 +7328,7 @@
     }
 
     return `
-      ${extractionOverviewSection(extractionOverview, tables)}
+      ${extractionOverviewSection(extractionOverview, tables, outcomeNameByKey)}
       <div class="outcome-panel-list">
         ${tables.map((table, index) => renderOutcomeExtractionPanel(table, index)).join("")}
       </div>
@@ -10512,8 +10537,8 @@
 	      <div class="detail-card" id="extraction-results" style="margin-top:14px;">
 	        <h3>Study extraction results</h3>
 	        <p class="note">This section summarizes outcome-specific extraction rows. With full text, extraction and RoB are produced together; without full text, extraction uses abstract plus exact linked NCT records when available, otherwise the abstract alone, and RoB is skipped.</p>
-	        ${extractionAttemptSection(outcomeExtractionTables, currentNonExtractableLimit, extractionOverview, extractionTemplates, cochraneOutcomeAlignment)}
-	        ${studyExtractionSection(perStudyOutputs)}
+	        ${extractionAttemptSection(outcomeExtractionTables, currentNonExtractableLimit, extractionOverview, extractionTemplates, cochraneOutcomeAlignment, outcomes)}
+	        ${studyExtractionSection(perStudyOutputs, outcomes)}
 	      </div>
 	      ${studyTypeRoutingSection(robDisplay)}
 	      ${robToolDetailsSection(robDisplay)}
