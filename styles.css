@@ -395,6 +395,7 @@ main {
 
 :where(
   #single-prompt,
+  #answer-snapshot,
   #run-timing,
   #review-pico,
   #search-query-history,

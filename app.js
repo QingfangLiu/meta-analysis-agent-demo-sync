@@ -2659,10 +2659,15 @@
     const hasEvaluationArtifacts = options.hasEvaluationArtifacts === true;
     const groups = [
       {
+        label: "Overview",
+        items: [
+          ["Question", "#single-prompt"],
+          ["Answer snapshot", "#answer-snapshot"],
+        ],
+      },
+      {
         label: "Review setup",
         items: [
-          ["Single prompt", "#single-prompt"],
-          ["Answer snapshot", "#answer-snapshot"],
           ["PICO", "#review-pico"],
         ],
       },
@@ -10364,13 +10369,7 @@
 	        hasEvaluationArtifacts,
 	      })}
 	    ${hasEvaluationArtifacts ? renderEvaluationVisibilityDock() : ""}
-		    <section class="step-card" id="step-1">
-	      <div class="step-header">
-	        <div>
-	          <p class="kicker">Stage 1</p>
-	          <h2>Review setup</h2>
-	        </div>
-	      </div>
+	    <section class="step-card overview-card" id="overview">
 	      <div class="panel root-prompt-card" id="single-prompt">
 	        <div class="root-prompt-head">
 	          <div>
@@ -10389,6 +10388,15 @@
 	        </div>
 	      </div>
 	      ${answerSnapshotSection(gradeSummary, outcomes)}
+	    </section>
+
+	    <section class="step-card" id="step-1">
+	      <div class="step-header">
+	        <div>
+	          <p class="kicker">Stage 1</p>
+	          <h2>Review setup</h2>
+	        </div>
+	      </div>
 	      <div class="small" style="margin:10px 2px 0;">Structured into PICO framework</div>
       <div class="panel" id="review-pico" style="margin-top:8px;">
         <h3>PICO</h3>
