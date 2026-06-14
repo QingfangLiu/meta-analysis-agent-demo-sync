@@ -2662,6 +2662,7 @@
         label: "Review setup",
         items: [
           ["Single prompt", "#single-prompt"],
+          ["Answer snapshot", "#answer-snapshot"],
           ["PICO", "#review-pico"],
         ],
       },
@@ -10021,6 +10022,149 @@
     `;
   }
 
+  function answerSnapshotOutcomeRanks(outcomesArtifact = {}) {
+    const rankedOutcomes = Array.isArray(outcomesArtifact?.outcomes?.outcomes)
+      ? outcomesArtifact.outcomes.outcomes
+      : [];
+    return new Map(
+      rankedOutcomes
+        .filter(Boolean)
+        .map((outcome, index) => [
+          String(outcome.outcome_id || outcome.outcome_key || "").trim(),
+          Number.isFinite(Number(outcome.rank)) ? Number(outcome.rank) : index + 1,
+        ])
+        .filter(([key]) => key)
+    );
+  }
+
+  function answerSnapshotRows(gradeSummary = {}, outcomesArtifact = {}) {
+    const rows = Array.isArray(gradeSummary.summary_of_findings)
+      ? gradeSummary.summary_of_findings.filter(Boolean)
+      : [];
+    if (!rows.length) {
+      return [];
+    }
+    const rankByOutcome = answerSnapshotOutcomeRanks(outcomesArtifact);
+    const sorted = [...rows].sort((a, b) => {
+      const aKey = String(a?.outcome_key || "").trim();
+      const bKey = String(b?.outcome_key || "").trim();
+      const aRank = rankByOutcome.get(aKey) ?? synthesisOutcomeSortKey(aKey)[0];
+      const bRank = rankByOutcome.get(bKey) ?? synthesisOutcomeSortKey(bKey)[0];
+      const aScope = String(a?.analysis_scope || "").trim() === "all_eligible" ? 0 : 1;
+      const bScope = String(b?.analysis_scope || "").trim() === "all_eligible" ? 0 : 1;
+      const aStudies = Number(a?.studies) || 0;
+      const bStudies = Number(b?.studies) || 0;
+      const aParticipants = Number(a?.participants) || 0;
+      const bParticipants = Number(b?.participants) || 0;
+      return aRank - bRank
+        || aScope - bScope
+        || bStudies - aStudies
+        || bParticipants - aParticipants
+        || String(a?.effect_measure || "").localeCompare(String(b?.effect_measure || ""));
+    });
+    const seen = new Set();
+    const selected = [];
+    for (const row of sorted) {
+      const key = String(row?.outcome_key || row?.outcome_name || "").trim().toLowerCase();
+      if (!key || seen.has(key)) {
+        continue;
+      }
+      seen.add(key);
+      selected.push(row);
+      if (selected.length >= 3) {
+        break;
+      }
+    }
+    return selected;
+  }
+
+  function answerSnapshotEvidenceText(row) {
+    const studies = Number(row?.studies);
+    const participants = Number(row?.participants);
+    const studyText = Number.isFinite(studies)
+      ? `${number(studies)} ${studies === 1 ? "study" : "studies"}`
+      : "Studies not reported";
+    const participantText = Number.isFinite(participants) && participants > 0
+      ? `${number(participants)} participants`
+      : "participants not reported";
+    return `${studyText}; ${participantText}`;
+  }
+
+  function answerSnapshotLimitText(rows) {
+    if (!rows.length) {
+      return "";
+    }
+    const certainties = rows
+      .map((row) => cleanText(row?.certainty).toLowerCase())
+      .filter(Boolean);
+    const uniqueCertainties = new Set(certainties);
+    if (uniqueCertainties.size === 1) {
+      return `Certainty for these highlighted findings is ${humanizeMetric(certainties[0]).toLowerCase()}.`;
+    }
+    if (certainties.includes("very_low")) {
+      return "At least one highlighted finding is very-low certainty.";
+    }
+    return "";
+  }
+
+  function answerSnapshotSection(gradeSummary = {}, outcomesArtifact = {}) {
+    const rows = answerSnapshotRows(gradeSummary, outcomesArtifact);
+    const status = cleanText(gradeSummary.status);
+    if (!rows.length) {
+      return `
+        <div class="panel answer-snapshot-panel" id="answer-snapshot">
+          <div class="answer-snapshot-head">
+            <div>
+              <span class="root-prompt-badge answer-snapshot-badge">Answer snapshot</span>
+              <h3>Structured answer</h3>
+            </div>
+          </div>
+          <p class="note">No structured answer snapshot was generated for this run.</p>
+        </div>
+      `;
+    }
+    const firstRow = rows[0] || {};
+    const bottomLine = cleanText(firstRow.plain_language_summary)
+      || cleanText(firstRow?.effect_estimate?.interpretation)
+      || "Structured GRADE summary rows were saved for this run.";
+    const limitText = answerSnapshotLimitText(rows);
+    return `
+      <div class="panel answer-snapshot-panel" id="answer-snapshot">
+        <div class="answer-snapshot-head">
+          <div>
+            <span class="root-prompt-badge answer-snapshot-badge">Answer snapshot</span>
+            <h3>Structured answer</h3>
+          </div>
+          <span class="answer-snapshot-source">From synthesis/grade_summary.json${status ? `; ${escapeHtml(status)}` : ""}</span>
+        </div>
+        <div class="answer-snapshot-bottom-line">
+          <span>Bottom line</span>
+          <p>${sentence(bottomLine)}</p>
+        </div>
+        <div class="answer-snapshot-findings">
+          ${rows.map((row) => {
+            const certainty = cleanText(row.certainty) || "not reported";
+            return `
+              <div class="answer-finding">
+                <div class="answer-finding-main">
+                  <div>
+                    <h4>${sentence(row.outcome_name || row.outcome_key || "Outcome")}</h4>
+                    ${row.comparison ? `<p>${sentence(row.comparison)}</p>` : ""}
+                  </div>
+                  <span class="grade-certainty-pill ${gradeCertaintyClass(certainty)}">${sentence(humanizeMetric(certainty))}</span>
+                </div>
+                <div class="answer-finding-effect">${gradeEffectText(row)}</div>
+                <div class="answer-finding-evidence">${escapeHtml(answerSnapshotEvidenceText(row))}</div>
+                ${row.plain_language_summary ? `<p class="answer-finding-summary">${sentence(row.plain_language_summary)}</p>` : ""}
+              </div>
+            `;
+          }).join("")}
+        </div>
+        ${limitText ? `<p class="answer-snapshot-limit">${escapeHtml(limitText)}</p>` : ""}
+      </div>
+    `;
+  }
+
   function gradeSummarySection(gradeSummary = {}) {
     const rows = Array.isArray(gradeSummary.summary_of_findings)
       ? gradeSummary.summary_of_findings
@@ -10244,6 +10388,7 @@
 	          <p class="root-prompt-question">${sentence(review.research_question)}</p>
 	        </div>
 	      </div>
+	      ${answerSnapshotSection(gradeSummary, outcomes)}
 	      <div class="small" style="margin:10px 2px 0;">Structured into PICO framework</div>
       <div class="panel" id="review-pico" style="margin-top:8px;">
         <h3>PICO</h3>
