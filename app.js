@@ -580,7 +580,7 @@
       entries.push({
         key: `post-${index}`,
         kind: "post",
-        stage: "Screening-driven query update",
+        stage: "Post-screening query update",
         title: `Post-screening iteration ${iteration?.iteration || index + 1}`,
         badge: skippedSameQuery ? "Same as final screening query" : "",
         query,
