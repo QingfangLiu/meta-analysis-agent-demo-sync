@@ -2702,6 +2702,7 @@
         label: "Synthesis",
         items: [
           ["Forest plots", "#synthesis-results"],
+          ["GRADE summary", "#grade-summary"],
           ["Final report", "#final-report"],
         ],
       },
@@ -9973,6 +9974,128 @@
     `;
   }
 
+  function gradeEffectText(row) {
+    const effect = row?.effect_estimate || {};
+    const measure = humanizeMetric(row?.effect_measure || "effect");
+    const value = formatEffect(effect.value, 3);
+    const lower = formatEffect(effect.ci_low, 3);
+    const upper = formatEffect(effect.ci_high, 3);
+    const ci = lower !== "—" || upper !== "—" ? ` (95% CI ${lower} to ${upper})` : "";
+    const scale = cleanText(effect.unit_or_scale);
+    const interpretation = cleanText(effect.interpretation);
+    return `
+      <div class="grade-effect-main">${escapeHtml(measure)} ${value}${ci}</div>
+      ${scale ? `<div class="grade-effect-sub">${sentence(scale)}</div>` : ""}
+      ${interpretation ? `<div class="grade-effect-sub">${sentence(interpretation)}</div>` : ""}
+    `;
+  }
+
+  function gradeCertaintyClass(certainty) {
+    return `grade-certainty-${String(certainty || "unknown").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-") || "unknown"}`;
+  }
+
+  function gradeDomainJudgments(row) {
+    const judgments = Array.isArray(row?.domain_judgments) ? row.domain_judgments : [];
+    if (!judgments.length) {
+      return "";
+    }
+    return `
+      <details class="grade-domain-details">
+        <summary>Domain judgments</summary>
+        <ul>
+          ${judgments.map((item) => {
+            const domain = humanizeMetric(item?.domain || "Domain");
+            const judgment = humanizeMetric(item?.judgment || "Not reported");
+            const downgrade = Number(item?.downgrade_level);
+            const downgradeText = Number.isFinite(downgrade) && downgrade > 0 ? `; downgraded ${downgrade}` : "";
+            const reason = cleanText(item?.reason);
+            return `
+              <li>
+                <strong>${escapeHtml(domain)}:</strong> ${escapeHtml(judgment)}${escapeHtml(downgradeText)}
+                ${reason ? `<span>${sentence(reason)}</span>` : ""}
+              </li>
+            `;
+          }).join("")}
+        </ul>
+      </details>
+    `;
+  }
+
+  function gradeSummarySection(gradeSummary = {}) {
+    const rows = Array.isArray(gradeSummary.summary_of_findings)
+      ? gradeSummary.summary_of_findings
+      : [];
+    const status = cleanText(gradeSummary.status);
+    const artifactNote = "Rendered from synthesis/grade_summary.json.";
+
+    if (!rows.length) {
+      return `
+        <div class="detail-card grade-summary-panel" id="grade-summary" style="margin-top:14px;">
+          <h3>GRADE summary</h3>
+          <p class="note">No GRADE summary was saved for this run.</p>
+        </div>
+      `;
+    }
+
+    return `
+      <details class="detail-card grade-summary-panel" id="grade-summary" style="margin-top:14px;">
+        <summary class="collapsible-table-summary grade-summary-head">
+          <div class="collapsible-summary-text">
+            <h3>GRADE summary</h3>
+            <span>${number(rows.length)} summary-of-findings ${rows.length === 1 ? "row" : "rows"}${status ? `; ${escapeHtml(status)}` : ""}. ${artifactNote}</span>
+          </div>
+        </summary>
+        <div class="report-status-banner report-status-draft">
+          <strong>AI-generated draft</strong>
+          <span>This GRADE summary has not been human-verified. Use it as a draft certainty assessment, not as a final evidence-certainty judgment.</span>
+        </div>
+        ${gradeSummary.scope_note ? `<p class="note grade-summary-scope">${sentence(gradeSummary.scope_note)}</p>` : ""}
+        <div class="table-wrap grade-summary-table-wrap">
+          <table class="screening-table grade-summary-table">
+            <thead>
+              <tr>
+                <th>Outcome</th>
+                <th>Effect</th>
+                <th>Evidence</th>
+                <th>Certainty</th>
+                <th>Summary</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows.map((row) => {
+                const certainty = cleanText(row.certainty) || "not reported";
+                const studies = Number(row.studies);
+                const participants = Number(row.participants);
+                return `
+                  <tr>
+                    <td>
+                      <div class="grade-outcome-name">${sentence(row.outcome_name || row.outcome_key || "Outcome")}</div>
+                      ${row.comparison ? `<div class="grade-outcome-meta">${sentence(row.comparison)}</div>` : ""}
+                      ${row.analysis_scope ? `<div class="grade-outcome-meta">${sentence(humanizeMetric(row.analysis_scope))}</div>` : ""}
+                    </td>
+                    <td>${gradeEffectText(row)}</td>
+                    <td>
+                      <div>${Number.isFinite(studies) ? number(studies) : "Not reported"} ${studies === 1 ? "study" : "studies"}</div>
+                      <div class="grade-outcome-meta">${Number.isFinite(participants) ? number(participants) : "Not reported"} participants</div>
+                    </td>
+                    <td>
+                      <span class="grade-certainty-pill ${gradeCertaintyClass(certainty)}">${sentence(humanizeMetric(certainty))}</span>
+                    </td>
+                    <td>
+                      ${row.plain_language_summary ? `<div class="grade-summary-text">${sentence(row.plain_language_summary)}</div>` : ""}
+                      ${row.downgrade_summary ? `<div class="grade-downgrade-text">${sentence(row.downgrade_summary)}</div>` : ""}
+                      ${gradeDomainJudgments(row)}
+                    </td>
+                  </tr>
+                `;
+              }).join("")}
+            </tbody>
+          </table>
+        </div>
+      </details>
+    `;
+  }
+
   function finalReportSection(markdown, verification = {}) {
     const text = String(markdown || "").trim();
     const isHumanVerified = verification?.human_verified === true
@@ -10074,6 +10197,7 @@
     const llmUsageSummary = current.llm_usage_summary || {};
     const llmUsageByStageRows = current.llm_usage_by_stage_rows || [];
     const finalReportMarkdown = current.final_report_markdown || "";
+    const gradeSummary = current.grade_summary || {};
     const completedRobReviewCount = (Array.isArray(robDisplay.assessment_groups) ? robDisplay.assessment_groups : [])
       .reduce((total, group) => total + Number(group.n_completed_assessments || 0), 0);
     const sourceAvailabilityDroppedPmids = sourceAvailabilityDroppedPmidSet(sourceAvailabilityGate);
@@ -10260,6 +10384,7 @@
           ${synthesisOutcomeSection(synthesis, assets, current.comparison || {}, outcomeExtractionTables, subgroupPlan, cochraneOutcomeAlignment, cochraneSynthesisCiOverlap, screening, extractionSourceSummary)}
         </div>
       </div>
+      ${gradeSummarySection(gradeSummary)}
       ${finalReportSection(finalReportMarkdown, current.final_report_verification || current.human_verification || {})}
 	    </section>
 
