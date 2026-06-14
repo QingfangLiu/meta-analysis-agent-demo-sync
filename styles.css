@@ -4565,18 +4565,6 @@ details[open] > .collapsible-table-summary::before,
   color: var(--ink);
 }
 
-.rob-routing-evidence-list {
-  display: grid;
-  gap: 5px;
-  margin-top: 7px;
-  color: var(--muted);
-  font-size: var(--text-xs);
-}
-
-.rob-routing-evidence-item {
-  overflow-wrap: anywhere;
-}
-
 .rob-routing-logic-panel {
   margin-top: 10px;
   padding-top: 10px;
@@ -4644,10 +4632,6 @@ details[open] > .collapsible-table-summary::before,
 
 .rob-tool-group-list {
   margin-top: 14px;
-}
-
-.rob-tool-details-panel {
-  background: rgba(248, 251, 252, 0.84);
 }
 
 .rob-tool-detail-list {

@@ -3299,25 +3299,10 @@
       `;
     }
 
-    function routingEvidenceSummary(row) {
-      const evidence = Array.isArray(row.routing_evidence) ? row.routing_evidence : [];
-      if (!evidence.length) {
-        return "";
-      }
-      return evidence
-        .slice(0, 2)
-        .map((item) => (typeof item === "string" ? item.trim() : ""))
-        .filter(Boolean)
-        .map((item) => `<div class="rob-routing-evidence-item">${sentence(item)}</div>`)
-        .join("") || "";
-    }
-
-    function reasonEvidenceCell(row) {
+    function routingReasonCell(row) {
       const reason = String(row.rob_routing_reason || "").trim();
-      const evidence = routingEvidenceSummary(row);
       return `
         <div class="rob-routing-reason-main">${reason ? sentence(reason) : "—"}</div>
-        ${evidence ? `<div class="rob-routing-evidence-list">${evidence}</div>` : ""}
       `;
     }
 
@@ -3350,7 +3335,7 @@
                 <th class="screen-col-study">Study</th>
                 <th class="rob-routing-design-col">Design</th>
                 <th class="rob-routing-tool-col">Tool Selection</th>
-                <th class="rob-routing-reason-col">Reason / Evidence</th>
+                <th class="rob-routing-reason-col">Routing reason</th>
               </tr>
             </thead>
             <tbody>
@@ -3360,7 +3345,7 @@
                   <td class="screen-col-study">${compactStudyCell(row)}</td>
                   <td class="rob-routing-design-col">${designCell(row)}</td>
                   <td class="rob-routing-tool-col">${toolSelectionCell(row)}</td>
-                  <td class="rob-routing-reason rob-routing-reason-col">${reasonEvidenceCell(row)}</td>
+                  <td class="rob-routing-reason rob-routing-reason-col">${routingReasonCell(row)}</td>
                 </tr>
               `).join("")}
             </tbody>
@@ -4382,8 +4367,8 @@
     outcomeSourceContribution = {}
   ) {
     const artifact = outcomesArtifact || {};
-    const outcomes = Array.isArray(artifact.outcomes?.outcomes)
-      ? artifact.outcomes.outcomes.filter(Boolean)
+    const outcomes = Array.isArray(artifact.outcomes)
+      ? artifact.outcomes.filter(Boolean)
       : [];
     const status = artifact.status || "";
     const initialOutcome = String((pico || {}).outcome || "").trim();
@@ -4870,7 +4855,6 @@
           isBenchmarkMatch ? matchDetail(benchmarkMatches) : "",
         ],
         ["source support", sourceSupportSummary(item)],
-        ["source note", item.source_note],
         ["notes", item.notes],
       ].filter(([, value]) => value !== undefined && String(value || "").trim() !== "");
       const outcomeName = String(item.name || title).trim();
@@ -5557,8 +5541,8 @@
   }
 
   function rankedOutcomeNameByKey(outcomesArtifact = {}) {
-    const rankedOutcomes = Array.isArray(outcomesArtifact?.outcomes?.outcomes)
-      ? outcomesArtifact.outcomes.outcomes
+    const rankedOutcomes = Array.isArray(outcomesArtifact?.outcomes)
+      ? outcomesArtifact.outcomes
       : [];
     return rankedOutcomes.reduce((acc, outcome) => {
       const key = String(outcome?.outcome_id || outcome?.outcome_key || "").trim();
@@ -10053,8 +10037,8 @@
   }
 
   function answerSnapshotOutcomeRanks(outcomesArtifact = {}) {
-    const rankedOutcomes = Array.isArray(outcomesArtifact?.outcomes?.outcomes)
-      ? outcomesArtifact.outcomes.outcomes
+    const rankedOutcomes = Array.isArray(outcomesArtifact?.outcomes)
+      ? outcomesArtifact.outcomes
       : [];
     return new Map(
       rankedOutcomes
