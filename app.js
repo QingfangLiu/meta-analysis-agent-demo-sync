@@ -67,9 +67,7 @@
     "study_design_type",
     "study_design_subtype",
     "recommended_rob_tool_id",
-    "implemented_rob_tool_id",
     "administered_rob_tool_id",
-    "rob_routing_status",
     "overall_risk_of_bias",
     "overall_reason",
   ]);
@@ -3238,30 +3236,6 @@
       return `<span class="rob-routing-chip rob-routing-chip-${escapeHtml(tone)}">${escapeHtml(label)}</span>`;
     }
 
-    function routingTone(value) {
-      const text = String(value || "").trim().toLowerCase();
-      if (!text) {
-        return "muted";
-      }
-      if (text === "ready" || text.startsWith("implemented")) {
-        return "ready";
-      }
-      if (
-        text === "planned"
-        || text.includes("not_implemented")
-        || text.includes("not_routable")
-        || text.includes("no_applicable")
-        || text.includes("missing")
-        || text.includes("uncertain")
-      ) {
-        return "warning";
-      }
-      if (text.includes("exclude") || text.includes("unavailable") || text.includes("skipped")) {
-        return "muted";
-      }
-      return "neutral";
-    }
-
     function designCell(row) {
       const design = String(row.study_design_type || "").trim();
       const subtype = String(row.study_design_subtype || "").trim();
@@ -3278,31 +3252,17 @@
     function toolSelectionCell(row) {
       const recommendedId = String(row.recommended_rob_tool_id || "").trim();
       const recommendedName = String(row.recommended_rob_tool_name || "").trim();
-      const implementationStatus = String(row.recommended_tool_implementation_status || "").trim();
-      const routingStatus = String(row.rob_routing_status || "").trim();
       if (!recommendedId) {
         return `
           <div class="rob-routing-cell-stack">
             <div class="rob-routing-primary muted">No tool routed</div>
-            <div class="rob-routing-chip-row">${routingChip(routingStatus || "not_routable", routingTone(routingStatus))}</div>
           </div>
         `;
       }
       return `
         <div class="rob-routing-cell-stack">
           <div class="rob-routing-primary mono" title="${escapeHtml(recommendedName || recommendedId)}">${escapeHtml(recommendedId)}</div>
-          <div class="rob-routing-chip-row">
-            ${implementationStatus ? routingChip(implementationStatus, routingTone(implementationStatus)) : ""}
-            ${routingStatus ? routingChip(routingStatus, routingTone(routingStatus)) : ""}
-          </div>
         </div>
-      `;
-    }
-
-    function routingReasonCell(row) {
-      const reason = String(row.rob_routing_reason || "").trim();
-      return `
-        <div class="rob-routing-reason-main">${reason ? sentence(reason) : "—"}</div>
       `;
     }
 
@@ -3335,7 +3295,6 @@
                 <th class="screen-col-study">Study</th>
                 <th class="rob-routing-design-col">Design</th>
                 <th class="rob-routing-tool-col">Tool Selection</th>
-                <th class="rob-routing-reason-col">Routing reason</th>
               </tr>
             </thead>
             <tbody>
@@ -3345,7 +3304,6 @@
                   <td class="screen-col-study">${compactStudyCell(row)}</td>
                   <td class="rob-routing-design-col">${designCell(row)}</td>
                   <td class="rob-routing-tool-col">${toolSelectionCell(row)}</td>
-                  <td class="rob-routing-reason rob-routing-reason-col">${routingReasonCell(row)}</td>
                 </tr>
               `).join("")}
             </tbody>
