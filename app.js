@@ -646,6 +646,10 @@
       recall: fallback.recall,
       tp_pmids: fallback.tp_pmids,
       fn_pmids: fallback.fn_pmids,
+      study_tp: fallback.study_tp,
+      study_fn: fallback.study_fn,
+      study_recall: fallback.study_recall,
+      study_fn_rows: fallback.study_fn_rows,
       retrieval_set_source: source || "same_as_final_pre_screening_query",
     };
   }
@@ -665,24 +669,31 @@
     if (!row) {
       return "";
     }
+    const useStudyRows = row.study_recall !== undefined && row.study_recall !== null;
+    const found = useStudyRows ? row.study_tp : row.tp;
+    const missed = useStudyRows ? row.study_fn : row.fn;
+    const recall = useStudyRows ? row.study_recall : row.recall;
+    const detail = useStudyRows
+      ? `Cochrane included study rows; PMID recall ${formatPercent(row.recall)}`
+      : "Cochrane included-reference PMIDs";
 	    return `
 		      <aside class="query-evaluation-panel" aria-label="Retrieval evaluation for ${escapeHtml(entry.title || "query")}">
 		        <div class="query-evaluation-card query-evaluation-card-compact">
 		          <div class="query-evaluation-metrics">
 		            <div>
 		              <div class="stat-label">Found</div>
-		              <div class="query-evaluation-value">${number(row.tp)}</div>
+		              <div class="query-evaluation-value">${number(found)}</div>
 		            </div>
 		            <div>
 		              <div class="stat-label">Missed</div>
-		              <div class="query-evaluation-value">${number(row.fn)}</div>
+		              <div class="query-evaluation-value">${number(missed)}</div>
 		            </div>
 		            <div>
 		              <div class="stat-label">Recall</div>
-		              <div class="query-evaluation-value">${formatPercent(row.recall)}</div>
+		              <div class="query-evaluation-value">${formatPercent(recall)}</div>
 		            </div>
 		          </div>
-		          <div class="stat-detail">Cochrane included-reference PMIDs</div>
+		          <div class="stat-detail">${escapeHtml(detail)}</div>
 	        </div>
 	      </aside>
 	    `;
@@ -1018,9 +1029,28 @@
     const rows = Array.isArray(retrievalRows) ? retrievalRows : [];
     const finalRound = finalRetrievalRoundForDisplay(searchMetrics, rows);
     const fallbackRow = rows.length ? rows[rows.length - 1] : {};
-    const missedCount = Number(finalRound.cochrane_pmids_missed ?? finalRound.fn ?? fallbackRow.fn ?? 0);
+    const missedCount = Number(
+      finalRound.cochrane_study_rows_missed
+      ?? finalRound.study_fn
+      ?? fallbackRow.study_fn
+      ?? finalRound.cochrane_pmids_missed
+      ?? finalRound.fn
+      ?? fallbackRow.fn
+      ?? 0
+    );
     if (Number.isFinite(missedCount) && missedCount <= 0) {
       return [];
+    }
+    const missedStudyRows = Array.isArray(finalRound.missed_study_rows) ? finalRound.missed_study_rows : [];
+    if (missedStudyRows.length) {
+      const lookup = cochraneStudyLookupFromSynthesis(ciOverlapArtifact);
+      return missedStudyRows.map((study) => {
+        const pmids = Array.isArray(study?.pmids)
+          ? study.pmids.map((value) => String(value || "").trim()).filter(Boolean)
+          : [String(study?.pmid || "").trim()].filter(Boolean);
+        const lookupRecord = pmids.map((pmid) => lookup.get(pmid)).find(Boolean) || {};
+        return mergeStudyLookupRecord(study, lookupRecord);
+      });
     }
     const missedStudies = Array.isArray(finalRound.missed_studies) ? finalRound.missed_studies : [];
     const missedPmids = Array.isArray(finalRound.missed_pmids) ? finalRound.missed_pmids : null;
@@ -1044,12 +1074,19 @@
 
   function renderRetrievalMissedStudyCell(study) {
     const pmid = String(study?.pmid || "").trim();
+    const pmids = Array.isArray(study?.pmids)
+      ? study.pmids.map((value) => String(value || "").trim()).filter(Boolean)
+      : (pmid ? [pmid] : []);
     const rawLabel = String(study?.study_label || study?.label || "").trim();
     const label = rawLabel && rawLabel !== pmid ? rawLabel : "Study not labeled";
     return `
       <div class="retrieval-missed-study-cell">
         <div class="retrieval-missed-study-label">${escapeHtml(cleanStudyRowLabel(label))}</div>
-        ${pmid ? `<div class="retrieval-missed-study-pmid mono">PMID ${renderPmidLink({ pmid, metadata: { url: study.pubmed_url } })}</div>` : ""}
+        ${pmids.length ? `
+          <div class="retrieval-missed-study-pmid mono">
+            ${pmids.map((item) => `PMID ${renderPmidLink({ pmid: item, metadata: { url: item === pmid ? study.pubmed_url : "" } })}`).join(", ")}
+          </div>
+        ` : ""}
       </div>
     `;
   }
@@ -1066,6 +1103,7 @@
       return {};
     }
     const missedCount = correctedRow.fn ?? finalRound.cochrane_pmids_missed ?? finalRound.fn;
+    const missedStudyCount = correctedRow.study_fn ?? finalRound.cochrane_study_rows_missed ?? finalRound.study_fn;
     return {
       ...finalRound,
       query_key: finalRound.query_key || correctedRow.key,
@@ -1076,7 +1114,13 @@
       cochrane_pmids_retrieved: correctedRow.tp ?? finalRound.cochrane_pmids_retrieved,
       cochrane_pmids_missed: missedCount,
       recall: correctedRow.recall ?? finalRound.recall,
+      cochrane_study_rows_retrieved: correctedRow.study_tp ?? finalRound.cochrane_study_rows_retrieved,
+      cochrane_study_rows_missed: missedStudyCount,
+      study_row_recall: correctedRow.study_recall ?? finalRound.study_row_recall,
       missed_pmids: Array.isArray(correctedRow.fn_pmids) ? correctedRow.fn_pmids : finalRound.missed_pmids,
+      missed_study_rows: Number(missedStudyCount || 0) === 0
+        ? []
+        : (Array.isArray(correctedRow.study_fn_rows) ? correctedRow.study_fn_rows : (finalRound.missed_study_rows || [])),
       missed_studies: Number(missedCount || 0) === 0 ? [] : (finalRound.missed_studies || []),
     };
   }
@@ -1100,11 +1144,22 @@
     `;
   }
 
+  function retrievalMissedStudyTitle(study) {
+    return String(study?.title || study?.title_queries || study?.reference_excerpt || "").trim();
+  }
+
   function renderFinalRetrievalMissedStudies(searchMetrics, retrievalRows, ciOverlapArtifact = {}) {
     const rows = Array.isArray(retrievalRows) ? retrievalRows : [];
     const finalRound = finalRetrievalRoundForDisplay(searchMetrics, rows);
     const fallbackRow = rows.length ? rows[rows.length - 1] : {};
-    const missedCountValue = finalRound.cochrane_pmids_missed ?? finalRound.fn ?? fallbackRow.fn;
+    const missedCountValue = (
+      finalRound.cochrane_study_rows_missed
+      ?? finalRound.study_fn
+      ?? fallbackRow.study_fn
+      ?? finalRound.cochrane_pmids_missed
+      ?? finalRound.fn
+      ?? fallbackRow.fn
+    );
     const missedRows = retrievalMissedStudyRows(searchMetrics, retrievalRows, ciOverlapArtifact);
     const missedCount = missedCountValue ?? missedRows.length;
     const finalLabel = finalRound.query_label || fallbackRow.label || "Final retrieval query";
@@ -1138,7 +1193,7 @@
                   <td>${escapeHtml(study.pmcid || study.in_pmc || "—")}</td>
                   <td>${renderRetrievalMissedSynthesisCell(study)}</td>
                   <td>
-                    <div class="screen-study-title">${escapeHtml(study.title || "—")}</div>
+                    <div class="screen-study-title">${escapeHtml(retrievalMissedStudyTitle(study) || "—")}</div>
                     ${study.journal ? `<div class="screen-study-secondary">${escapeHtml(study.journal)}</div>` : ""}
                   </td>
                 </tr>
@@ -1159,6 +1214,21 @@
     }
     const finalLabel = finalRound.query_label || fallbackRow.label || "Final retrieval query";
     const metricGrid = renderEvaluationMetricGrid([
+      {
+        label: "Study rows retrieved",
+        value: number(finalRound.cochrane_study_rows_retrieved ?? fallbackRow.study_tp),
+        detail: "Included-study rows with at least one PMID found",
+      },
+      {
+        label: "Study rows missed",
+        value: number(finalRound.cochrane_study_rows_missed ?? fallbackRow.study_fn),
+        detail: "Included-study rows with no PMIDs retrieved",
+      },
+      {
+        label: "Study-row recall",
+        value: formatPercent(finalRound.study_row_recall ?? fallbackRow.study_recall),
+        detail: "Retrieved Cochrane study rows / all Cochrane study rows",
+      },
       {
         label: "Cochrane PMIDs retrieved",
         value: number(finalRound.cochrane_pmids_retrieved ?? fallbackRow.tp),
@@ -1196,7 +1266,10 @@
     }
     const benchmark = searchMetrics.benchmark || {};
     const benchmarkCount = number(benchmark.n_cochrane_pubmed_ids);
-    const note = `Retrieval is evaluated against Cochrane included-reference PubMed IDs as positive ground truth only (${benchmarkCount} PMIDs). Excluded-reference PMIDs are not counted as retrieval negatives because Cochrane also retrieved them before excluding them after eligibility assessment.`;
+    const studyRowCount = benchmark.n_cochrane_study_rows_with_pmids !== undefined
+      ? ` and ${number(benchmark.n_cochrane_study_rows_with_pmids)} study rows`
+      : "";
+    const note = `Retrieval is evaluated against Cochrane included-reference PubMed IDs (${benchmarkCount} PMIDs${studyRowCount}). Study-row recall counts a study row as retrieved when any linked PMID was found. Excluded-reference PMIDs are not counted as retrieval negatives because Cochrane also retrieved them before excluding them after eligibility assessment.`;
     const summaryOnly = options.summaryOnly === true;
     return `
       <div class="detail-card evaluation-card" style="margin-top:14px;">
@@ -1208,9 +1281,12 @@
               <thead>
                 <tr>
                   <th>Query</th>
+                  <th>Study rows retrieved</th>
+                  <th>Study rows missed</th>
+                  <th>Study-row recall</th>
                   <th>Cochrane PMIDs retrieved</th>
                   <th>Cochrane PMIDs missed</th>
-                  <th>Recall</th>
+                  <th>PMID recall</th>
                 </tr>
               </thead>
               <tbody>
@@ -1220,6 +1296,9 @@
                       <div class="screen-study-primary">${escapeHtml(row.label || row.key || "Query")}</div>
                       ${row.stage ? `<div class="screen-study-secondary">${escapeHtml(String(row.stage).replaceAll("_", " "))}</div>` : ""}
                     </td>
+                    <td>${number(row.study_tp)}</td>
+                    <td>${number(row.study_fn)}</td>
+                    <td>${formatPercent(row.study_recall)}</td>
                     <td>${number(row.tp)}</td>
                     <td>${number(row.fn)}</td>
                     <td>${formatPercent(row.recall)}</td>
