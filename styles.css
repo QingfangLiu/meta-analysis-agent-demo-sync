@@ -5404,6 +5404,46 @@ body.source-trace-open .evaluation-visibility-dock {
   margin-top: 12px;
 }
 
+.retrieval-final-groups {
+  display: grid;
+  gap: 16px;
+  margin-top: 14px;
+}
+
+.retrieval-final-group {
+  display: grid;
+  gap: 8px;
+}
+
+.retrieval-final-group-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.retrieval-final-group-heading h4 {
+  margin: 0;
+  color: var(--ink);
+  font-size: var(--text-md);
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.retrieval-final-group-heading p {
+  max-width: 680px;
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-xs);
+  line-height: 1.35;
+  text-align: right;
+}
+
+.retrieval-final-metric-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 0;
+}
+
 .screening-evaluation-grid-compact {
   grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
 }
@@ -7407,6 +7447,20 @@ body.source-trace-open .left-rail {
 
   .outcome-final-count {
     width: max-content;
+  }
+
+  .retrieval-final-group-heading {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .retrieval-final-group-heading p {
+    text-align: left;
+  }
+
+  .retrieval-final-metric-grid {
+    grid-template-columns: 1fr;
   }
 
   h1 {

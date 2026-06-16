@@ -1213,22 +1213,29 @@
       return "";
     }
     const finalLabel = finalRound.query_label || fallbackRow.label || "Final retrieval query";
-    const metricGrid = renderEvaluationMetricGrid([
+    const benchmark = (searchMetrics || {}).benchmark || {};
+    const studyRowCount = number(benchmark.n_cochrane_study_rows_with_pmids);
+    const pmidCount = number(benchmark.n_cochrane_pubmed_ids);
+    const studyRowMetrics = renderEvaluationMetricGrid([
       {
         label: "Study rows retrieved",
         value: number(finalRound.cochrane_study_rows_retrieved ?? fallbackRow.study_tp),
-        detail: "Included-study rows with at least one PMID found",
+        detail: "Rows with at least one linked PMID found",
       },
       {
         label: "Study rows missed",
         value: number(finalRound.cochrane_study_rows_missed ?? fallbackRow.study_fn),
-        detail: "Included-study rows with no PMIDs retrieved",
+        detail: "Rows with no linked PMIDs retrieved",
       },
       {
         label: "Study-row recall",
         value: formatPercent(finalRound.study_row_recall ?? fallbackRow.study_recall),
-        detail: "Retrieved Cochrane study rows / all Cochrane study rows",
+        detail: "Retrieved rows / all benchmark rows",
       },
+    ],
+      "retrieval-final-metric-grid",
+    );
+    const pmidMetrics = renderEvaluationMetricGrid([
       {
         label: "Cochrane PMIDs retrieved",
         value: number(finalRound.cochrane_pmids_retrieved ?? fallbackRow.tp),
@@ -1240,16 +1247,31 @@
         detail: "Included-reference PMIDs not retrieved",
       },
       {
-        label: "Final recall",
+        label: "PMID recall",
         value: formatPercent(finalRound.recall ?? fallbackRow.recall),
-        detail: "Retrieved Cochrane included PMIDs / all Cochrane included PMIDs",
+        detail: "Retrieved PMIDs / all benchmark PMIDs",
       },
     ],
       "retrieval-final-metric-grid",
     );
     return `
       <p class="note retrieval-final-round-note">Final retrieval round summarized here: ${escapeHtml(finalLabel)}.</p>
-      ${metricGrid}
+      <div class="retrieval-final-groups">
+        <section class="retrieval-final-group">
+          <div class="retrieval-final-group-heading">
+            <h4>Included Study Rows</h4>
+            <p>Counted across ${studyRowCount} benchmark study rows; a row is retrieved when any linked PMID was found.</p>
+          </div>
+          ${studyRowMetrics}
+        </section>
+        <section class="retrieval-final-group">
+          <div class="retrieval-final-group-heading">
+            <h4>Included Reference PMIDs</h4>
+            <p>Counted across ${pmidCount} benchmark PMIDs linked to Cochrane included references.</p>
+          </div>
+          ${pmidMetrics}
+        </section>
+      </div>
     `;
   }
 
@@ -2277,8 +2299,9 @@
     return RUN_TIMING_STAGE_LABELS[key] || key.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
   }
 
-  function runTimingSection(timing, runSummary) {
+  function runTimingSection(timing, runSummary, runState) {
     const payload = timing && typeof timing === "object" ? timing : {};
+    const state = runState && typeof runState === "object" ? runState : {};
     const stages = Array.isArray(payload.stages) ? payload.stages : [];
     const invocations = Array.isArray(payload.invocations) ? payload.invocations : [];
     const invocationCount = Math.max(
@@ -2289,6 +2312,7 @@
     );
     const stageTotal = stages.reduce((sum, stage) => sum + Math.max(0, Number(stage.elapsed_seconds) || 0), 0);
     const totalSeconds = Number(payload.total_elapsed_seconds ?? runSummary?.total_elapsed_seconds ?? stageTotal);
+    const status = state.status || payload.status || runSummary?.status || "unknown";
     const totalForScale = Number.isFinite(totalSeconds) && totalSeconds > 0 ? totalSeconds : stageTotal;
     const longestStage = stages.reduce((best, stage) => {
       const elapsed = Number(stage.elapsed_seconds) || 0;
@@ -2320,7 +2344,7 @@
           </div>
           <div class="synthesis-mini-stat run-timing-stat">
             <div class="stat-label">Status</div>
-            <div class="stat-value run-timing-status">${escapeHtml(payload.status || "unknown")}</div>
+            <div class="stat-value run-timing-status">${escapeHtml(status)}</div>
           </div>
           <div class="synthesis-mini-stat run-timing-stat">
             <div class="stat-label">Invocations</div>
@@ -10357,6 +10381,7 @@
     const pico = current.pico || {};
     const screening = current.screening_results || {};
     const run = current.run_summary || {};
+    const runState = current.run_state || {};
     const review = current.review_definition || {};
     const queryReview = current.query_review || {};
     const screeningQueryUpdate = current.screening_query_update || {};
@@ -10588,7 +10613,7 @@
 	    </section>
 
 			    ${renderEvaluationSummary(cochraneSearchScreeningMetrics, cochraneOutcomeAlignment, cochraneComparisonAlignment, cochraneSynthesisCiOverlap, synthesisPlotSummary, screening)}
-			    ${runTimingSection(timing, run)}
+			    ${runTimingSection(timing, run, runState)}
 			    ${llmTokenUsageSection(llmUsageSummary, llmUsageByStageRows, run)}
 			    ${sourceTraceDrawer()}
 			    ${renderCochraneReferenceStatusLegend()}
