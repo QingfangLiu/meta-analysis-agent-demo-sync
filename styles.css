@@ -5456,6 +5456,120 @@ body.source-trace-open .evaluation-visibility-dock {
   background: var(--evaluation-surface);
 }
 
+.outcome-matched-summary {
+  margin-top: 12px;
+}
+
+.outcome-matched-summary-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.outcome-matched-summary-head strong {
+  color: var(--ink);
+  font-size: var(--text-sm);
+  font-weight: 900;
+}
+
+.outcome-matched-summary-head span,
+.outcome-matched-summary p {
+  color: var(--muted);
+  font-size: var(--text-xs);
+  line-height: 1.35;
+}
+
+.outcome-matched-summary p {
+  margin: 4px 0 0;
+}
+
+.outcome-ranking-note {
+  margin-top: 6px;
+}
+
+.outcome-ranking-note strong {
+  color: var(--ink);
+  font-weight: 900;
+}
+
+.outcome-matched-table-wrap {
+  margin-top: 10px;
+}
+
+.outcome-ranked-cutoff-details {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--evaluation-line);
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+.outcome-ranked-cutoff-details summary {
+  width: max-content;
+  max-width: 100%;
+  cursor: pointer;
+  color: var(--evaluation-ink);
+  font-weight: 900;
+}
+
+.outcome-ranked-cutoff-table {
+  display: grid;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.outcome-ranked-cutoff-row {
+  display: grid;
+  grid-template-columns: 56px 52px minmax(0, 1fr);
+  gap: 8px;
+  align-items: baseline;
+}
+
+.outcome-ranked-cutoff-label,
+.outcome-ranked-cutoff-value {
+  color: var(--ink);
+  font-weight: 900;
+}
+
+.outcome-ranked-cutoff-detail {
+  min-width: 0;
+  color: var(--muted);
+  line-height: 1.25;
+}
+
+.outcome-unmatched-details {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--evaluation-line);
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+.outcome-unmatched-details summary {
+  width: max-content;
+  max-width: 100%;
+  cursor: pointer;
+  color: var(--evaluation-ink);
+  font-weight: 900;
+}
+
+.outcome-unmatched-details p {
+  margin: 8px 0 0;
+  line-height: 1.35;
+}
+
+.outcome-unmatched-details ul {
+  display: grid;
+  gap: 5px;
+  max-height: 220px;
+  margin: 8px 0 0;
+  padding-left: 18px;
+  overflow: auto;
+  color: var(--ink);
+  line-height: 1.3;
+}
+
 .screening-evaluation-grid-compact .evaluation-metric-card {
   min-height: 74px;
   padding: 10px;
@@ -5725,6 +5839,42 @@ body.source-trace-open .evaluation-visibility-dock {
   overflow-wrap: anywhere;
 }
 
+.evaluation-match-table .evaluation-match-label-col {
+  width: 27%;
+}
+
+.evaluation-match-table .evaluation-match-judgment-col {
+  width: 18%;
+}
+
+.evaluation-match-table .evaluation-match-rationale-col {
+  width: 28%;
+}
+
+.evaluation-match-table th,
+.evaluation-match-table td {
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.evaluation-match-judgment,
+.evaluation-match-confidence {
+  display: block;
+}
+
+.evaluation-match-judgment {
+  color: var(--ink);
+}
+
+.evaluation-match-confidence {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
 .synthesis-ci-overlap-cell {
   text-align: left;
 }
@@ -5873,6 +6023,27 @@ body.source-trace-open .evaluation-visibility-dock {
   color: var(--ink);
   font-size: var(--text-sm);
   line-height: 1.2;
+}
+
+.missed-cochrane-analysis-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: none;
+  min-height: 28px;
+  padding: 5px 9px;
+  border: 1px solid rgba(176, 72, 63, 0.18);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--ink);
+  font-size: var(--text-sm);
+  line-height: 1.2;
+}
+
+.missed-cochrane-analysis-id {
+  flex: 0 0 auto;
+  color: var(--bad);
+  font-weight: 900;
 }
 
 .agent-only-outcome-name {
@@ -7457,6 +7628,16 @@ body.source-trace-open .left-rail {
 
   .retrieval-final-group-heading p {
     text-align: left;
+  }
+
+  .outcome-ranked-cutoff-row {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+
+  .outcome-matched-summary-head {
+    flex-direction: column;
+    gap: 2px;
   }
 
   .retrieval-final-metric-grid {

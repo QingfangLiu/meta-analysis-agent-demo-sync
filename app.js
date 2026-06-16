@@ -837,6 +837,183 @@
     `;
   }
 
+  function rankedOutcomeCutoffRows(outcomeAlignment) {
+    const metrics = (outcomeAlignment || {}).ranked_outcome_metrics
+      || ((outcomeAlignment || {}).counts || {}).ranked_outcome_metrics
+      || {};
+    const ordered = [
+      ["top_5", "Top 5"],
+      ["top_10", "Top 10"],
+      ["top_15", "Top 15"],
+      ["full", "Full list"],
+    ];
+    return ordered
+      .map(([key, label]) => {
+        const item = metrics[key] || {};
+        if (!Object.keys(item).length) {
+          return null;
+        }
+        return {
+          label,
+          recall: item.recall,
+          precision: item.precision,
+          f1: item.f1,
+          truePositiveMatches: item.true_positive_outcome_matches,
+          cochraneAnalyzedOutcomes: item.cochrane_analyzed_outcomes,
+        };
+      })
+      .filter(Boolean);
+  }
+
+  function renderRankedOutcomeCutoffDetails(outcomeAlignment, metric = "recall") {
+    if (!currentEvaluationVisible || (outcomeAlignment || {}).status !== "completed") {
+      return "";
+    }
+    const rows = rankedOutcomeCutoffRows(outcomeAlignment);
+    if (!rows.length) {
+      return "";
+    }
+    const metricLabel = metric === "precision" ? "precision" : "recall";
+    return `
+      <details class="outcome-ranked-cutoff-details">
+        <summary>Show ranked ${metricLabel} cutoffs</summary>
+        <div class="outcome-ranked-cutoff-table" role="table" aria-label="Ranked outcome ${metricLabel} cutoffs">
+          ${rows.map((row) => `
+            <div class="outcome-ranked-cutoff-row" role="row">
+              <span class="outcome-ranked-cutoff-label" role="cell">${escapeHtml(row.label)}</span>
+              <span class="outcome-ranked-cutoff-value" role="cell">${formatPercent(row[metricLabel])}</span>
+              <span class="outcome-ranked-cutoff-detail" role="cell">
+                ${number(row.truePositiveMatches)} / ${number(row.cochraneAnalyzedOutcomes)} Cochrane matched; F1 ${formatPercent(row.f1)}
+              </span>
+            </div>
+          `).join("")}
+        </div>
+      </details>
+    `;
+  }
+
+  function renderMatchedOutcomeSummary(outcomeAlignment) {
+    if (!currentEvaluationVisible || (outcomeAlignment || {}).status !== "completed") {
+      return "";
+    }
+    const matches = Array.isArray(outcomeAlignment.one_to_one_matches)
+      ? outcomeAlignment.one_to_one_matches
+      : [];
+    if (!matches.length) {
+      return "";
+    }
+    return `
+      <div class="outcome-matched-summary">
+        <div class="outcome-matched-summary-head">
+          <strong>Matched outcomes</strong>
+          <span>${number(matches.length)} one-to-one matches</span>
+        </div>
+        <div class="outcome-ranking-note">
+          <p><strong>How agent outcomes are ranked:</strong> the final outcome list is intentionally ordered by expected importance for answering the review question. Ranking favors source-supported clinical endpoints that directly address the PICO question, matter to patients or decision makers, and represent benefits or harms; source labels such as primary or secondary can inform ranking but are not binding.</p>
+        </div>
+        <p>These are retained semantic matches between final agent outcomes and Cochrane analyzed outcomes.</p>
+        <div class="table-wrap screening-wrap evaluation-summary-table-wrap outcome-matched-table-wrap">
+          <table class="screening-table evaluation-table evaluation-summary-table synthesis-evaluation-table evaluation-match-table">
+            <colgroup>
+              <col class="evaluation-match-label-col">
+              <col class="evaluation-match-label-col">
+              <col class="evaluation-match-judgment-col">
+              <col class="evaluation-match-rationale-col">
+            </colgroup>
+            <thead>
+              <tr>
+                <th>Agent outcome</th>
+                <th>Cochrane outcome</th>
+                <th>LLM judgment</th>
+                <th>Rationale</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${matches.map((match) => `
+                <tr>
+                  <td>${sentence(match.agent_label || match.agent_outcome_key || "Agent outcome")}</td>
+                  <td>${sentence(match.benchmark_label || match.label || "Cochrane outcome")}</td>
+                  <td>
+                    <span class="evaluation-match-judgment">${escapeHtml(String(match.relationship || match.reason || "semantic match").replaceAll("_", " "))}</span>
+                    <span class="evaluation-match-confidence">confidence ${escapeHtml(formatCochraneMatchScore(match))}</span>
+                  </td>
+                  <td>${sentence(match.rationale || "")}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }
+
+  function outcomeAlignmentItemName(item, fallback = "Unnamed outcome") {
+    return String(
+      item?.name
+      || item?.label
+      || item?.outcome_name
+      || item?.outcome
+      || item?.agent_label
+      || item?.benchmark_label
+      || fallback
+    ).trim();
+  }
+
+  function renderUnmatchedOutcomeDetails(items, options = {}) {
+    const values = (Array.isArray(items) ? items : [])
+      .map((item) => outcomeAlignmentItemName(item))
+      .filter(Boolean);
+    if (!values.length) {
+      return "";
+    }
+    const title = options.title || "Show unmatched outcome names";
+    const note = options.note || "These names are unmatched by the current one-to-one semantic alignment. Use them as audit targets, not automatic errors.";
+    return `
+      <details class="outcome-unmatched-details">
+        <summary>${escapeHtml(title)}</summary>
+        <p>${escapeHtml(note)}</p>
+        <ul>
+          ${values.map((value) => `<li>${escapeHtml(value)}</li>`).join("")}
+        </ul>
+      </details>
+    `;
+  }
+
+  function comparisonAlignmentItemName(item, fallback = "Unnamed comparison") {
+    const armLabel = item?.arm_1 && item?.arm_2
+      ? `${item.arm_1} versus ${item.arm_2}`
+      : "";
+    return String(
+      item?.label_clean
+      || item?.label
+      || item?.cochrane_label_clean
+      || item?.cochrane_label
+      || item?.comparison_label
+      || armLabel
+      || fallback
+    ).trim();
+  }
+
+  function renderUnmatchedComparisonDetails(items, options = {}) {
+    const values = (Array.isArray(items) ? items : [])
+      .map((item) => comparisonAlignmentItemName(item))
+      .filter(Boolean);
+    if (!values.length) {
+      return "";
+    }
+    const title = options.title || "Show missed comparison names";
+    const note = options.note || "These Cochrane analyzed arm contrasts did not retain a one-to-one match to the agent comparison. Review them as missed-comparison audit targets.";
+    return `
+      <details class="outcome-unmatched-details">
+        <summary>${escapeHtml(title)}</summary>
+        <p>${escapeHtml(note)}</p>
+        <ul>
+          ${values.map((value) => `<li>${escapeHtml(value)}</li>`).join("")}
+        </ul>
+      </details>
+    `;
+  }
+
   function renderEvaluationVisibilityControl() {
     return `
       <div class="evaluation-visibility-control" role="group" aria-label="Show benchmark evaluation">
@@ -1536,30 +1713,47 @@
     const counts = outcomeAlignment.counts || {};
     const recall = counts.cochrane_analyzed_outcome_recall ?? counts.cochrane_analyzed_outcome_coverage;
     const precision = counts.agent_outcome_precision_against_analyzed ?? counts.agent_outcome_analyzed_match_rate;
+    const unmatchedAgentOutcomes = Array.isArray(outcomeAlignment.unmatched_agent_outcomes)
+      ? outcomeAlignment.unmatched_agent_outcomes
+      : [];
+    const unmatchedCochraneOutcomes = Array.isArray(outcomeAlignment.unmatched_cochrane_analyzed_outcomes)
+      ? outcomeAlignment.unmatched_cochrane_analyzed_outcomes
+      : [];
     return `
       <div class="detail-card evaluation-card" style="margin-top:14px;">
-        <h3>Outcome Identification Recall</h3>
-        <p class="note">Recall is the percentage of locally curated Cochrane analyzed outcomes that have a one-to-one LLM semantic match among the agent's final outcome decisions.</p>
+        <h3>Outcome Identification Evaluation</h3>
+        <p class="note">Final agent outcomes are compared with locally curated Cochrane analyzed outcomes using one-to-one LLM semantic alignment. Metrics summarize recall, precision, matched outcomes, and unmatched outcomes.</p>
+        ${renderMatchedOutcomeSummary(outcomeAlignment)}
         ${renderEvaluationMetricGrid([
           {
             label: "Analyzed outcome recall",
             value: formatPercent(recall),
             detail: `${number(counts.true_positive_outcome_matches ?? counts.cochrane_analyzed_outcomes_matched)} of ${number(counts.cochrane_analyzed_outcomes)} Cochrane analyzed outcomes matched`,
+            extraHtml: renderRankedOutcomeCutoffDetails(outcomeAlignment, "recall"),
           },
           {
             label: "Agent outcome precision",
             value: formatPercent(precision),
             detail: `${number(counts.true_positive_outcome_matches ?? counts.agent_outcomes_matching_analyzed)} of ${number(counts.agent_outcomes)} agent outcomes matched Cochrane analyzed outcomes`,
+            extraHtml: renderRankedOutcomeCutoffDetails(outcomeAlignment, "precision"),
           },
           {
             label: "Unmatched agent outcomes",
             value: number(counts.false_positive_agent_outcomes),
             detail: "Agent final outcomes without a retained Cochrane analyzed-outcome match",
+            extraHtml: renderUnmatchedOutcomeDetails(unmatchedAgentOutcomes, {
+              title: "Show unmatched agent outcome names",
+              note: "These agent-selected outcomes did not retain a one-to-one match to a Cochrane analyzed outcome. Review them as audit targets, not automatic mistakes.",
+            }),
           },
           {
             label: "Unmatched Cochrane outcomes",
             value: number(counts.false_negative_cochrane_analyzed_outcomes),
             detail: "Cochrane analyzed outcomes without a retained agent outcome match",
+            extraHtml: renderUnmatchedOutcomeDetails(unmatchedCochraneOutcomes, {
+              title: "Show unmatched Cochrane outcome names",
+              note: "These Cochrane analyzed outcomes did not retain a one-to-one match to a final agent outcome. Review them as missed-outcome audit targets.",
+            }),
           },
         ])}
       </div>
@@ -1575,62 +1769,69 @@
     }
     const counts = comparisonAlignment.counts || {};
     const denominator = Number(counts.cochrane_analysis_comparisons) || 0;
-    const retainedMatches = Array.isArray(comparisonAlignment.matches) ? comparisonAlignment.matches : [];
-    const retainedAnalysisMatches = retainedMatches.filter((match) => (
-      String(match?.comparison_type || "").toLowerCase() === "analysis_comparison"
-    ));
-    const best = comparisonAlignment.best_match || {};
-    const fallbackNumerator = String(best.comparison_type || "").toLowerCase() === "analysis_comparison"
-      ? 1
-      : 0;
-    const numerator = retainedMatches.length
-      ? retainedAnalysisMatches.length
-      : fallbackNumerator;
+    const retainedMatches = Array.isArray(comparisonAlignment.one_to_one_matches)
+      ? comparisonAlignment.one_to_one_matches
+      : (Array.isArray(comparisonAlignment.matches) ? comparisonAlignment.matches : []);
+    const numerator = Number(counts.retained_matches ?? retainedMatches.length) || 0;
     const recall = denominator ? numerator / denominator : null;
-    const displayMatches = retainedAnalysisMatches.length
-      ? retainedAnalysisMatches
-      : (fallbackNumerator ? [best] : []);
+    const missed = Number(counts.false_negative_cochrane_analysis_comparisons) || Math.max(denominator - numerator, 0);
+    const unmatchedCochraneComparisons = Array.isArray(comparisonAlignment.unmatched_cochrane_comparisons)
+      ? comparisonAlignment.unmatched_cochrane_comparisons
+      : [];
 
     return `
       <div class="detail-card evaluation-card" style="margin-top:14px;">
-        <h3>Comparison Identification Recall</h3>
-        <p class="note">Recall is the percentage of locally curated Cochrane analysis-comparison labels that have a retained match among the agent's final comparison decision. Sensitivity or subgroup comparison labels are counted separately and are not included in this recall denominator.</p>
+        <h3>Comparison Identification Evaluation</h3>
+        <p class="note">Recall is the percentage of main Cochrane analyzed comparison arms, derived from benchmark meta-analysis study rows, that have a retained LLM match to the agent's final comparison decision.</p>
         ${renderEvaluationMetricGrid([
           {
-            label: "Cochrane analysis comparisons",
+            label: "Main analyzed comparisons",
             value: formatPercent(recall),
-            detail: `${number(numerator)} of ${number(denominator)} analysis comparison labels recalled`,
+            detail: `${number(numerator)} of ${number(denominator)} Cochrane analyzed arm contrasts recalled`,
           },
           {
-            label: "Sensitivity/subgroup labels",
-            value: number(counts.cochrane_sensitivity_or_subgroup_comparisons),
-            detail: "Tracked for audit, excluded from the comparison-recall denominator",
+            label: "Missed comparisons",
+            value: number(missed),
+            detail: "Cochrane analyzed arm contrasts without a retained agent comparison match",
+            extraHtml: renderUnmatchedComparisonDetails(unmatchedCochraneComparisons, {
+              title: "Show missed comparison names",
+              note: "These Cochrane analyzed arm contrasts did not retain a one-to-one match to the agent comparison. Review them as missed-comparison audit targets.",
+            }),
           },
         ])}
-        ${displayMatches.length ? `
+        ${retainedMatches.length ? `
           <div class="table-wrap screening-wrap evaluation-summary-table-wrap">
-            <table class="screening-table evaluation-table evaluation-summary-table synthesis-evaluation-table">
+            <table class="screening-table evaluation-table evaluation-summary-table synthesis-evaluation-table evaluation-match-table">
+              <colgroup>
+                <col class="evaluation-match-label-col">
+                <col class="evaluation-match-label-col">
+                <col class="evaluation-match-judgment-col">
+                <col class="evaluation-match-rationale-col">
+              </colgroup>
               <thead>
                 <tr>
                   <th>Cochrane comparison</th>
                   <th>Agent comparison</th>
-                  <th>Match strength</th>
-                  <th>Score</th>
+                  <th>LLM judgment</th>
+                  <th>Rationale</th>
                 </tr>
               </thead>
               <tbody>
-                ${displayMatches.map((match) => `
+                ${retainedMatches.map((match) => `
                   <tr>
                     <td>${sentence(match.cochrane_label_clean || match.cochrane_label || "Cochrane comparison")}</td>
-                    <td>${sentence(match.agent_label || (comparisonAlignment.agent_comparison || {}).comparison_label_canonical || (comparisonAlignment.agent_comparison || {}).comparison_label || "Agent comparison")}</td>
-                    <td>${escapeHtml(cochraneStrengthLabel(String(match.match_strength || "none").toLowerCase()))}</td>
-                    <td>${formatEffect(match.score)}</td>
+                    <td>${sentence(match.agent_label || (comparisonAlignment.agent_comparison || {}).comparison_label || "Agent comparison")}</td>
+                    <td>
+                      <span class="evaluation-match-judgment">${escapeHtml(String(match.relationship || match.match_strength || "match").replaceAll("_", " "))}</span>
+                      <span class="evaluation-match-confidence">confidence ${escapeHtml(formatEffect(match.confidence ?? match.score))}</span>
+                    </td>
+                    <td>${sentence(match.rationale || "")}</td>
                   </tr>
                 `).join("")}
               </tbody>
             </table>
           </div>
-        ` : `<p class="note evaluation-empty-note">No Cochrane analysis comparison label was recalled by the agent comparison decision.</p>`}
+        ` : `<p class="note evaluation-empty-note">No main Cochrane analyzed comparison arm contrast was recalled by the agent comparison decision.</p>`}
       </div>
     `;
   }
@@ -2055,7 +2256,7 @@
     const ciTarget = ((ciOverlapArtifact.metric_definition || {}).cochrane_ci_target)
       || "locally reproduced Cochrane all-studies CI using all estimable extracted Cochrane forest-plot rows";
     const rows = synthesisConfusionRows(ciOverlapArtifact);
-    const tableRows = rows.filter((row) => String(row.classification || "").toLowerCase() !== "fp");
+    const tableRows = rows.filter((row) => String(row.classification || "").toLowerCase() === "tp");
     const meanStudyOverlapF1 = finiteNumber(counts.mean_study_row_overlap_f1);
     const studyOverlapCount = finiteNumber(counts.study_row_overlap_count) ?? 0;
     const agentOnlyRows = rows.filter((row) => String(row.classification || "").toLowerCase() === "fp");
@@ -2073,11 +2274,26 @@
         ${plotCount > 1 ? `<span class="agent-only-outcome-count">${number(plotCount)} plots</span>` : ""}
       </span>`
     )).join("");
+    const missedCochraneRows = rows.filter((row) => String(row.classification || "").toLowerCase() === "fn");
+    const missedCochraneCountLabel = `${number(missedCochraneRows.length)} ${missedCochraneRows.length === 1 ? "analysis" : "analyses"}`;
+    const missedCochraneItems = missedCochraneRows.map((row) => {
+      const cochrane = row.cochrane_analysis || {};
+      const analysisId = String(cochrane.analysis_id || "—").trim();
+      const outcome = String(cochrane.outcome || "Unnamed Cochrane outcome").trim();
+      const comparison = String(cochrane.comparison || cochrane.comparison_label || "").trim();
+      return `
+        <span class="missed-cochrane-analysis-chip" role="listitem">
+          <span class="missed-cochrane-analysis-id">${escapeHtml(analysisId)}</span>
+          <span class="agent-only-outcome-name">${escapeHtml(outcome)}</span>
+          ${comparison ? `<span class="agent-only-outcome-count">${escapeHtml(comparison)}</span>` : ""}
+        </span>
+      `;
+    }).join("");
     return `
       <div class="detail-card evaluation-card" style="margin-top:14px;">
         <h3>Cochrane Analysis Recall</h3>
         <p class="note"><strong>Evaluation plot selection:</strong> for each agent outcome/effect-measure, compare <span class="mono">all_eligible</span> with Cochrane when it exists; otherwise compare <span class="mono">study_design_randomized_trial</span> when it exists. Other study-design branches and subgroup plots are not counted in Cochrane recall or CI-IoU.</p>
-        <p class="note">A Cochrane analysis is counted as recalled when the agent created a matched evaluated forest plot for the same outcome and effect measure. The evaluator uses the all-eligible forest plot when it exists; when all-eligible pooling was skipped for mixed study designs, it uses the randomized-trial study-design branch when available. Other subgroup or design-branch plots are skipped. TP/FP/FN is defined at the forest-plot-analysis level; no true-negative denominator is defined. CI intersection over union compares the agent CI with reproduced Cochrane CI targets: all estimable studies and, when available, the PMCID-only subset. Ratio measures use log-scale CI overlap; non-ratio measures use the original linear scale.</p>
+        <p class="note">A Cochrane analysis is counted as recalled when the agent created a matched evaluated forest plot for the same outcome and effect measure. The evaluator uses the all-eligible forest plot when it exists; when all-eligible pooling was skipped for mixed study designs, it uses the randomized-trial study-design branch when available. Other subgroup or design-branch plots are skipped. TP/FP/FN is defined at the forest-plot-analysis level; no true-negative denominator is defined. CI intersection over union compares the arm-orientation-adjusted agent CI with reproduced Cochrane CI targets: all estimable studies and, when available, the PMCID-only subset. Ratio measures use log-scale CI overlap; non-ratio measures use the original linear scale.</p>
         ${designBranchForestPlots ? `<p class="note synthesis-evaluation-scope-note">${number(designBranchForestPlots)} study-design branch ${designBranchForestPlots === 1 ? "forest plot is shown" : "forest plots are shown"} in the synthesis section. If all-eligible pooling is absent, the randomized-trial branch can be counted by the Cochrane recall/CI-IoU artifact; non-randomized or other branch plots remain display-only for this evaluation.</p>` : ""}
         ${renderEvaluationMetricGrid([
           {
@@ -2130,47 +2346,49 @@
               ${currentSynthesisCiOverlapTarget === "pmcid_only" ? "Show all-studies CI" : "Show PMCID-only CI"}
             </button>
           </div>
-          <div class="table-wrap screening-wrap evaluation-summary-table-wrap">
-            <table class="screening-table evaluation-table evaluation-summary-table synthesis-evaluation-table">
-              <thead>
-                <tr>
-                  <th>Result</th>
-                  <th>Cochrane outcome</th>
-                  <th>Agent outcome</th>
-                  <th>Study overlap</th>
-                  <th>CI overlap</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${tableRows.map((row) => {
-                  const classification = row.classification || "—";
-                  const cochrane = row.cochrane_analysis || {};
-                  const agent = row.agent_forest_plot || {};
-                  const allStudies = row.all_studies_iou || null;
-                  const pmcidOnly = row.pmcid_only_iou || null;
-                  const selectedCiOverlap = currentSynthesisCiOverlapTarget === "pmcid_only"
-                    ? pmcidOnly
-                    : allStudies;
-                  return `
-                    <tr class="synthesis-confusion-row synthesis-confusion-row-${escapeHtml(String(classification).toLowerCase())}">
-                      <td>
-                        ${synthesisConfusionBadge(classification)}
-                      </td>
-                      <td class="synthesis-cochrane-analysis-cell">
-                        <div class="screen-study-primary">${escapeHtml(cochrane.analysis_id || "—")}</div>
-                        ${cochrane.outcome ? `<div class="screen-study-secondary synthesis-cochrane-analysis-label">${escapeHtml(cochrane.outcome)}</div>` : ""}
-                      </td>
-                      <td>
-                        <div class="screen-study-primary">${escapeHtml(agent.outcome_name || agent.outcome_key || "—")}</div>
-                      </td>
-                      <td class="synthesis-study-overlap">${renderStudyRowOverlap(row.study_row_overlap, currentSynthesisStudyRowDetailsOpen)}</td>
-                      <td class="synthesis-ci-overlap-cell">${renderCiOverlapBars(agent, selectedCiOverlap, cochrane, currentSynthesisCiOverlapTarget)}</td>
-                    </tr>
-                  `;
-                }).join("")}
-              </tbody>
-            </table>
-          </div>
+          ${tableRows.length ? `
+            <div class="table-wrap screening-wrap evaluation-summary-table-wrap">
+              <table class="screening-table evaluation-table evaluation-summary-table synthesis-evaluation-table">
+                <thead>
+                  <tr>
+                    <th>Result</th>
+                    <th>Cochrane outcome</th>
+                    <th>Agent outcome</th>
+                    <th>Study overlap</th>
+                    <th>CI overlap</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${tableRows.map((row) => {
+                    const classification = row.classification || "—";
+                    const cochrane = row.cochrane_analysis || {};
+                    const agent = row.agent_forest_plot || {};
+                    const allStudies = row.all_studies_iou || null;
+                    const pmcidOnly = row.pmcid_only_iou || null;
+                    const selectedCiOverlap = currentSynthesisCiOverlapTarget === "pmcid_only"
+                      ? pmcidOnly
+                      : allStudies;
+                    return `
+                      <tr class="synthesis-confusion-row synthesis-confusion-row-${escapeHtml(String(classification).toLowerCase())}">
+                        <td>
+                          ${synthesisConfusionBadge(classification)}
+                        </td>
+                        <td class="synthesis-cochrane-analysis-cell">
+                          <div class="screen-study-primary">${escapeHtml(cochrane.analysis_id || "—")}</div>
+                          ${cochrane.outcome ? `<div class="screen-study-secondary synthesis-cochrane-analysis-label">${escapeHtml(cochrane.outcome)}</div>` : ""}
+                        </td>
+                        <td>
+                          <div class="screen-study-primary">${escapeHtml(agent.outcome_name || agent.outcome_key || "—")}</div>
+                        </td>
+                        <td class="synthesis-study-overlap">${renderStudyRowOverlap(row.study_row_overlap, currentSynthesisStudyRowDetailsOpen)}</td>
+                        <td class="synthesis-ci-overlap-cell">${renderCiOverlapBars(agent, selectedCiOverlap, cochrane, currentSynthesisCiOverlapTarget)}</td>
+                      </tr>
+                    `;
+                  }).join("")}
+                </tbody>
+              </table>
+            </div>
+          ` : `<p class="note evaluation-empty-note">No retained Cochrane-agent analysis matches were available for the table.</p>`}
           ${agentOnlyRows.length ? `
             <div class="agent-only-outcome-summary">
               <div class="agent-only-outcome-summary-head">
@@ -2182,6 +2400,20 @@
               </div>
               <div class="agent-only-outcome-list" role="list">
                 ${agentOnlyOutcomeItems}
+              </div>
+            </div>
+          ` : ""}
+          ${missedCochraneRows.length ? `
+            <div class="agent-only-outcome-summary">
+              <div class="agent-only-outcome-summary-head">
+                <div>
+                  <div class="screen-study-primary">Missed Cochrane analyses not shown in the table</div>
+                  <p class="screen-study-secondary">These Cochrane benchmark analyses did not have a retained matched agent forest plot, so they are still counted as false negatives.</p>
+                </div>
+                <span class="agent-only-outcome-total">${missedCochraneCountLabel}</span>
+              </div>
+              <div class="agent-only-outcome-list" role="list">
+                ${missedCochraneItems}
               </div>
             </div>
           ` : ""}
@@ -4608,26 +4840,42 @@
       const counts = benchmarkAlignment.counts || {};
       const analyzed = outcomeCoverageMetric();
       const precision = counts.agent_outcome_precision_against_analyzed ?? counts.agent_outcome_analyzed_match_rate;
+      const unmatchedAgentOutcomes = Array.isArray(benchmarkAlignment.unmatched_agent_outcomes)
+        ? benchmarkAlignment.unmatched_agent_outcomes
+        : [];
+      const unmatchedCochraneOutcomes = Array.isArray(benchmarkAlignment.unmatched_cochrane_analyzed_outcomes)
+        ? benchmarkAlignment.unmatched_cochrane_analyzed_outcomes
+        : [];
       return renderEvaluationMetricGrid([
         analyzed && {
           label: "Cochrane analyzed outcomes matched",
           value: formatPercent(analyzed.coverage),
           detail: `${number(counts.true_positive_outcome_matches ?? analyzed.matched)} of ${number(analyzed.total)} analyzed Cochrane outcomes matched final agent outcomes`,
+          extraHtml: renderRankedOutcomeCutoffDetails(benchmarkAlignment, "recall"),
         },
         {
           label: "Agent outcomes matched",
           value: formatPercent(precision),
           detail: `${number(counts.true_positive_outcome_matches ?? counts.agent_outcomes_matching_analyzed)} of ${number(counts.agent_outcomes)} final agent outcomes matched Cochrane analyzed outcomes`,
+          extraHtml: renderRankedOutcomeCutoffDetails(benchmarkAlignment, "precision"),
         },
         {
           label: "Agent unmatched",
           value: number(counts.false_positive_agent_outcomes),
           detail: "Final agent outcomes without a retained one-to-one Cochrane analyzed match",
+          extraHtml: renderUnmatchedOutcomeDetails(unmatchedAgentOutcomes, {
+            title: "Show names",
+            note: "These agent-selected outcomes did not retain a one-to-one match to a Cochrane analyzed outcome. Review them as audit targets, not automatic mistakes.",
+          }),
         },
         {
           label: "Cochrane unmatched",
           value: number(counts.false_negative_cochrane_analyzed_outcomes),
           detail: "Cochrane analyzed outcomes without a retained one-to-one agent match",
+          extraHtml: renderUnmatchedOutcomeDetails(unmatchedCochraneOutcomes, {
+            title: "Show names",
+            note: "These Cochrane analyzed outcomes did not retain a one-to-one match to a final agent outcome. Review them as missed-outcome audit targets.",
+          }),
         },
       ], "outcome-evaluation-grid");
     }
@@ -5441,6 +5689,25 @@
       return labels[String(value || "").toLowerCase()] || "No retained match";
     }
 
+    function armOrientationLabel(value) {
+      const labels = {
+        same_order: "Same arm order",
+        reversed_order: "Reversed arm order",
+        unclear: "Arm order unclear",
+        not_applicable: "Not applicable",
+      };
+      return labels[String(value || "").toLowerCase()] || "Arm order not recorded";
+    }
+
+    function effectDirectionConsistencyLabel(value) {
+      const labels = {
+        consistent: "Effect direction consistent",
+        inconsistent: "Effect direction inconsistent",
+        not_evaluable: "Effect direction not evaluable",
+      };
+      return labels[String(value || "").toLowerCase()] || "";
+    }
+
     function renderComparisonEvaluation() {
       if (!currentEvaluationVisible) {
         return "";
@@ -5461,8 +5728,8 @@
       const detailRows = [
         ["Cochrane comparison", best.cochrane_label_clean || best.cochrane_label],
         ["Match strength", `${strengthLabel(best.match_strength)} ${formatComparisonScore(best.score)}`],
-        ["Label score", `${formatComparisonScore(best.label_score)} (${best.label_reason || "label similarity"})`],
-        ["Arm score", `${formatComparisonScore(best.arm_average_score)} (${best.orientation === "swapped" ? "swapped arm order" : "same arm order"})`],
+        ["Relationship", best.relationship],
+        ["Arm orientation", armOrientationLabel(best.arm_orientation)],
         ["Cochrane analysis comparisons", counts.cochrane_analysis_comparisons],
       ].filter(([, value]) => value !== undefined && String(value || "").trim() !== "");
       return `
@@ -9745,6 +10012,12 @@
     const selectedSubsetLabel = selectedVersion?.label || (selectedSubset === "pmcid_only" ? "PMCID-only studies" : "All estimable studies");
     const selectedIou = ciOverlapSubsetValue(match, selectedSubset);
     const selectedCi = ciOverlapSubsetCi(match, selectedSubset);
+    const directionConsistency = match.effect_direction_consistency || {};
+    const armOrientation = match.comparison_arm_orientation
+      || directionConsistency.arm_orientation
+      || (match.comparison_alignment_match || {}).arm_orientation
+      || match.arm_orientation;
+    const directionConsistencyText = effectDirectionConsistencyLabel(directionConsistency.status);
     return `
       <div class="synthesis-evaluation-block">
         <div class="synthesis-evaluation-panel">
@@ -9755,6 +10028,7 @@
           <div class="synthesis-evaluation-detail">
             Matched ${escapeHtml(match.outcome || "Cochrane outcome")} (${escapeHtml(match.analysis_id || "analysis")});
             reproduced Cochrane CI ${escapeHtml(selectedCi)}.
+            Arm orientation: ${escapeHtml(armOrientationLabel(armOrientation))}${directionConsistencyText ? `; ${escapeHtml(directionConsistencyText.toLowerCase())}.` : "."}
           </div>
           <div class="synthesis-evaluation-actions">
             ${hasReferenceStatuses ? `
