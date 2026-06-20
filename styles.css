@@ -5304,7 +5304,7 @@ summary.outcome-panel-head {
   position: fixed;
   top: 72px;
   right: max(16px, calc((100vw - var(--content-width)) / 2 - 220px));
-  z-index: 30;
+  z-index: 60;
   display: grid;
   gap: 5px;
   justify-items: center;
@@ -6311,6 +6311,22 @@ body.source-trace-open .evaluation-visibility-dock {
 
 .comparison-evaluation-details {
   margin-top: 0;
+}
+
+.comparison-analysis-wrap {
+  margin-top: 14px;
+}
+
+.comparison-analysis-table th,
+.comparison-analysis-table td {
+  vertical-align: top;
+}
+
+.small-muted {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  line-height: 1.4;
 }
 
 .synthesis-evaluation-panel {

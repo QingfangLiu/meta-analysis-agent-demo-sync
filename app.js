@@ -218,7 +218,9 @@
     currentStudyExtractionFilterValue = typeof saved.currentStudyExtractionFilterValue === "string"
       ? saved.currentStudyExtractionFilterValue
       : "";
-    currentEvaluationVisible = false;
+    currentEvaluationVisible = typeof saved.currentEvaluationVisible === "boolean"
+      ? saved.currentEvaluationVisible
+      : currentEvaluationVisible;
     currentOutcomeBenchmarkView = "off";
     currentCochraneReferenceStatusPlots = new Set();
     currentCochraneForestPlotViews = new Map();
@@ -980,8 +982,10 @@
   }
 
   function comparisonAlignmentItemName(item, fallback = "Unnamed comparison") {
-    const armLabel = item?.arm_1 && item?.arm_2
-      ? `${item.arm_1} versus ${item.arm_2}`
+    const arm1 = item?.arm_1 || item?.arm_1_role;
+    const arm2 = item?.arm_2 || item?.arm_2_role;
+    const armLabel = arm1 && arm2
+      ? `${arm1} versus ${arm2}`
       : "";
     return String(
       item?.label_clean
@@ -992,6 +996,29 @@
       || armLabel
       || fallback
     ).trim();
+  }
+
+  function comparisonArtifactPayload(comparisonArtifact) {
+    const artifact = comparisonArtifact || {};
+    const payload = artifact.comparison;
+    return payload && typeof payload === "object" && !Array.isArray(payload)
+      ? payload
+      : artifact;
+  }
+
+  function reviewComparisonFromArtifact(comparisonArtifact) {
+    const payload = comparisonArtifactPayload(comparisonArtifact);
+    const reviewComparison = payload.review_comparison;
+    return reviewComparison && typeof reviewComparison === "object" && !Array.isArray(reviewComparison)
+      ? reviewComparison
+      : payload;
+  }
+
+  function analysisComparisonsFromArtifact(comparisonArtifact) {
+    const payload = comparisonArtifactPayload(comparisonArtifact);
+    return Array.isArray(payload.analysis_comparisons)
+      ? payload.analysis_comparisons.filter((item) => item && typeof item === "object")
+      : [];
   }
 
   function renderUnmatchedComparisonDetails(items, options = {}) {
@@ -1782,7 +1809,7 @@
     return `
       <div class="detail-card evaluation-card" style="margin-top:14px;">
         <h3>Comparison Identification Evaluation</h3>
-        <p class="note">Recall is the percentage of main Cochrane analyzed comparison arms, derived from benchmark meta-analysis study rows, that have a retained LLM match to the agent's final comparison decision.</p>
+        <p class="note">Recall is the percentage of main Cochrane analyzed comparison arms, derived from benchmark meta-analysis study rows, that have a retained LLM match to the agent's final analysis-level comparison decisions.</p>
         ${renderEvaluationMetricGrid([
           {
             label: "Main analyzed comparisons",
@@ -1792,10 +1819,10 @@
           {
             label: "Missed comparisons",
             value: number(missed),
-            detail: "Cochrane analyzed arm contrasts without a retained agent comparison match",
+            detail: "Cochrane analyzed arm contrasts without a retained analysis-level agent comparison match",
             extraHtml: renderUnmatchedComparisonDetails(unmatchedCochraneComparisons, {
               title: "Show missed comparison names",
-              note: "These Cochrane analyzed arm contrasts did not retain a one-to-one match to the agent comparison. Review them as missed-comparison audit targets.",
+              note: "These Cochrane analyzed arm contrasts did not retain a one-to-one match to the agent's analysis-level comparison decisions. Review them as missed-comparison audit targets.",
             }),
           },
         ])}
@@ -1811,7 +1838,7 @@
               <thead>
                 <tr>
                   <th>Cochrane comparison</th>
-                  <th>Agent comparison</th>
+                  <th>Agent analysis comparison</th>
                   <th>LLM judgment</th>
                   <th>Rationale</th>
                 </tr>
@@ -1831,7 +1858,7 @@
               </tbody>
             </table>
           </div>
-        ` : `<p class="note evaluation-empty-note">No main Cochrane analyzed comparison arm contrast was recalled by the agent comparison decision.</p>`}
+        ` : `<p class="note evaluation-empty-note">No main Cochrane analyzed comparison arm contrast was recalled by the agent's analysis-level comparison decisions.</p>`}
       </div>
     `;
   }
@@ -2791,6 +2818,25 @@
       weak: "Weak",
     };
     return labels[value] || "No match";
+  }
+
+  function armOrientationLabel(value) {
+    const labels = {
+      same_order: "Same arm order",
+      reversed_order: "Reversed arm order",
+      unclear: "Arm order unclear",
+      not_applicable: "Not applicable",
+    };
+    return labels[String(value || "").toLowerCase()] || "Arm order not recorded";
+  }
+
+  function effectDirectionConsistencyLabel(value) {
+    const labels = {
+      consistent: "Effect direction consistent",
+      inconsistent: "Effect direction inconsistent",
+      not_evaluable: "Effect direction not evaluable",
+    };
+    return labels[String(value || "").toLowerCase()] || "";
   }
 
   function bestCochraneBenchmarkMatch(matches) {
@@ -5640,10 +5686,11 @@
 
   function comparisonSection(comparisonArtifact, pico, cochraneComparisonAlignment = {}, studyArmsArtifact = {}) {
     const artifact = comparisonArtifact || {};
-    const comparison = artifact.comparison || {};
+    const payload = comparisonArtifactPayload(artifact);
+    const comparison = reviewComparisonFromArtifact(artifact);
+    const analysisComparisons = analysisComparisonsFromArtifact(artifact);
     const comparisonAlignment = cochraneComparisonAlignment || {};
     const mappedStudyArms = studyArmsSection(studyArmsArtifact, { embedded: true, title: "Study arms by publication" });
-    const initialComparison = String((pico || {}).comparison || "").trim();
     const placeholderValues = new Set([
       "n/a",
       "na",
@@ -5669,6 +5716,9 @@
     const comparisonLabel = hasMeaningfulValue(comparison.comparison_label)
       ? String(comparison.comparison_label).trim()
       : "";
+    const comparisonPolicyNotes = hasMeaningfulValue(payload.comparison_policy_notes)
+      ? String(payload.comparison_policy_notes).trim()
+      : "";
 
     function comparisonScore(value) {
       const score = Number(value);
@@ -5689,25 +5739,6 @@
       return labels[String(value || "").toLowerCase()] || "No retained match";
     }
 
-    function armOrientationLabel(value) {
-      const labels = {
-        same_order: "Same arm order",
-        reversed_order: "Reversed arm order",
-        unclear: "Arm order unclear",
-        not_applicable: "Not applicable",
-      };
-      return labels[String(value || "").toLowerCase()] || "Arm order not recorded";
-    }
-
-    function effectDirectionConsistencyLabel(value) {
-      const labels = {
-        consistent: "Effect direction consistent",
-        inconsistent: "Effect direction inconsistent",
-        not_evaluable: "Effect direction not evaluable",
-      };
-      return labels[String(value || "").toLowerCase()] || "";
-    }
-
     function renderComparisonEvaluation() {
       if (!currentEvaluationVisible) {
         return "";
@@ -5726,6 +5757,7 @@
       }
       const counts = comparisonAlignment.counts || {};
       const detailRows = [
+        ["Agent analysis comparison", best.agent_label],
         ["Cochrane comparison", best.cochrane_label_clean || best.cochrane_label],
         ["Match strength", `${strengthLabel(best.match_strength)} ${formatComparisonScore(best.score)}`],
         ["Relationship", best.relationship],
@@ -5753,14 +5785,57 @@
       `;
     }
 
-    if (!comparisonLabel && !fields.length && !mappedStudyArms) {
+    function renderAnalysisComparisons() {
+      if (!analysisComparisons.length) {
+        return "";
+      }
+      return `
+        <div class="table-wrap screening-wrap comparison-analysis-wrap">
+          <table class="screening-table evaluation-table comparison-analysis-table">
+            <thead>
+              <tr>
+                <th>Analysis comparison</th>
+                <th>Arm 1</th>
+                <th>Arm 2</th>
+                <th>Selection notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${analysisComparisons.map((item, index) => {
+                const notes = [
+                  item.split_reason,
+                  item.pooling_note,
+                  item.source_signal,
+                  Array.isArray(item.related_subgroup_factors) && item.related_subgroup_factors.length
+                    ? `Related subgroup factors: ${item.related_subgroup_factors.join(", ")}`
+                    : "",
+                ].map((value) => String(value || "").trim()).filter(Boolean);
+                return `
+                  <tr>
+                    <td>
+                      <strong>${sentence(item.comparison_label || `Analysis comparison ${index + 1}`)}</strong>
+                      ${item.comparison_description ? `<div class="small-muted">${sentence(item.comparison_description)}</div>` : ""}
+                    </td>
+                    <td>${sentence(item.arm_1_role || "—")}</td>
+                    <td>${sentence(item.arm_2_role || "—")}</td>
+                    <td>${notes.length ? notes.map((note) => `<div>${sentence(note)}</div>`).join("") : `<span class="muted">—</span>`}</td>
+                  </tr>
+                `;
+              }).join("")}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    if (!comparisonLabel && !fields.length && !analysisComparisons.length && !mappedStudyArms) {
       return "";
     }
 
     return `
       <div class="detail-card" id="comparison" style="margin-top:14px;">
         <h3>Comparison</h3>
-        <p class="note">Study arms are mapped from each included study first. The agent then summarizes those mapped arms into a review-level comparison used for extraction and synthesis.</p>
+        <p class="note">Study arms are mapped from each included study first. The agent then summarizes those mapped arms into a broad review comparison and analysis-level comparison candidates.</p>
         ${mappedStudyArms}
         ${comparisonLabel || fields.length
           ? `
@@ -5783,6 +5858,7 @@
                         </div>
                       `).join("")}
                     </div>
+                    ${comparisonPolicyNotes ? `<p class="note">${sentence(comparisonPolicyNotes)}</p>` : ""}
                   `
                   : `<p class="note">No additional comparison details were generated for this run.</p>`
                 }
@@ -5792,6 +5868,7 @@
           `
           : `<p class="note">No comparison decision artifact was generated for this run.</p>`
         }
+        ${renderAnalysisComparisons()}
       </div>
     `;
   }
@@ -7198,7 +7275,8 @@
 
     function outcomeFilterLabel(result) {
       const outcomeName = concreteOutcomeName(result);
-      return [readableResultLabel(result), outcomeName].filter(Boolean).join(" | ");
+      const comparisonLabel = cleanText(result?.comparison_label || "");
+      return [readableResultLabel(result), outcomeName, comparisonLabel].filter(Boolean).join(" | ");
     }
 
     function filterOptionsForMode(mode) {
@@ -7280,10 +7358,12 @@
     function resultOutcomeCell(result) {
       const label = readableResultLabel(result);
       const outcomeName = concreteOutcomeName(result);
+      const comparisonLabel = cleanText(result?.comparison_label || "");
       return `
         <div class="study-extraction-cell-stack">
           <div class="study-extraction-primary">${escapeHtml(label)}</div>
           ${outcomeName ? `<div class="study-extraction-muted">${escapeHtml(outcomeName)}</div>` : ""}
+          ${comparisonLabel ? `<div class="study-extraction-muted">${escapeHtml(comparisonLabel)}</div>` : ""}
         </div>
       `;
     }
@@ -7776,8 +7856,7 @@
     if (!comparisonPayload || typeof comparisonPayload !== "object") {
       return {};
     }
-    const detail = comparisonPayload.comparison;
-    return detail && typeof detail === "object" && !Array.isArray(detail) ? detail : comparisonPayload;
+    return reviewComparisonFromArtifact(comparisonPayload);
   }
 
   function cleanForestArmHeader(value, fallback) {
