@@ -2435,7 +2435,7 @@
 	            <h2>Evaluation summary</h2>
 	          </div>
 	        </div>
-        <p class="note">Evaluation artifacts are generated under <span class="mono">evaluation/</span> and loaded into the demo after the agent run is complete. These metrics are not used by the agent during the run.</p>
+        <p class="note">Evaluation artifacts are generated under each run's <span class="mono">outputs/&lt;run_id&gt;/evaluation/</span> folder and loaded into the demo after the agent run is complete. These metrics are not used by the agent during the run.</p>
         ${currentEvaluationVisible ? `
           ${renderSearchEvaluation(searchMetrics, ciOverlapArtifact, { summaryOnly: true })}
           ${renderScreeningEvaluation(searchMetrics, screeningResults)}
