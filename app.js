@@ -5549,14 +5549,6 @@
       `;
     }
 
-    function compactArmDetails(study) {
-      const arms = Array.isArray(study.study_arms) ? study.study_arms.filter(Boolean) : [];
-      const labels = arms
-        .map((arm) => [arm.arm_label, arm.description].filter(Boolean).join(": "))
-        .filter(Boolean);
-      return labels.length ? labels : [];
-    }
-
     function armDetailItems(study) {
       const arms = Array.isArray(study.study_arms) ? study.study_arms.filter(Boolean) : [];
       return arms
@@ -5579,12 +5571,8 @@
 
     function hasArmContent(study) {
       return Boolean(
-        uniqueTextList(study.intervention_arms).length
-        || uniqueTextList(study.comparator_arms).length
-        || uniqueTextList(study.extra_or_irrelevant_arms).length
-        || uniqueTextList(study.comparison_context_notes).length
-        || compactArmDetails(study).length
-        || cleanText(study.multi_arm_handling_note)
+        uniqueTextList(study.comparison_context_notes).length
+        || armDetailItems(study).length
       );
     }
 
@@ -5598,9 +5586,9 @@
       return `
         <details class="study-arms-omitted">
           <summary>
-            <span>Studies without mapped arm details <span class="inline-section-count">(x ${number(omittedStudies.length)})</span></span>
+            <span>Studies without source-reported arm details <span class="inline-section-count">(x ${number(omittedStudies.length)})</span></span>
           </summary>
-          <p class="note">No intervention, comparator, extra arm, or study-arm detail was saved in study_arms.json.</p>
+          <p class="note">No source-reported arm detail was saved in study_arms.json.</p>
           <div class="table-wrap screening-wrap study-arms-omitted-wrap">
             <table class="screening-table extraction-study-summary-table study-sticky-table">
               <thead>
@@ -5615,7 +5603,7 @@
                   <tr>
                     <td class="screen-col-index mono">${index + 1}</td>
                     <td class="screen-col-study">${compactStudyCell(study)}</td>
-                    <td class="study-arm-omitted-reason">No mapped arm detail saved.</td>
+                    <td class="study-arm-omitted-reason">No source-reported arm detail saved.</td>
                   </tr>
                 `).join("")}
               </tbody>
@@ -5630,7 +5618,7 @@
         <summary class="collapsible-table-summary study-arms-summary">
           <h3>${escapeHtml(options.title || "Study arms")} <span class="inline-section-count">(x ${number(studies.length)})</span></h3>
         </summary>
-        <p class="note">${options.embedded ? "Per-study intervention and comparator arms projected from saved study tables." : "Intervention and comparator arms are projected from saved study tables for candidates not excluded by full-text screening."}</p>
+        <p class="note">${options.embedded ? "Per-study source-reported arms from saved study tables." : "Source-reported study arms are projected from saved study tables for candidates not excluded by full-text screening."}</p>
         ${studies.length
           ? `
             <div class="table-wrap screening-wrap study-arms-table-wrap">
@@ -5639,33 +5627,20 @@
                   <tr>
                     <th class="screen-col-index">#</th>
                     <th class="screen-col-study">Study</th>
-                    <th>Intervention arms</th>
-                    <th>Comparator arms</th>
-                    <th>Extra arms / handling note</th>
+                    <th>Source-reported arms</th>
+                    <th>Comparison context</th>
                   </tr>
                 </thead>
                 <tbody>
                   ${studies.map((study, index) => {
-                    const extraArms = uniqueTextList(study.extra_or_irrelevant_arms);
-                    const handlingNote = cleanText(study.multi_arm_handling_note);
                     const comparisonContextNotes = uniqueTextList(study.comparison_context_notes);
                     const armDetails = armDetailItems(study);
-                    const fallbackArms = !uniqueTextList(study.intervention_arms).length && !uniqueTextList(study.comparator_arms).length
-                      ? compactArmDetails(study)
-                      : [];
                     return `
                       <tr>
                         <td class="screen-col-index mono">${index + 1}</td>
                         <td class="screen-col-study">${compactStudyCell(study)}</td>
-                        <td>${armList(study.intervention_arms)}</td>
-                        <td>${armList(study.comparator_arms)}</td>
-                        <td class="study-arms-extra-col">
-                          ${extraArms.length ? armList(extraArms) : ""}
-                          ${fallbackArms.length ? `<div class="study-arm-fallback"><span class="stat-label">Study arms</span>${armList(fallbackArms)}</div>` : ""}
-                          ${armDetails.length ? `<div class="study-arm-fallback"><span class="stat-label">Arm details</span>${armList(armDetails)}</div>` : ""}
-                          ${comparisonContextNotes.length ? `<div class="study-arm-fallback"><span class="stat-label">Comparison context</span>${armList(comparisonContextNotes)}</div>` : ""}
-                          ${handlingNote ? `<p class="study-arm-note">${sentence(handlingNote)}</p>` : (!extraArms.length && !fallbackArms.length && !armDetails.length && !comparisonContextNotes.length ? `<span class="muted">—</span>` : "")}
-                        </td>
+                        <td>${armDetails.length ? armList(armDetails) : `<span class="muted">—</span>`}</td>
+                        <td class="study-arms-extra-col">${comparisonContextNotes.length ? armList(comparisonContextNotes) : `<span class="muted">—</span>`}</td>
                       </tr>
                     `;
                   }).join("")}
@@ -5844,7 +5819,7 @@
                   <div>
                     <div class="insight-title">Comparison Decision</div>
                     <h4>${sentence(comparisonLabel || "Target comparison")}</h4>
-                    <p class="note">First analysis-level comparison inferred from the mapped arms and original PICO.</p>
+                    <p class="note">First analysis-level comparison inferred from source-reported study arms and original PICO.</p>
                   </div>
                 </div>
                 ${fields.length
