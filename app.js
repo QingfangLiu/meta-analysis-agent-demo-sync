@@ -6884,7 +6884,7 @@
       const source = entry?.fulltext_source && typeof entry.fulltext_source === "object" ? entry.fulltext_source : {};
       const eligibility = entry?.fulltext_eligibility && typeof entry.fulltext_eligibility === "object" ? entry.fulltext_eligibility : {};
       const fulltextObtained = source.fulltext_obtained === true;
-      const decision = cleanText(eligibility.decision || source.fulltext_eligibility_decision);
+      const decision = cleanText(eligibility.decision);
       const normalizedDecision = decision.toLowerCase();
       return {
         pmid: cleanText(entry?.pmid) || cleanText(metadata.pmid),
@@ -6898,7 +6898,7 @@
         decisionCategory: fulltextObtained && ["include", "exclude"].includes(normalizedDecision)
           ? normalizedDecision
           : "no full text",
-        reason: cleanText(eligibility.reason || source.fulltext_eligibility_reason || source.skip_reason),
+        reason: cleanText(eligibility.reason || source.skip_reason),
       };
     }).filter((row) => !droppedSourcePmids.has(row.pmid));
   }
