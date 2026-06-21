@@ -982,8 +982,8 @@
   }
 
   function comparisonAlignmentItemName(item, fallback = "Unnamed comparison") {
-    const arm1 = item?.arm_1 || item?.arm_1_role;
-    const arm2 = item?.arm_2 || item?.arm_2_role;
+    const arm1 = item?.arm_1_label || item?.agent_arm_1_label || item?.arm_1 || item?.arm_1_role;
+    const arm2 = item?.arm_2_label || item?.agent_arm_2_label || item?.arm_2 || item?.arm_2_role;
     const armLabel = arm1 && arm2
       ? `${arm1} versus ${arm2}`
       : "";
@@ -1006,19 +1006,15 @@
       : artifact;
   }
 
-  function reviewComparisonFromArtifact(comparisonArtifact) {
-    const payload = comparisonArtifactPayload(comparisonArtifact);
-    const reviewComparison = payload.review_comparison;
-    return reviewComparison && typeof reviewComparison === "object" && !Array.isArray(reviewComparison)
-      ? reviewComparison
-      : payload;
-  }
-
   function analysisComparisonsFromArtifact(comparisonArtifact) {
     const payload = comparisonArtifactPayload(comparisonArtifact);
     return Array.isArray(payload.analysis_comparisons)
       ? payload.analysis_comparisons.filter((item) => item && typeof item === "object")
       : [];
+  }
+
+  function primaryAnalysisComparisonFromArtifact(comparisonArtifact) {
+    return analysisComparisonsFromArtifact(comparisonArtifact)[0] || {};
   }
 
   function renderUnmatchedComparisonDetails(items, options = {}) {
@@ -5686,9 +5682,8 @@
 
   function comparisonSection(comparisonArtifact, pico, cochraneComparisonAlignment = {}, studyArmsArtifact = {}) {
     const artifact = comparisonArtifact || {};
-    const payload = comparisonArtifactPayload(artifact);
-    const comparison = reviewComparisonFromArtifact(artifact);
     const analysisComparisons = analysisComparisonsFromArtifact(artifact);
+    const comparison = analysisComparisons[0] || {};
     const comparisonAlignment = cochraneComparisonAlignment || {};
     const mappedStudyArms = studyArmsSection(studyArmsArtifact, { embedded: true, title: "Study arms by publication" });
     const placeholderValues = new Set([
@@ -5709,15 +5704,15 @@
 
     const fields = [
       ["Comparison description", comparison.comparison_description],
+      ["Arm 1 label", comparison.arm_1_label],
       ["Arm 1 role", comparison.arm_1_role],
+      ["Arm 2 label", comparison.arm_2_label],
       ["Arm 2 role", comparison.arm_2_role],
+      ["Rationale", comparison.comparison_rationale],
       ["Notes", comparison.notes],
     ].filter(([, value]) => hasMeaningfulValue(value));
     const comparisonLabel = hasMeaningfulValue(comparison.comparison_label)
       ? String(comparison.comparison_label).trim()
-      : "";
-    const comparisonPolicyNotes = hasMeaningfulValue(payload.comparison_policy_notes)
-      ? String(payload.comparison_policy_notes).trim()
       : "";
 
     function comparisonScore(value) {
@@ -5803,9 +5798,7 @@
             <tbody>
               ${analysisComparisons.map((item, index) => {
                 const notes = [
-                  item.split_reason,
-                  item.pooling_note,
-                  item.source_signal,
+                  item.comparison_rationale,
                   Array.isArray(item.related_subgroup_factors) && item.related_subgroup_factors.length
                     ? `Related subgroup factors: ${item.related_subgroup_factors.join(", ")}`
                     : "",
@@ -5816,8 +5809,14 @@
                       <strong>${sentence(item.comparison_label || `Analysis comparison ${index + 1}`)}</strong>
                       ${item.comparison_description ? `<div class="small-muted">${sentence(item.comparison_description)}</div>` : ""}
                     </td>
-                    <td>${sentence(item.arm_1_role || "—")}</td>
-                    <td>${sentence(item.arm_2_role || "—")}</td>
+                    <td>
+                      ${sentence(item.arm_1_label || item.arm_1_role || "—")}
+                      ${item.arm_1_label && item.arm_1_role ? `<div class="small-muted">${sentence(item.arm_1_role)}</div>` : ""}
+                    </td>
+                    <td>
+                      ${sentence(item.arm_2_label || item.arm_2_role || "—")}
+                      ${item.arm_2_label && item.arm_2_role ? `<div class="small-muted">${sentence(item.arm_2_role)}</div>` : ""}
+                    </td>
                     <td>${notes.length ? notes.map((note) => `<div>${sentence(note)}</div>`).join("") : `<span class="muted">—</span>`}</td>
                   </tr>
                 `;
@@ -5835,7 +5834,7 @@
     return `
       <div class="detail-card" id="comparison" style="margin-top:14px;">
         <h3>Comparison</h3>
-        <p class="note">Study arms are mapped from each included study first. The agent then summarizes those mapped arms into a broad review comparison and analysis-level comparison candidates.</p>
+        <p class="note">Study arms are mapped from each included study first. The agent then selects analysis-level comparison candidates for extraction and synthesis.</p>
         ${mappedStudyArms}
         ${comparisonLabel || fields.length
           ? `
@@ -5845,7 +5844,7 @@
                   <div>
                     <div class="insight-title">Comparison Decision</div>
                     <h4>${sentence(comparisonLabel || "Target comparison")}</h4>
-                    <p class="note">Review-level comparison framing inferred from the mapped arms and original PICO.</p>
+                    <p class="note">First analysis-level comparison inferred from the mapped arms and original PICO.</p>
                   </div>
                 </div>
                 ${fields.length
@@ -5858,7 +5857,6 @@
                         </div>
                       `).join("")}
                     </div>
-                    ${comparisonPolicyNotes ? `<p class="note">${sentence(comparisonPolicyNotes)}</p>` : ""}
                   `
                   : `<p class="note">No additional comparison details were generated for this run.</p>`
                 }
@@ -7856,7 +7854,7 @@
     if (!comparisonPayload || typeof comparisonPayload !== "object") {
       return {};
     }
-    return reviewComparisonFromArtifact(comparisonPayload);
+    return primaryAnalysisComparisonFromArtifact(comparisonPayload);
   }
 
   function cleanForestArmHeader(value, fallback) {
@@ -7890,11 +7888,11 @@
     const comparison = forestComparisonDetail(comparisonPayload);
     return {
       arm1: cleanForestArmHeader(
-        comparison.arm_1_role || firstForestRowValue(rows, "arm_1_label"),
+        comparison.arm_1_label || comparison.arm_1_role || firstForestRowValue(rows, "arm_1_label"),
         "Intervention"
       ),
       arm2: cleanForestArmHeader(
-        comparison.arm_2_role || firstForestRowValue(rows, "arm_2_label"),
+        comparison.arm_2_label || comparison.arm_2_role || firstForestRowValue(rows, "arm_2_label"),
         "Comparator"
       ),
     };
