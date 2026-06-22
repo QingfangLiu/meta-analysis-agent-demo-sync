@@ -2841,7 +2841,7 @@ th {
 }
 
 .study-arms-table {
-  min-width: 980px;
+  min-width: 760px;
   table-layout: fixed;
 }
 
@@ -2852,25 +2852,14 @@ th {
 
 .study-arms-table th:nth-child(2),
 .study-arms-table td:nth-child(2) {
-  width: 150px;
+  width: 170px;
 }
 
 .study-arms-table th:nth-child(3),
 .study-arms-table td:nth-child(3) {
-  width: 220px;
+  width: auto;
 }
 
-.study-arms-table th:nth-child(4),
-.study-arms-table td:nth-child(4) {
-  width: 220px;
-}
-
-.study-arms-table th:nth-child(5),
-.study-arms-table td:nth-child(5) {
-  width: 340px;
-}
-
-.study-arms-extra-col,
 .study-arm-note,
 .study-arm-list li {
   overflow-wrap: anywhere;

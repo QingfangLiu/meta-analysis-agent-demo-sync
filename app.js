@@ -5570,10 +5570,7 @@
     }
 
     function hasArmContent(study) {
-      return Boolean(
-        uniqueTextList(study.comparison_context_notes).length
-        || armDetailItems(study).length
-      );
+      return Boolean(armDetailItems(study).length);
     }
 
     const studies = allStudies.filter(hasArmContent);
@@ -5628,19 +5625,16 @@
                     <th class="screen-col-index">#</th>
                     <th class="screen-col-study">Study</th>
                     <th>Source-reported arms</th>
-                    <th>Comparison context</th>
                   </tr>
                 </thead>
                 <tbody>
                   ${studies.map((study, index) => {
-                    const comparisonContextNotes = uniqueTextList(study.comparison_context_notes);
                     const armDetails = armDetailItems(study);
                     return `
                       <tr>
                         <td class="screen-col-index mono">${index + 1}</td>
                         <td class="screen-col-study">${compactStudyCell(study)}</td>
                         <td>${armDetails.length ? armList(armDetails) : `<span class="muted">—</span>`}</td>
-                        <td class="study-arms-extra-col">${comparisonContextNotes.length ? armList(comparisonContextNotes) : `<span class="muted">—</span>`}</td>
                       </tr>
                     `;
                   }).join("")}
