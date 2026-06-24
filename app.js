@@ -5877,9 +5877,11 @@
 
   function extractionTemplateForOutcomeTable(table, templateSet) {
     const outcomeKey = String(table?.outcome_key || "").trim();
-    const templates = Array.isArray((templateSet || {}).outcome_templates)
-      ? templateSet.outcome_templates
-      : [];
+    const templates = Array.isArray(templateSet)
+      ? templateSet
+      : Array.isArray((templateSet || {}).outcome_templates)
+        ? templateSet.outcome_templates
+        : [];
     return templates.find((template, index) => {
       const targets = template?.review_targets || {};
       const templateKey = String(targets.outcome_id || `outcome_${String(index + 1).padStart(2, "0")}`).trim();
