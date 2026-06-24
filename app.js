@@ -7821,9 +7821,23 @@
     return variance !== null && variance >= 0 ? Math.sqrt(variance) : null;
   }
 
-  function forestComparisonDetail(comparisonPayload) {
+  function comparisonIdFromSubsetName(subsetName) {
+    const text = String(subsetName || "").trim();
+    const match = text.match(/^comparison_(analysis_comparison_\d+)$/);
+    return match ? match[1] : "";
+  }
+
+  function forestComparisonDetail(comparisonPayload, plotData = {}) {
     if (!comparisonPayload || typeof comparisonPayload !== "object") {
       return {};
+    }
+    const comparisonId = comparisonIdFromSubsetName(plotData?.subset);
+    if (comparisonId) {
+      const comparison = analysisComparisonsFromArtifact(comparisonPayload)
+        .find((item) => String(item?.comparison_id || "").trim() === comparisonId);
+      if (comparison) {
+        return comparison;
+      }
     }
     return primaryAnalysisComparisonFromArtifact(comparisonPayload);
   }
@@ -7855,8 +7869,8 @@
     return "";
   }
 
-  function forestSampleHeaders(rows, comparisonPayload) {
-    const comparison = forestComparisonDetail(comparisonPayload);
+  function forestSampleHeaders(rows, comparisonPayload, plotData = {}) {
+    const comparison = forestComparisonDetail(comparisonPayload, plotData);
     return {
       arm1: cleanForestArmHeader(
         comparison.arm_1_label || comparison.arm_1_role || firstForestRowValue(rows, "arm_1_label"),
@@ -8119,9 +8133,8 @@
   }
 
   function isMixedStudyDesignSynthesis(analysis) {
-    const handling = synthesisStudyDesignHandling(analysis);
     const skipReason = String(analysis?.primaryResult?.skip_reason || "").trim();
-    return handling.mixed_study_designs === true || skipReason === "mixed_study_designs";
+    return skipReason === "mixed_study_designs" || synthesisDesignBranchEntries(analysis).length > 0;
   }
 
   function isStudyDesignSubsetName(subsetName) {
@@ -8154,12 +8167,29 @@
         bySubsetName.delete(subsetName);
       }
     });
+    bySubsetName.forEach((subgroup) => {
+      ordered.push(subgroup);
+    });
     return ordered;
   }
 
   function synthesisNonDesignSubgroupEntries(analysis) {
     return (Array.isArray(analysis?.subgroupAnalyses) ? analysis.subgroupAnalyses : [])
       .filter((subgroup) => !isStudyDesignSubsetName(subgroup.subsetName));
+  }
+
+  function isComparisonSubsetName(subsetName) {
+    return String(subsetName || "").trim().startsWith("comparison_");
+  }
+
+  function synthesisComparisonVariantEntries(analysis) {
+    return synthesisNonDesignSubgroupEntries(analysis)
+      .filter((subgroup) => isComparisonSubsetName(subgroup.subsetName));
+  }
+
+  function synthesisNonDesignNonComparisonSubgroupEntries(analysis) {
+    return synthesisNonDesignSubgroupEntries(analysis)
+      .filter((subgroup) => !isComparisonSubsetName(subgroup.subsetName));
   }
 
   function hasSynthesisDisplayPayload(analysis) {
@@ -8947,7 +8977,7 @@
     const sampleTwoX = showHazardLogColumns ? 585 : showEventColumns ? 543 : 390;
     const weightLabelX = showHazardLogColumns ? 685 : showEventColumns ? 640 : 485;
     const valueLabelX = showHazardLogColumns ? 860 : showEventColumns ? 870 : 650;
-    const sampleHeaders = forestSampleHeaders(rows, comparisonPayload);
+    const sampleHeaders = forestSampleHeaders(rows, comparisonPayload, plotData);
     const sampleTotalFields = showEventColumns
       ? ["events_arm_1", "n_arm_1", "events_arm_2", "n_arm_2"]
       : ["n_arm_1", "n_arm_2"];
@@ -9496,6 +9526,53 @@
           }).join("")}
         </div>
       </details>
+    `;
+  }
+
+  function renderSynthesisComparisonVariants(variantAnalyses, entry, comparisonPayload, subgroupPlan) {
+    const variants = Array.isArray(variantAnalyses) ? variantAnalyses : [];
+    if (!variants.length) {
+      return "";
+    }
+    return `
+      <div class="synthesis-comparison-variant-section">
+        <div class="synthesis-comparison-variant-head">
+          <h5>Comparison-specific forest plots</h5>
+          <p class="note">The combined estimate was skipped because multiple analysis comparisons were present; plots are shown separately by comparison.</p>
+        </div>
+        <div class="synthesis-comparison-variant-list">
+          ${variants.map((variant) => {
+            const interactivePlot = renderInteractiveForestPlot(
+              variant.plotData,
+              variant.plotKey,
+              entry.outcome_name || entry.label || entry.key,
+              comparisonPayload,
+              { showTitle: true }
+            );
+            const estimateLabel = synthesisEstimateLabel(variant);
+            return `
+              <div class="synthesis-comparison-variant-panel">
+                <div class="synthesis-subgroup-level-header">
+                  <span class="synthesis-subgroup-title">${escapeHtml(variant.label || humanizeMetric(variant.subsetName))}</span>
+                  <span class="synthesis-subgroup-meta">
+                    <span>${escapeHtml(synthesisStudyCountLabel(variant))}</span>
+                    ${estimateLabel ? `<span>${escapeHtml(estimateLabel)}</span>` : ""}
+                  </span>
+                </div>
+                <div class="synthesis-plot-card synthesis-forest-result labeled-forest-result agent-synthesis-forest-result" data-forest-source-label="Agent made">
+                  ${interactivePlot || `<p class="note">No forest plot was generated for this comparison variant.</p>`}
+                  ${renderPublicationOverlapWarnings(
+                    variant.plotData?.publication_overlap_warnings
+                    || variant.primaryResult?.publication_overlap_warnings
+                    || []
+                  )}
+                  ${renderSynthesisDiagnostics(variant.primaryResult || {}, null, subgroupPlan, { showSubgroupDifferences: false })}
+                </div>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      </div>
     `;
   }
 
@@ -10272,7 +10349,8 @@
 	                  const primaryResult = analysis.primaryResult || {};
 	                  const hasEstimate = primaryResult.pooled_effect !== null && primaryResult.pooled_effect !== undefined && primaryResult.pooled_effect !== "";
                     const mixedDesignSynthesis = isMixedStudyDesignSynthesis(analysis);
-                    const nonDesignSubgroupAnalyses = synthesisNonDesignSubgroupEntries(analysis);
+                    const comparisonVariantAnalyses = synthesisComparisonVariantEntries(analysis);
+                    const nonDesignSubgroupAnalyses = synthesisNonDesignNonComparisonSubgroupEntries(analysis);
 	                  const showCochraneReferenceStatuses = currentEvaluationVisible && currentCochraneReferenceStatusPlots.has(analysis.plotKey);
 	                  const showCochraneReproducedPlot = currentEvaluationVisible && currentCochraneForestPlotViews.has(analysis.plotKey);
 	                  const cochraneReferenceStatuses = currentEvaluationVisible ? cochraneReferenceStatusesForPlot(cochraneSynthesisCiOverlap, analysis.plotKey) : {};
@@ -10309,7 +10387,7 @@
                             ${measureHeading}
                           </div>
                         </div>
-                      ${hasEstimate || mixedDesignSynthesis
+                      ${hasEstimate || mixedDesignSynthesis || comparisonVariantAnalyses.length
                         ? ""
                         : `<p class="note synthesis-note">No estimate was produced for this analysis.</p>`
                       }
@@ -10340,6 +10418,12 @@
                           comparisonPayload
                         )}
                       ` : ""}
+                      ${renderSynthesisComparisonVariants(
+                        comparisonVariantAnalyses,
+                        entry,
+                        comparisonPayload,
+                        subgroupPlan
+                      )}
                       ${renderSynthesisStudyDesignBranches(
                         analysis,
                         entry,
