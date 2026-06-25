@@ -5044,187 +5044,25 @@ summary.outcome-panel-head {
   overflow: hidden;
 }
 
-.outcome-merge-flow {
-  display: grid;
-  gap: 16px;
-  margin-top: 16px;
-}
-
-.outcome-source-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-  align-items: stretch;
-}
-
-.outcome-source-card {
-  min-width: 0;
-  padding: 14px;
-  border: 1px solid var(--line);
-  border-left: 4px solid rgba(15, 118, 110, 0.55);
-  border-radius: var(--radius-md);
-  background: var(--surface);
-}
-
-.outcome-source-head {
-  display: grid;
-  grid-template-columns: 24px minmax(0, 1fr);
-  gap: 12px;
-  align-items: start;
-  cursor: pointer;
-  list-style: none;
-}
-
-.outcome-source-head::-webkit-details-marker {
-  display: none;
-}
-
-.outcome-source-head::before {
-  content: "+";
-  display: inline-grid;
-  place-items: center;
-  width: 22px;
-  height: 22px;
-  margin-top: 1px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  color: var(--muted);
-  font-family: var(--font-mono);
-  font-size: var(--text-sm);
-  line-height: 1;
-}
-
-.outcome-source-card[open] > .outcome-source-head::before {
-  content: "−";
-}
-
-.outcome-source-body {
-  display: grid;
-  gap: 12px;
-  margin-top: 12px;
-}
-
-.outcome-source-nct {
-  border-left-color: rgba(29, 78, 216, 0.58);
-}
-
-.outcome-source-fulltext {
-  border-left-color: rgba(180, 83, 9, 0.58);
-}
-
-.outcome-source-head p,
-.outcome-final-head p {
+.outcome-final-head p,
+.outcome-decision-section > .note {
   margin: 6px 0 0;
   color: var(--muted);
   font-size: var(--text-sm);
   line-height: 1.45;
 }
 
-.outcome-source-stats {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.outcome-source-stats > div {
-  min-width: 0;
-  padding: 10px;
-  border: 1px solid rgba(86, 100, 106, 0.14);
-  border-radius: var(--radius-sm);
-  background: var(--surface-subtle);
-}
-
-.outcome-source-stats .stat-label {
-  display: block;
-  margin-bottom: 5px;
-  letter-spacing: 0.06em;
-}
-
-.outcome-source-stats strong {
-  font-size: var(--text-lg);
-  line-height: 1;
-}
-
-.outcome-source-labels {
-  align-self: end;
-  min-width: 0;
-  color: var(--ink);
-  font-size: var(--text-sm);
-  line-height: 1.45;
-}
-
-.outcome-source-label-list {
-  margin: 0;
-  padding-left: 20px;
-}
-
-.outcome-source-label-list li + li {
-  margin-top: 6px;
-}
-
-.outcome-source-empty {
-  margin: 0;
-  color: var(--muted);
-}
-
-.outcome-source-contribution-note {
-  color: var(--muted);
-  font-size: var(--text-xs);
-  line-height: 1.4;
-}
-
-.outcome-merge-connector {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 46px;
-}
-
-.outcome-merge-line {
-  position: absolute;
-  left: 8%;
-  right: 8%;
-  top: 50%;
-  display: block;
-  height: 2px;
-  background: linear-gradient(90deg, rgba(86, 100, 106, 0.1), rgba(86, 100, 106, 0.44), rgba(86, 100, 106, 0.1));
-}
-
-.outcome-merge-step {
-  position: relative;
-  z-index: 1;
-  display: inline-flex;
-  align-items: center;
-  min-height: 32px;
-  padding: 7px 12px;
-  border: 1px solid rgba(86, 100, 106, 0.26);
-  border-radius: 999px;
-  background: var(--card);
-  color: var(--ink);
-  font-size: var(--text-xs);
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.outcome-merge-arrow {
-  position: absolute;
-  left: 50%;
-  bottom: -8px;
-  width: 14px;
-  height: 14px;
-  border-right: 2px solid rgba(86, 100, 106, 0.58);
-  border-bottom: 2px solid rgba(86, 100, 106, 0.58);
-  transform: translateX(-50%) rotate(45deg);
-}
-
 .outcome-final-decision {
   min-width: 0;
+  margin-top: 16px;
   padding: 14px;
   border: 1px solid rgba(15, 118, 110, 0.22);
   border-radius: var(--radius-md);
   background: rgba(15, 118, 110, 0.045);
+}
+
+.outcome-final-head p {
+  margin-top: 6px;
 }
 
 .outcome-final-head {
@@ -7508,7 +7346,6 @@ body.source-trace-open .left-rail {
   .insight-grid,
   .variant-grid,
   .artifact-grid,
-  .outcome-source-grid,
   .outcome-final-grid,
   .stats-grid,
   .extraction-source-summary,
@@ -7569,7 +7406,6 @@ body.source-trace-open .left-rail {
   .study-grid,
   .insight-grid,
   .variant-grid,
-  .outcome-source-grid,
   .outcome-final-grid,
   .outcome-extraction-panel-row,
   .extraction-template-list,

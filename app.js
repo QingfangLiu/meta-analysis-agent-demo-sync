@@ -4706,10 +4706,7 @@
       ? artifact.outcomes.filter(Boolean)
       : [];
     const status = artifact.status || "";
-    const initialOutcome = String((pico || {}).outcome || "").trim();
-    const sourceInventory = outcomeSignalInventory || {};
     const benchmarkAlignment = cochraneOutcomeAlignment || {};
-    const sourceContribution = currentEvaluationVisible ? outcomeSourceContribution || {} : {};
 
     function asArray(value) {
       if (Array.isArray(value)) {
@@ -4756,19 +4753,6 @@
         fulltext_derived: "Full text",
       };
       return labels[tag] || String(tag || "").replaceAll("_", " ");
-    }
-
-    function sourceContributionByKey() {
-      const summaries = Array.isArray(sourceContribution.source_summaries)
-        ? sourceContribution.source_summaries
-        : [];
-      return summaries.reduce((acc, source) => {
-        const key = String(source.source_key || "").trim();
-        if (key) {
-          acc[key] = source;
-        }
-        return acc;
-      }, {});
     }
 
     function benchmarkLabel(mode) {
@@ -5019,124 +5003,6 @@
       `;
     }
 
-    function sourceOutcomeList(labels) {
-      const values = uniqueText(labels);
-      if (!values.length) {
-        return `<p class="outcome-source-empty">No outcomes discovered from this source.</p>`;
-      }
-      return `
-        <ul class="outcome-source-label-list">
-          ${values.map((value) => `<li>${escapeHtml(value)}</li>`).join("")}
-        </ul>
-      `;
-    }
-
-    function sourceData() {
-      const abstract = sourceInventory.abstract || {};
-      const nct = sourceInventory.nct || {};
-      const fulltext = sourceInventory.fulltext || {};
-
-      return [
-        {
-          key: "abstract",
-          classKey: "title-abstract",
-          title: "Title/abstract study tables",
-          subtitle: "Outcome labels projected from study tables for screened candidate studies.",
-          outcomes: Array.isArray(abstract.outcomes) ? abstract.outcomes : [],
-          counts: abstract.counts || {},
-          inputLabel: "signals",
-          inputCount: (abstract.counts || {}).n_raw_outcome_signals,
-          sourceOutcomeCount: (abstract.counts || {}).n_merged_outcomes,
-        },
-        {
-          key: "nct",
-          classKey: "nct",
-          title: "Exact Linked NCT Records",
-          subtitle: "Protocol and posted-result endpoints from ClinicalTrials.gov records explicitly linked in PubMed abstracts.",
-          outcomes: Array.isArray(nct.outcomes) ? nct.outcomes : [],
-          counts: nct.counts || {},
-          inputLabel: "signals",
-          inputCount: (nct.counts || {}).n_raw_outcome_signals,
-          sourceOutcomeCount: (nct.counts || {}).n_merged_outcomes,
-        },
-        {
-          key: "fulltext",
-          classKey: "fulltext",
-          title: "Candidate-study full text",
-          subtitle: "Outcome labels discovered from available PMC full text and merged into source-level concepts.",
-          outcomes: Array.isArray(fulltext.outcomes) ? fulltext.outcomes : [],
-          counts: fulltext.counts || {},
-          inputLabel: "raw signals",
-          inputCount: (fulltext.counts || {}).n_raw_outcome_signals,
-          sourceOutcomeCount: (fulltext.counts || {}).n_merged_outcomes,
-        },
-      ];
-    }
-
-    function renderSourceCard(source) {
-      const sourceSummary = sourceContributionByKey()[source.key] || {};
-      const labels = sourceOutcomeLabels(source.outcomes);
-      const counts = source.counts || {};
-      const inputCount = source.inputCount ?? counts.n_raw_outcome_signals ?? counts.n_outcome_signals ?? source.outcomes.length;
-      const sourceOutcomeCount = sourceSummary.source_outcome_count ?? source.sourceOutcomeCount ?? labels.length;
-      const finalSupported = sourceSummary.final_outcomes_supported;
-      const finalTotal = sourceSummary.final_outcomes_total;
-      const uniqueSupported = sourceSummary.final_outcomes_unique_to_source;
-      const analyzedMatched = sourceSummary.cochrane_analyzed_outcomes_matched;
-      const analyzedTotal = sourceSummary.cochrane_analyzed_outcomes_total;
-      const uniqueAnalyzed = sourceSummary.cochrane_analyzed_outcomes_unique_to_source;
-      const hasContribution = sourceContribution.status === "completed" && Object.keys(sourceSummary).length;
-      const showBenchmarkContribution = currentEvaluationVisible && hasContribution;
-      return `
-        <details class="outcome-source-card outcome-source-${escapeHtml(source.classKey || source.key)}">
-          <summary class="outcome-source-head">
-            <div>
-              <div class="insight-title">${escapeHtml(source.title)}</div>
-              <p>${escapeHtml(source.subtitle)}</p>
-            </div>
-          </summary>
-          <div class="outcome-source-body">
-            <div class="outcome-source-stats">
-              <div>
-                <span class="stat-label">${escapeHtml(source.inputLabel)}</span>
-                <strong>${number(inputCount)}</strong>
-              </div>
-              <div>
-                <span class="stat-label">source outcomes</span>
-                <strong>${number(sourceOutcomeCount)}</strong>
-              </div>
-              ${hasContribution ? `
-                <div>
-                  <span class="stat-label">matched final</span>
-                  <strong>${number(finalSupported)}/${number(finalTotal)}</strong>
-                </div>
-                <div>
-                  <span class="stat-label">unique final</span>
-                  <strong>${number(uniqueSupported)}/${number(finalTotal)}</strong>
-                </div>
-                ${showBenchmarkContribution ? `
-                <div>
-                  <span class="stat-label">cochrane analyzed</span>
-                  <strong>${number(analyzedMatched)}/${number(analyzedTotal)}</strong>
-                </div>
-                <div>
-                  <span class="stat-label">unique cochrane</span>
-                  <strong>${number(uniqueAnalyzed)}/${number(analyzedTotal)}</strong>
-                </div>
-                ` : ""}
-              ` : ""}
-            </div>
-            ${hasContribution ? `
-              <div class="outcome-source-contribution-note">
-                Source-only final outcomes: ${compactLabelList((sourceSummary.unique_final_outcomes || []).map((item) => item.name), 4)}${showBenchmarkContribution ? `; source-only Cochrane analyzed: ${compactLabelList((sourceSummary.unique_cochrane_analyzed_matches || []).map((item) => item.label), 4)}.` : "."}
-              </div>
-            ` : ""}
-            <div class="outcome-source-labels">${sourceOutcomeList(labels)}</div>
-          </div>
-        </details>
-      `;
-    }
-
     function sourceSupportSummary(item) {
       const support = item?.source_support || {};
       if (!support || typeof support !== "object" || Array.isArray(support)) {
@@ -5253,31 +5119,21 @@
     return `
       <div class="detail-card outcome-decision-section" id="outcomes" style="margin-top:14px;">
         <h3>Outcomes</h3>
-        <p class="note">The final outcome list is a merge decision across three post-screening evidence sources, rather than only the initial PICO outcome of ${sentence(initialOutcome || "Not specified")}.</p>
-        <div class="outcome-merge-flow" aria-label="Outcome source merge">
-          <div class="outcome-source-grid">
-            ${sourceData().map(renderSourceCard).join("")}
-          </div>
-          <div class="outcome-merge-connector" aria-label="Merge outcome source signals into final outcomes">
-            <span class="outcome-merge-line" aria-hidden="true"></span>
-            <span class="outcome-merge-step">Merge, deduplicate, canonicalize</span>
-            <span class="outcome-merge-arrow" aria-hidden="true"></span>
-          </div>
-          <div class="outcome-final-decision">
-            <div class="outcome-final-head">
-              <div>
-                <div class="insight-title">Final Outcome Decision</div>
-                <p>Canonical outcomes selected for extraction and synthesis after deduplicating aliases, preserving source support, and keeping clinically important component endpoints separate from composites.</p>
-              </div>
-              <div class="outcome-final-count mono">${number(outcomes.length)}</div>
+        <p class="note">Final selected outcomes used for extraction and synthesis.</p>
+        <div class="outcome-final-decision">
+          <div class="outcome-final-head">
+            <div>
+              <div class="insight-title">Final Outcome Decision</div>
+              <p>Canonical outcomes selected for extraction and synthesis after deduplicating aliases, preserving source support, and keeping clinically important component endpoints separate from composites.</p>
             </div>
-            ${renderOutcomeCoverageSummary()}
-            <div class="outcome-panel-list outcome-final-grid">
-              ${outcomes.map((item, index) => renderOutcomeCard(item, index)).join("")}
-            </div>
-            ${renderOutcomeAlignmentAudit()}
-            ${renderBenchmarkControl()}
+            <div class="outcome-final-count mono">${number(outcomes.length)}</div>
           </div>
+          ${renderOutcomeCoverageSummary()}
+          <div class="outcome-panel-list outcome-final-grid">
+            ${outcomes.map((item, index) => renderOutcomeCard(item, index)).join("")}
+          </div>
+          ${renderOutcomeAlignmentAudit()}
+          ${renderBenchmarkControl()}
         </div>
       </div>
     `;
