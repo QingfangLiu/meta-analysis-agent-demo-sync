@@ -5199,6 +5199,8 @@
         ["outcome type", item.outcome_type],
         ["importance reason", item.importance_reason],
         ["outcome definition", item.outcome_definition],
+        ["value direction", item.value_direction],
+        ["value direction reason", item.value_direction_reason],
         ["preferred timepoint", item.preferred_timepoint],
         ["preferred measure", Array.isArray(item.preferred_effect_measures) ? item.preferred_effect_measures.join(", ") : ""],
         [
