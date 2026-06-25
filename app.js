@@ -7884,7 +7884,11 @@
   }
 
   function wrapTextLines(text, maxChars = 24, maxLines = 3) {
-    const words = String(text || "").trim().split(/\s+/).filter(Boolean);
+    const words = String(text || "")
+      .trim()
+      .replace(/\/(?=\S)/g, "/ ")
+      .split(/\s+/)
+      .filter(Boolean);
     const lines = [];
     words.forEach((word) => {
       const current = lines[lines.length - 1] || "";
@@ -7904,9 +7908,9 @@
     return kept;
   }
 
-  function renderForestHeaderLabel(label, x, centerY, className) {
-    const lines = wrapTextLines(label, 12, 5);
-    const lineHeight = 11;
+  function renderForestHeaderLabel(label, x, centerY, className, options = {}) {
+    const lines = wrapTextLines(label, options.maxChars || 12, options.maxLines || 5);
+    const lineHeight = options.lineHeight || 11;
     const allLines = [...lines, "Total"];
     const firstY = centerY - ((allLines.length - 1) * lineHeight) / 2;
     return `
@@ -8972,12 +8976,17 @@
     const logValueX = 285;
     const seValueX = 365;
     const sampleOneEventX = showEventColumns ? 292 : null;
-    const sampleOneX = showHazardLogColumns ? 490 : showEventColumns ? 360 : 300;
+    const sampleOneX = showHazardLogColumns ? 490 : showEventColumns ? 360 : 305;
     const sampleTwoEventX = showEventColumns ? 475 : null;
-    const sampleTwoX = showHazardLogColumns ? 585 : showEventColumns ? 543 : 390;
-    const weightLabelX = showHazardLogColumns ? 685 : showEventColumns ? 640 : 485;
-    const valueLabelX = showHazardLogColumns ? 860 : showEventColumns ? 870 : 650;
+    const sampleTwoX = showHazardLogColumns ? 585 : showEventColumns ? 543 : 405;
+    const weightLabelX = showHazardLogColumns ? 685 : showEventColumns ? 640 : 500;
+    const valueLabelX = showHazardLogColumns ? 860 : showEventColumns ? 870 : 660;
     const sampleHeaders = forestSampleHeaders(rows, comparisonPayload, plotData);
+    const continuousHeaderOptions = {
+      maxChars: 14,
+      maxLines: 5,
+      lineHeight: 10,
+    };
     const sampleTotalFields = showEventColumns
       ? ["events_arm_1", "n_arm_1", "events_arm_2", "n_arm_2"]
       : ["n_arm_1", "n_arm_2"];
@@ -9025,11 +9034,11 @@
           ${showHazardLogColumns ? renderForestColumnHeader("SE", seValueX, headerCenterY, "forest-column-header forest-se-header", 4, 1) : ""}
           ${showEventColumns
             ? renderForestEventHeaderLabel(sampleHeaders.arm1, sampleOneEventX, sampleOneX, headerCenterY, "forest-column-header forest-sample-header")
-            : renderForestHeaderLabel(sampleHeaders.arm1, sampleOneX, headerCenterY, "forest-column-header forest-sample-header")
+            : renderForestHeaderLabel(sampleHeaders.arm1, sampleOneX, headerCenterY, "forest-column-header forest-sample-header forest-sample-header-compact", continuousHeaderOptions)
           }
           ${showEventColumns
             ? renderForestEventHeaderLabel(sampleHeaders.arm2, sampleTwoEventX, sampleTwoX, headerCenterY, "forest-column-header forest-sample-header")
-            : renderForestHeaderLabel(sampleHeaders.arm2, sampleTwoX, headerCenterY, "forest-column-header forest-sample-header")
+            : renderForestHeaderLabel(sampleHeaders.arm2, sampleTwoX, headerCenterY, "forest-column-header forest-sample-header forest-sample-header-compact", continuousHeaderOptions)
           }
           ${renderForestColumnHeader("Weight", weightLabelX, headerCenterY, "forest-column-header forest-weight-header", 8, 1)}
           ${renderForestColumnHeader(effectColumnLabel, valueLabelX, headerCenterY, "forest-column-header forest-effect-header", 13, 3)}
@@ -9174,11 +9183,11 @@
     const logValueX = 285;
     const seValueX = 365;
     const sampleOneEventX = showEventColumns ? 292 : null;
-    const sampleOneX = showHazardLogColumns ? 490 : showEventColumns ? 360 : 300;
+    const sampleOneX = showHazardLogColumns ? 490 : showEventColumns ? 360 : 305;
     const sampleTwoEventX = showEventColumns ? 475 : null;
-    const sampleTwoX = showHazardLogColumns ? 585 : showEventColumns ? 543 : 390;
-    const weightLabelX = showHazardLogColumns ? 685 : showEventColumns ? 640 : 485;
-    const valueLabelX = showHazardLogColumns ? 860 : showEventColumns ? 870 : 650;
+    const sampleTwoX = showHazardLogColumns ? 585 : showEventColumns ? 543 : 405;
+    const weightLabelX = showHazardLogColumns ? 685 : showEventColumns ? 640 : 500;
+    const valueLabelX = showHazardLogColumns ? 860 : showEventColumns ? 870 : 660;
     const rowY = 40;
     const axisTop = 18;
     const axisBottom = 68;

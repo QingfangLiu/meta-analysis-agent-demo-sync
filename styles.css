@@ -1437,6 +1437,10 @@ main {
   text-anchor: middle;
 }
 
+.forest-sample-header-compact {
+  font-size: 10px;
+}
+
 .forest-weight-header {
   text-anchor: end;
 }
