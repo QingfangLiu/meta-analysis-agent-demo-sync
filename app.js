@@ -9278,7 +9278,7 @@
     return `${formatCompactStat(normalized, 0)} ${normalized === 1 ? "study" : "studies"}`;
   }
 
-  function synthesisEstimateLabel(analysis) {
+  function synthesisEstimateLabel(analysis, options = {}) {
     const primaryResult = analysis?.primaryResult || {};
     const effect = finiteNumber(primaryResult.pooled_effect);
     const ciLow = finiteNumber(primaryResult.ci_low);
@@ -9287,7 +9287,8 @@
       return "";
     }
     const measure = effectMeasureLabel(analysis?.plotData?.effect_measure || analysis?.measure || "");
-    return `${measure} ${formatEffect(effect)} [${formatEffect(ciLow)}, ${formatEffect(ciHigh)}]`;
+    const estimate = `${formatEffect(effect)} [${formatEffect(ciLow)}, ${formatEffect(ciHigh)}]`;
+    return options.includeMeasure === false ? estimate : `${measure} ${estimate}`;
   }
 
   function subgroupDimensionLabel(dimension) {
@@ -9545,12 +9546,8 @@
     }
     return `
       <div class="synthesis-comparison-variant-section">
-        <div class="synthesis-comparison-variant-head">
-          <h5>Comparison-specific forest plots</h5>
-          <p class="note">The combined estimate was skipped because multiple analysis comparisons were present; plots are shown separately by comparison.</p>
-        </div>
         <div class="synthesis-comparison-variant-list">
-          ${variants.map((variant) => {
+          ${variants.map((variant, variantIndex) => {
             const interactivePlot = renderInteractiveForestPlot(
               variant.plotData,
               variant.plotKey,
@@ -9558,11 +9555,13 @@
               comparisonPayload,
               { showTitle: true }
             );
-            const estimateLabel = synthesisEstimateLabel(variant);
+            const variantLabel = variant.label || humanizeMetric(variant.subsetName);
+            const comparisonLabel = `Comparison ${variantIndex + 1}: ${variantLabel}`;
+            const estimateLabel = synthesisEstimateLabel(variant, { includeMeasure: false });
             return `
               <div class="synthesis-comparison-variant-panel">
                 <div class="synthesis-subgroup-level-header">
-                  <span class="synthesis-subgroup-title">${escapeHtml(variant.label || humanizeMetric(variant.subsetName))}</span>
+                  <span class="synthesis-subgroup-title">${escapeHtml(comparisonLabel)}</span>
                   <span class="synthesis-subgroup-meta">
                     <span>${escapeHtml(synthesisStudyCountLabel(variant))}</span>
                     ${estimateLabel ? `<span>${escapeHtml(estimateLabel)}</span>` : ""}

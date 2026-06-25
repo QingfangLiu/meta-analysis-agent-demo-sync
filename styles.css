@@ -2067,6 +2067,10 @@ main {
   padding: 4px 0 0;
 }
 
+.synthesis-comparison-variant-panel + .synthesis-comparison-variant-panel {
+  margin-top: 22px;
+}
+
 .synthesis-subgroup-title {
   min-width: 0;
   color: var(--ink);
