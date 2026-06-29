@@ -4732,29 +4732,6 @@
         });
     }
 
-    function outcomeSourceLabel(item) {
-      return String(
-        item?.name
-        || item?.outcome_label
-        || item?.measure
-        || item?.title
-        || ""
-      ).trim();
-    }
-
-    function sourceOutcomeLabels(items) {
-      return uniqueText((Array.isArray(items) ? items : []).map(outcomeSourceLabel));
-    }
-
-    function sourceTagLabel(tag) {
-      const labels = {
-        abstract_derived: "Title/abstract",
-        nct_derived: "NCT",
-        fulltext_derived: "Full text",
-      };
-      return labels[tag] || String(tag || "").replaceAll("_", " ");
-    }
-
     function benchmarkLabel(mode) {
       return cochraneOutcomeBenchmarkLabel(mode);
     }
@@ -5064,7 +5041,6 @@
       const fields = [
         ["outcome type", item.outcome_type],
         ["importance reason", item.importance_reason],
-        ["outcome definition", item.outcome_definition],
         ["value direction", item.value_direction],
         ["value direction reason", item.value_direction_reason],
         ["preferred timepoint", item.preferred_timepoint],
@@ -5077,6 +5053,7 @@
         ["notes", item.notes],
       ].filter(([, value]) => value !== undefined && String(value || "").trim() !== "");
       const outcomeName = String(item.name || title).trim();
+      const outcomeDefinition = String(item.outcome_definition || "").trim();
 
       return `
         <details class="outcome-panel ${isBenchmarkMatch ? `is-cochrane-match is-cochrane-match-${escapeHtml(strength)}` : ""}">
@@ -5088,7 +5065,7 @@
                 ${sentence(outcomeName)}
                 ${isBenchmarkMatch ? `<span class="cochrane-match-badge cochrane-match-badge-${escapeHtml(strength)}">${escapeHtml(`${strengthLabel(strength)} ${formatMatchScore(bestMatch)}`)}</span>` : ""}
               </h4>
-              <div class="outcome-decision-sources">${chips((item.source_tags || []).map(sourceTagLabel), "outcome-source-chip-row")}</div>
+              ${outcomeDefinition ? `<p class="outcome-panel-definition">${sentence(outcomeDefinition)}</p>` : ""}
             </div>
           </summary>
           ${Array.isArray(item.aliases) && item.aliases.length

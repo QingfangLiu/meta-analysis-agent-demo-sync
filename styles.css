@@ -5040,6 +5040,13 @@ summary.outcome-panel-head {
   line-height: var(--leading-tight);
 }
 
+.outcome-panel-definition {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  line-height: 1.4;
+}
+
 .outcome-decision-section {
   overflow: hidden;
 }
@@ -6539,10 +6546,6 @@ body.source-trace-open .evaluation-visibility-dock {
 .agent-synthesis-forest-result .forest-plot-area {
   background: var(--panel-strong);
   fill: var(--panel-strong);
-}
-
-.outcome-decision-sources {
-  margin-top: 8px;
 }
 
 .outcome-chip-row {
