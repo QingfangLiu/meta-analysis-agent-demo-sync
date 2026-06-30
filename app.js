@@ -7234,7 +7234,6 @@
         "n_arm_2",
         "events_arm_1",
         "events_arm_2",
-        "definition_note",
         "analysis_population",
       ];
       return preferredFields
@@ -7574,7 +7573,6 @@
       ...(Array.isArray(table.non_extractable_rows) ? table.non_extractable_rows : []),
     ];
     const fields = [
-      "definition_note",
       "outcome_definition",
       "outcome_definition_note",
       "endpoint_definition",
