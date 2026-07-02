@@ -2913,7 +2913,7 @@
   }
 
   function outcomePanelToggleButton() {
-    return `<button class="outcome-panel-toggle" type="button" aria-label="Expand or collapse outcome section"></button>`;
+    return `<button class="outcome-panel-toggle" type="button" aria-label="Expand or collapse section"></button>`;
   }
 
   function renderInlineMarkdown(text) {
@@ -5487,7 +5487,6 @@
   function comparisonSection(comparisonArtifact, pico, cochraneComparisonAlignment = {}, studyArmsArtifact = {}) {
     const artifact = comparisonArtifact || {};
     const analysisComparisons = analysisComparisonsFromArtifact(artifact);
-    const comparison = analysisComparisons[0] || {};
     const comparisonAlignment = cochraneComparisonAlignment || {};
     const mappedStudyArms = studyArmsSection(studyArmsArtifact, { embedded: true, title: "Study arms by publication" });
     const placeholderValues = new Set([
@@ -5506,18 +5505,37 @@
       return Boolean(text) && !placeholderValues.has(text.toLowerCase());
     };
 
-    const fields = [
-      ["Comparison description", comparison.comparison_description],
-      ["Arm 1 label", comparison.arm_1_label],
-      ["Arm 1 role", comparison.arm_1_role],
-      ["Arm 2 label", comparison.arm_2_label],
-      ["Arm 2 role", comparison.arm_2_role],
-      ["Rationale", comparison.comparison_rationale],
-      ["Notes", comparison.notes],
-    ].filter(([, value]) => hasMeaningfulValue(value));
-    const comparisonLabel = hasMeaningfulValue(comparison.comparison_label)
-      ? String(comparison.comparison_label).trim()
-      : "";
+    const comparisonCards = analysisComparisons;
+
+    function comparisonAsArray(value) {
+      if (Array.isArray(value)) {
+        return value.filter((item) => item !== null && item !== undefined && String(item).trim() !== "");
+      }
+      if (value === null || value === undefined || String(value).trim() === "") {
+        return [];
+      }
+      return [value];
+    }
+
+    function compactComparisonLabelList(labels, maxItems = 8) {
+      const seen = new Set();
+      const values = comparisonAsArray(labels)
+        .map((value) => String(value || "").trim())
+        .filter((value) => {
+          const key = value.toLowerCase();
+          if (!value || seen.has(key)) {
+            return false;
+          }
+          seen.add(key);
+          return true;
+        });
+      if (!values.length) {
+        return "—";
+      }
+      const shown = values.slice(0, maxItems);
+      const suffix = values.length > maxItems ? ` +${values.length - maxItems} more` : "";
+      return `${shown.join("; ")}${suffix}`;
+    }
 
     function comparisonScore(value) {
       const score = Number(value);
@@ -5584,54 +5602,81 @@
       `;
     }
 
+    function comparisonSourceStudySummary(item) {
+      const sourceStudies = Array.isArray(item?.source_studies)
+        ? item.source_studies.filter((entry) => entry && typeof entry === "object")
+        : [];
+      if (!sourceStudies.length) {
+        return "";
+      }
+      const labels = sourceStudies
+        .map((entry) => String(entry.study_label || entry.pmid || "").trim())
+        .filter(Boolean);
+      const count = `${number(sourceStudies.length)} ${sourceStudies.length === 1 ? "study" : "studies"}`;
+      return labels.length ? `${count}: ${compactComparisonLabelList(labels, 5)}` : count;
+    }
+
+    function renderComparisonCard(item, index) {
+      const title = `Comparison ${index + 1}`;
+      const label = hasMeaningfulValue(item.comparison_label)
+        ? String(item.comparison_label).trim()
+        : `Analysis comparison ${index + 1}`;
+      const definition = hasMeaningfulValue(item.comparison_description)
+        ? String(item.comparison_description).trim()
+        : "";
+      const relatedSubgroups = comparisonAsArray(item.related_subgroup_factors)
+        .map((value) => String(value || "").trim())
+        .filter(Boolean);
+      const fields = [
+        ["arm 1 label", item.arm_1_label],
+        ["arm 1 role", item.arm_1_role],
+        ["arm 2 label", item.arm_2_label],
+        ["arm 2 role", item.arm_2_role],
+        ["rationale", item.comparison_rationale],
+        ["notes", item.notes],
+        ["related subgroup factors", relatedSubgroups.join(", ")],
+        ["source studies", comparisonSourceStudySummary(item)],
+      ].filter(([, value]) => hasMeaningfulValue(value));
+
+      return `
+        <details class="outcome-panel comparison-card">
+          <summary class="outcome-panel-head comparison-card-head" tabindex="-1">
+            ${outcomePanelToggleButton()}
+            <div>
+              <div class="insight-title">${escapeHtml(title)}</div>
+              <h4>${sentence(label)}</h4>
+              ${definition ? `<p class="outcome-panel-definition comparison-card-definition">${sentence(definition)}</p>` : ""}
+            </div>
+          </summary>
+          ${fields.length
+            ? `
+              <div class="artifact-field-list comparison-card-details">
+                ${fields.map(([fieldLabel, value]) => `
+                  <div class="artifact-field-row">
+                    <div class="artifact-field-key mono">${escapeHtml(fieldLabel)}</div>
+                    <div class="artifact-field-value">${sentence(value || "—")}</div>
+                  </div>
+                `).join("")}
+              </div>
+            `
+            : `<p class="note comparison-card-empty">No additional comparison details were generated for this comparison.</p>`
+          }
+        </details>
+      `;
+    }
+
     function renderAnalysisComparisons() {
-      if (!analysisComparisons.length) {
+      if (!comparisonCards.length) {
         return "";
       }
       return `
-        <div class="table-wrap screening-wrap comparison-analysis-wrap">
-          <table class="screening-table evaluation-table comparison-analysis-table">
-            <thead>
-              <tr>
-                <th>Analysis comparison</th>
-                <th>Arm 1</th>
-                <th>Arm 2</th>
-                <th>Selection notes</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${analysisComparisons.map((item, index) => {
-                const notes = [
-                  item.comparison_rationale,
-                  Array.isArray(item.related_subgroup_factors) && item.related_subgroup_factors.length
-                    ? `Related subgroup factors: ${item.related_subgroup_factors.join(", ")}`
-                    : "",
-                ].map((value) => String(value || "").trim()).filter(Boolean);
-                return `
-                  <tr>
-                    <td>
-                      <strong>${sentence(item.comparison_label || `Analysis comparison ${index + 1}`)}</strong>
-                      ${item.comparison_description ? `<div class="small-muted">${sentence(item.comparison_description)}</div>` : ""}
-                    </td>
-                    <td>
-                      ${sentence(item.arm_1_label || item.arm_1_role || "—")}
-                      ${item.arm_1_label && item.arm_1_role ? `<div class="small-muted">${sentence(item.arm_1_role)}</div>` : ""}
-                    </td>
-                    <td>
-                      ${sentence(item.arm_2_label || item.arm_2_role || "—")}
-                      ${item.arm_2_label && item.arm_2_role ? `<div class="small-muted">${sentence(item.arm_2_role)}</div>` : ""}
-                    </td>
-                    <td>${notes.length ? notes.map((note) => `<div>${sentence(note)}</div>`).join("") : `<span class="muted">—</span>`}</td>
-                  </tr>
-                `;
-              }).join("")}
-            </tbody>
-          </table>
+        <div class="outcome-panel-list comparison-card-grid">
+          ${comparisonCards.map((item, index) => renderComparisonCard(item, index)).join("")}
         </div>
       `;
     }
 
-    if (!comparisonLabel && !fields.length && !analysisComparisons.length && !mappedStudyArms) {
+    if (!comparisonCards.length && !mappedStudyArms) {
       return "";
     }
 
@@ -5639,38 +5684,9 @@
       <div class="detail-card" id="comparison" style="margin-top:14px;">
         <h3>Comparison</h3>
         <p class="note">Study arms are mapped from each included study first. The agent then selects analysis-level comparison candidates for extraction and synthesis.</p>
+        ${renderAnalysisComparisons() || `<p class="note">No comparison decision artifact was generated for this run.</p>`}
+        ${renderComparisonEvaluation()}
         ${mappedStudyArms}
-        ${comparisonLabel || fields.length
-          ? `
-            <div class="outcome-panel-list">
-              <div class="outcome-panel comparison-panel">
-                <div class="outcome-panel-head comparison-panel-head">
-                  <div>
-                    <div class="insight-title">Comparison Decision</div>
-                    <h4>${sentence(comparisonLabel || "Target comparison")}</h4>
-                    <p class="note">First analysis-level comparison inferred from source-reported study arms and original PICO.</p>
-                  </div>
-                </div>
-                ${fields.length
-                  ? `
-                    <div class="artifact-field-list comparison-detail-panel">
-                      ${fields.map(([label, value]) => `
-                        <div class="artifact-field-row">
-                          <div class="artifact-field-key">${escapeHtml(label)}</div>
-                          <div class="artifact-field-value">${sentence(value || "—")}</div>
-                        </div>
-                      `).join("")}
-                    </div>
-                  `
-                  : `<p class="note">No additional comparison details were generated for this run.</p>`
-                }
-                ${renderComparisonEvaluation()}
-              </div>
-            </div>
-          `
-          : `<p class="note">No comparison decision artifact was generated for this run.</p>`
-        }
-        ${renderAnalysisComparisons()}
       </div>
     `;
   }
