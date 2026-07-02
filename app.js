@@ -2259,7 +2259,7 @@
     `;
   }
 
-  function renderCochraneAnalysisRecallEvaluation(ciOverlapArtifact, synthesisDisplayContext = {}) {
+  function renderCochraneAnalysisRecallEvaluation(ciOverlapArtifact) {
     if (!currentEvaluationVisible) {
       return "";
     }
@@ -2275,26 +2275,36 @@
     const synthesisRecall = finiteNumber(counts.synthesis_recall)
       ?? (synthesisTp + synthesisFn ? synthesisTp / (synthesisTp + synthesisFn) : null);
     const synthesisF1 = finiteNumber(counts.synthesis_f1);
-    const designBranchForestPlots = Number(synthesisDisplayContext.designBranchForestPlots) || 0;
-    const ciTarget = ((ciOverlapArtifact.metric_definition || {}).cochrane_ci_target)
-      || "locally reproduced Cochrane all-studies CI using all estimable extracted Cochrane forest-plot rows";
     const rows = synthesisConfusionRows(ciOverlapArtifact);
     const tableRows = rows.filter((row) => String(row.classification || "").toLowerCase() === "tp");
     const meanStudyOverlapF1 = finiteNumber(counts.mean_study_row_overlap_f1);
-    const studyOverlapCount = finiteNumber(counts.study_row_overlap_count) ?? 0;
-    const agentOnlyRows = rows.filter((row) => String(row.classification || "").toLowerCase() === "fp");
-    const agentOnlyOutcomeCounts = new Map();
-    agentOnlyRows.forEach((row) => {
+    const agentOutcomeEvaluation = new Map();
+    rows.forEach((row) => {
+      const classification = String(row.classification || "").toLowerCase();
       const agent = row.agent_forest_plot || {};
-      const outcomeName = String(agent.outcome_name || agent.outcome_key || agent.agent_plot_key || "Unnamed agent outcome").trim();
-      agentOnlyOutcomeCounts.set(outcomeName, (agentOnlyOutcomeCounts.get(outcomeName) || 0) + 1);
+      const outcomeName = String(agent.outcome_name || agent.outcome_key || agent.agent_plot_key || row.agent_plot_key || "").trim();
+      if (!outcomeName) {
+        return;
+      }
+      const entry = agentOutcomeEvaluation.get(outcomeName) || {
+        outcomeName,
+        hasMatchedPlot: false,
+        unmatchedPlotCount: 0,
+      };
+      if (classification === "tp") {
+        entry.hasMatchedPlot = true;
+      } else if (classification === "fp") {
+        entry.unmatchedPlotCount += 1;
+      }
+      agentOutcomeEvaluation.set(outcomeName, entry);
     });
-    const agentOnlyOutcomeEntries = Array.from(agentOnlyOutcomeCounts.entries());
+    const agentOnlyOutcomeEntries = Array.from(agentOutcomeEvaluation.values())
+      .filter((entry) => entry.unmatchedPlotCount > 0 && !entry.hasMatchedPlot);
     const agentOnlyOutcomeCountLabel = `${number(agentOnlyOutcomeEntries.length)} ${agentOnlyOutcomeEntries.length === 1 ? "outcome" : "outcomes"}`;
-    const agentOnlyOutcomeItems = agentOnlyOutcomeEntries.map(([outcomeName, plotCount]) => (
+    const agentOnlyOutcomeItems = agentOnlyOutcomeEntries.map((entry) => (
       `<span class="agent-only-outcome-chip" role="listitem">
-        <span class="agent-only-outcome-name">${escapeHtml(outcomeName)}</span>
-        ${plotCount > 1 ? `<span class="agent-only-outcome-count">${number(plotCount)} plots</span>` : ""}
+        <span class="agent-only-outcome-name">${escapeHtml(entry.outcomeName)}</span>
+        ${entry.unmatchedPlotCount > 1 ? `<span class="agent-only-outcome-count">${number(entry.unmatchedPlotCount)} plots</span>` : ""}
       </span>`
     )).join("");
     const missedCochraneRows = rows.filter((row) => String(row.classification || "").toLowerCase() === "fn");
@@ -2314,16 +2324,14 @@
     }).join("");
     return `
       <div class="detail-card evaluation-card" style="margin-top:14px;">
-        <h3>Cochrane Analysis Recall</h3>
-        <p class="note"><strong>Evaluation plot selection:</strong> for each agent outcome/effect-measure, compare <span class="mono">all_eligible</span> with Cochrane when it exists; otherwise compare <span class="mono">study_design_randomized_trial</span> when it exists. Other study-design branches and subgroup plots are not counted in Cochrane recall or CI-IoU.</p>
-        <p class="note">A Cochrane analysis is counted as recalled when the agent created a matched evaluated forest plot for the same outcome and effect measure. The evaluator uses the all-eligible forest plot when it exists; when all-eligible pooling was skipped for mixed study designs, it uses the randomized-trial study-design branch when available. Other subgroup or design-branch plots are skipped. TP/FP/FN is defined at the forest-plot-analysis level; no true-negative denominator is defined. CI intersection over union compares the arm-orientation-adjusted agent CI with reproduced Cochrane CI targets: all estimable studies and, when available, the PMCID-only subset. Ratio measures use log-scale CI overlap; non-ratio measures use the original linear scale.</p>
-        ${designBranchForestPlots ? `<p class="note synthesis-evaluation-scope-note">${number(designBranchForestPlots)} study-design branch ${designBranchForestPlots === 1 ? "forest plot is shown" : "forest plots are shown"} in the synthesis section. If all-eligible pooling is absent, the randomized-trial branch can be counted by the Cochrane recall/CI-IoU artifact; non-randomized or other branch plots remain display-only for this evaluation.</p>` : ""}
+        <h3>Cochrane Analysis Evaluation</h3>
+        <ul class="note synthesis-evaluation-summary">
+          <li>Evaluation uses one agent forest plot per outcome/effect measure: <span class="mono">all_eligible</span> when available, otherwise <span class="mono">study_design_randomized_trial</span>.</li>
+          <li>A Cochrane analysis is recalled only when the selected agent plot matches <strong>both</strong> conditions: the same outcome and the same effect measure.</li>
+          <li>TP/FP/FN are defined at the forest-plot-analysis level; no true-negative denominator is defined.</li>
+          <li>CI-IoU compares arm-orientation-adjusted agent CIs with reproduced Cochrane targets for all estimable studies and, when available, the PMCID-only subset. Ratio measures use log-scale overlap.</li>
+        </ul>
         ${renderEvaluationMetricGrid([
-          {
-            label: "Evaluated agent plots",
-            value: number(counts.agent_evaluated_plots),
-            detail: `${number(counts.agent_all_eligible_plots)} all-eligible; ${number(counts.agent_randomized_branch_plots)} randomized-trial fallback`,
-          },
           {
             label: "Cochrane plots recalled",
             value: formatPercent(counts.cochrane_analysis_recall),
@@ -2337,17 +2345,14 @@
           {
             label: "Mean study-row F1",
             value: formatPercent(meanStudyOverlapF1),
-            detail: `${number(studyOverlapCount)} matched ${studyOverlapCount === 1 ? "plot" : "plots"} with study-overlap data`,
           },
           {
             label: "Mean CI IoU",
             value: formatPercent(counts.mean_ci_overlap_ratio),
-            detail: `${number(counts.matched_plots)} matched agent forest plots; target: ${ciTarget}`,
           },
           {
             label: "PMCID-only CI IoU",
             value: formatPercent(counts.mean_pmcid_only_ci_overlap_ratio),
-            detail: `${number(counts.pmcid_only_ci_overlap_count)} matched agent forest plots with a reproduced PMCID-only target`,
           },
         ])}
         ${rows.length ? `
@@ -2412,12 +2417,12 @@
               </table>
             </div>
           ` : `<p class="note evaluation-empty-note">No retained Cochrane-agent analysis matches were available for the table.</p>`}
-          ${agentOnlyRows.length ? `
+          ${agentOnlyOutcomeEntries.length ? `
             <div class="agent-only-outcome-summary">
               <div class="agent-only-outcome-summary-head">
                 <div>
                   <div class="screen-study-primary">Agent-only outcomes not shown in the table</div>
-                  <p class="screen-study-secondary">These evaluated agent forest plots did not match a Cochrane main analysis in the one-to-one outcome/effect-measure evaluation, so they are still counted as false positives.</p>
+                  <p class="screen-study-secondary">These evaluated agent outcomes did not match a Cochrane main analysis after merging plots by outcome, so their unmatched plots are still counted as false positives.</p>
                 </div>
                 <span class="agent-only-outcome-total">${agentOnlyOutcomeCountLabel}</span>
               </div>
@@ -2445,7 +2450,7 @@
     `;
   }
 
-  function renderEvaluationSummary(searchMetrics, outcomeAlignment, comparisonAlignment, ciOverlapArtifact, synthesisDisplayContext = {}, screeningResults = {}) {
+  function renderEvaluationSummary(searchMetrics, outcomeAlignment, comparisonAlignment, ciOverlapArtifact, screeningResults = {}) {
     const hasAnyEvaluation = hasBenchmarkEvaluationArtifacts(searchMetrics, outcomeAlignment, comparisonAlignment, ciOverlapArtifact);
     if (!hasAnyEvaluation) {
       return "";
@@ -2464,7 +2469,7 @@
           ${renderScreeningEvaluation(searchMetrics, screeningResults)}
           ${renderComparisonIdentificationEvaluationSummary(comparisonAlignment)}
           ${renderOutcomeIdentificationEvaluationSummary(outcomeAlignment)}
-          ${renderCochraneAnalysisRecallEvaluation(ciOverlapArtifact, synthesisDisplayContext)}
+          ${renderCochraneAnalysisRecallEvaluation(ciOverlapArtifact)}
         ` : `
           <div class="evaluation-hidden-panel">
             Evaluation results are hidden across the pipeline view. Agent-generated artifacts remain visible.
@@ -4698,8 +4703,7 @@
     outcomesArtifact,
     pico,
     outcomeSignalInventory = {},
-    cochraneOutcomeAlignment = {},
-    outcomeSourceContribution = {}
+    cochraneOutcomeAlignment = {}
   ) {
     const artifact = outcomesArtifact || {};
     const outcomes = Array.isArray(artifact.outcomes)
@@ -9498,7 +9502,6 @@
     const branches = synthesisDesignBranchEntries(analysis);
     const handling = synthesisStudyDesignHandling(analysis);
     const families = Array.isArray(handling.families) ? handling.families : [];
-    const primaryResult = analysis?.primaryResult || {};
     const ciOverlapArtifact = evaluationContext.cochraneSynthesisCiOverlap || {};
     const ciOverlapRowsByPlotKey = synthesisCiOverlapByPlotKey(ciOverlapArtifact);
     const cochraneStudySelectionContext = {
@@ -9506,8 +9509,7 @@
       outcomeExtractionTables: evaluationContext.outcomeExtractionTables || [],
       extractionSourceSummary: evaluationContext.extractionSourceSummary || {},
     };
-    const message = String(primaryResult.skip_message || "").trim()
-      || "Combined synthesis was skipped because analysis-eligible rows contain multiple study-design families.";
+    const message = "Multiple study designs detected; combined synthesis skipped. Forest plots are shown by study design.";
     const familySummary = families.map((family) => {
       const label = String(family?.label || family?.family || "").trim();
       const count = finiteNumber(family?.n_analysis_eligible);
@@ -9526,7 +9528,7 @@
       <div class="synthesis-design-branch-section">
         <div class="synthesis-design-branch-callout">
           <div class="synthesis-design-branch-title">Study-design separated synthesis</div>
-          <p>${escapeHtml(message)} Forest plots below are grouped by study design rather than combined into one all-eligible estimate.</p>
+          <p>${escapeHtml(message)}</p>
           ${familySummary ? `<div class="synthesis-design-branch-chips">${familySummary}</div>` : ""}
         </div>
         ${branches.length ? `
@@ -9551,7 +9553,7 @@
               const interactivePlot = renderInteractiveForestPlot(
                 branch.plotData,
                 branch.plotKey,
-                branch.label || entry.outcome_name || entry.label || entry.key,
+                entry.outcome_name || entry.label || entry.key || branch.label,
                 comparisonPayload,
                 {
                   showTitle: true,
@@ -10667,7 +10669,6 @@
       cochraneComparisonAlignment,
       cochraneSynthesisCiOverlap
     );
-    const outcomeSourceContribution = current.outcome_source_contribution || {};
     const comparison = current.comparison || {};
     const studyArms = current.study_arms || {};
     const sourceAvailabilityGate = current.source_availability_gate || {};
@@ -10829,7 +10830,7 @@
 		        </div>
 		      </div>
 			      ${nctLinkageSection(nctLinkageRows)}
-			      ${outcomesSection(outcomes, pico, outcomeSignalInventory, cochraneOutcomeAlignment, outcomeSourceContribution)}
+			      ${outcomesSection(outcomes, pico, outcomeSignalInventory, cochraneOutcomeAlignment)}
 		      ${comparisonSection(comparison, pico, cochraneComparisonAlignment, studyArms)}
 		      ${publicationLinkageSection(publicationLinkage, publicationLinkageEvidence, screening.screened_studies || [])}
 		      ${subgroupPlanSection(subgroupPlan, current.study_level_subgroup_values || [])}
@@ -10875,7 +10876,7 @@
       ${finalReportSection(finalReportMarkdown, current.final_report_verification || current.human_verification || {})}
 	    </section>
 
-			    ${renderEvaluationSummary(cochraneSearchScreeningMetrics, cochraneOutcomeAlignment, cochraneComparisonAlignment, cochraneSynthesisCiOverlap, synthesisPlotSummary, screening)}
+			    ${renderEvaluationSummary(cochraneSearchScreeningMetrics, cochraneOutcomeAlignment, cochraneComparisonAlignment, cochraneSynthesisCiOverlap, screening)}
 			    ${runTimingSection(timing, run, runState)}
 			    ${llmTokenUsageSection(llmUsageSummary, llmUsageByStageRows, run)}
 			    ${sourceTraceDrawer()}

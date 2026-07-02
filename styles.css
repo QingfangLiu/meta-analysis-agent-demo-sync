@@ -5941,13 +5941,6 @@ body.source-trace-open .evaluation-visibility-dock {
   margin-top: 10px;
 }
 
-.synthesis-evaluation-scope-note {
-  margin-top: 8px;
-  padding: 9px 10px;
-  border-left: 3px solid var(--evaluation-line);
-  background: var(--evaluation-bg);
-}
-
 .outcome-evaluation-grid {
   margin-bottom: 14px;
 }
