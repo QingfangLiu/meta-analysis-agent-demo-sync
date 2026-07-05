@@ -71,7 +71,7 @@
     "overall_risk_of_bias",
     "overall_reason",
   ]);
-  const VARIANCE_FALLBACK_SOURCES = new Set(["arm_mean_sd_n", "arm_event_counts"]);
+  const VARIANCE_FALLBACK_SOURCES = new Set(["arm_mean_sd_n", "median_iqr_approximation", "arm_event_counts"]);
   const RUN_TIMING_STAGE_LABELS = {
     review_setup: "Review setup",
     search_retrieval: "Search and retrieval",
@@ -7598,6 +7598,26 @@
     return formatSampleSize(row?.source_row?.[key]);
   }
 
+  function formatForestArmStatistic(value) {
+    const parsed = finiteNumber(value);
+    if (parsed !== null) {
+      return parsed.toFixed(3).replace(/\.?0+$/, "");
+    }
+    const text = String(value ?? "").trim();
+    return text ? escapeHtml(text) : "—";
+  }
+
+  function forestArmStatistic(row, preferredKey, fallbackKey) {
+    for (const key of [preferredKey, fallbackKey].filter(Boolean)) {
+      const value = row?.source_row?.[key];
+      if (value === null || value === undefined || String(value).trim() === "") {
+        continue;
+      }
+      return formatForestArmStatistic(value);
+    }
+    return row?.type === "pooled" ? "" : "—";
+  }
+
   function forestTransformedSe(row) {
     const explicit = finiteNumber(row?.source_row?.effect_size_se);
     if (explicit !== null) {
@@ -7717,6 +7737,22 @@
       <text class="${className}">
         ${lines.map((line, index) => `<tspan x="${groupX}" y="${firstY + index * lineHeight}">${escapeHtml(line)}</tspan>`).join("")}
         <tspan class="forest-column-subheader" x="${eventX}" y="${subheaderY}">Events</tspan>
+        <tspan class="forest-column-subheader" x="${totalX}" y="${subheaderY}">Total</tspan>
+      </text>
+    `;
+  }
+
+  function renderForestContinuousHeaderLabel(label, meanX, sdX, totalX, centerY, className) {
+    const lines = wrapTextLines(label, 14, 4);
+    const lineHeight = 10;
+    const groupX = (meanX + sdX + totalX) / 3;
+    const firstY = centerY - ((lines.length + 1) * lineHeight) / 2;
+    const subheaderY = firstY + lines.length * lineHeight + 2;
+    return `
+      <text class="${className}">
+        ${lines.map((line, index) => `<tspan x="${groupX}" y="${firstY + index * lineHeight}">${escapeHtml(line)}</tspan>`).join("")}
+        <tspan class="forest-column-subheader" x="${meanX}" y="${subheaderY}">Mean</tspan>
+        <tspan class="forest-column-subheader" x="${sdX}" y="${subheaderY}">SD</tspan>
         <tspan class="forest-column-subheader" x="${totalX}" y="${subheaderY}">Total</tspan>
       </text>
     `;
@@ -8729,6 +8765,7 @@
     const effectMeasure = String(plotData.effect_measure || "").trim().toLowerCase();
     const showHazardLogColumns = effectMeasure === "hazard_ratio";
     const showEventColumns = ["risk_ratio", "odds_ratio"].includes(effectMeasure);
+    const showContinuousArmColumns = ["mean_difference", "standardized_mean_difference"].includes(effectMeasure);
     const splitEffectValueLabel = !showHazardLogColumns && !showEventColumns;
     const favoursLeft = String(plotData.favours_left || "").trim();
     const favoursRight = String(plotData.favours_right || "").trim();
@@ -8741,12 +8778,12 @@
     const selectedPmid = String(selectedStudy.pmid || "").trim();
     const selectedLabel = normalizeStudyLabel(selectedStudy.label);
     const cochraneStudyMatchPlotKey = String(options.cochraneStudyMatchPlotKey || "").trim();
-    const width = showHazardLogColumns ? 1280 : showEventColumns ? 1340 : 1180;
+    const width = showHazardLogColumns ? 1280 : showEventColumns ? 1340 : showContinuousArmColumns ? 1380 : 1180;
     const titleMaxChars = Math.max(54, Math.floor((width - 220) / 12));
     const titleLines = showTitle ? wrapForestTitle(displayTitle, titleMaxChars, 3) : [];
     const titleLineHeight = 24;
     const titleOffset = showTitle ? Math.max(0, (titleLines.length - 1) * titleLineHeight) : -32;
-    const left = showHazardLogColumns ? 895 : showEventColumns ? 925 : 725;
+    const left = showHazardLogColumns ? 895 : showEventColumns ? 925 : showContinuousArmColumns ? 920 : 725;
     const right = 38;
     const titleY = 28;
     const headerCenterY = 76 + titleOffset;
@@ -8758,15 +8795,19 @@
     const plotRight = width - right;
     const plotWidth = plotRight - plotLeft;
     const height = top + bottom + rows.length * rowHeight;
-    const studyLabelX = showHazardLogColumns ? 150 : showEventColumns ? 155 : 165;
+    const studyLabelX = showHazardLogColumns ? 150 : showEventColumns ? 155 : showContinuousArmColumns ? 150 : 165;
     const logValueX = 285;
     const seValueX = 365;
     const sampleOneEventX = showEventColumns ? 292 : null;
-    const sampleOneX = showHazardLogColumns ? 490 : showEventColumns ? 360 : 305;
+    const sampleOneMeanX = showContinuousArmColumns ? 285 : null;
+    const sampleOneSdX = showContinuousArmColumns ? 340 : null;
+    const sampleOneX = showHazardLogColumns ? 490 : showEventColumns ? 360 : showContinuousArmColumns ? 395 : 305;
     const sampleTwoEventX = showEventColumns ? 475 : null;
-    const sampleTwoX = showHazardLogColumns ? 585 : showEventColumns ? 543 : 405;
-    const weightLabelX = showHazardLogColumns ? 685 : showEventColumns ? 640 : 500;
-    const valueLabelX = showHazardLogColumns ? 860 : showEventColumns ? 870 : 660;
+    const sampleTwoMeanX = showContinuousArmColumns ? 505 : null;
+    const sampleTwoSdX = showContinuousArmColumns ? 560 : null;
+    const sampleTwoX = showHazardLogColumns ? 585 : showEventColumns ? 543 : showContinuousArmColumns ? 615 : 405;
+    const weightLabelX = showHazardLogColumns ? 685 : showEventColumns ? 640 : showContinuousArmColumns ? 710 : 500;
+    const valueLabelX = showHazardLogColumns ? 860 : showEventColumns ? 870 : showContinuousArmColumns ? 870 : 660;
     const sampleHeaders = forestSampleHeaders(rows, comparisonPayload, plotData);
     const continuousHeaderOptions = {
       maxChars: 14,
@@ -8820,10 +8861,14 @@
           ${showHazardLogColumns ? renderForestColumnHeader("SE", seValueX, headerCenterY, "forest-column-header forest-se-header", 4, 1) : ""}
           ${showEventColumns
             ? renderForestEventHeaderLabel(sampleHeaders.arm1, sampleOneEventX, sampleOneX, headerCenterY, "forest-column-header forest-sample-header")
+            : showContinuousArmColumns
+            ? renderForestContinuousHeaderLabel(sampleHeaders.arm1, sampleOneMeanX, sampleOneSdX, sampleOneX, headerCenterY, "forest-column-header forest-sample-header")
             : renderForestHeaderLabel(sampleHeaders.arm1, sampleOneX, headerCenterY, "forest-column-header forest-sample-header forest-sample-header-compact", continuousHeaderOptions)
           }
           ${showEventColumns
             ? renderForestEventHeaderLabel(sampleHeaders.arm2, sampleTwoEventX, sampleTwoX, headerCenterY, "forest-column-header forest-sample-header")
+            : showContinuousArmColumns
+            ? renderForestContinuousHeaderLabel(sampleHeaders.arm2, sampleTwoMeanX, sampleTwoSdX, sampleTwoX, headerCenterY, "forest-column-header forest-sample-header")
             : renderForestHeaderLabel(sampleHeaders.arm2, sampleTwoX, headerCenterY, "forest-column-header forest-sample-header forest-sample-header-compact", continuousHeaderOptions)
           }
           ${renderForestColumnHeader("Weight", weightLabelX, headerCenterY, "forest-column-header forest-weight-header", 8, 1)}
@@ -8875,11 +8920,19 @@
             const logValueText = showHazardLogColumns && !isPooled ? formatForestStatistic(row?.source_row?.effect_size_transformed, 6) : "";
             const seText = showHazardLogColumns && !isPooled ? formatForestStatistic(forestTransformedSe(row), 6) : "";
             const eventArm1 = showEventColumns ? forestSampleSize(row, "events_arm_1", sampleTotals) : "";
+            const meanArm1 = showContinuousArmColumns ? forestArmStatistic(row, "mean_arm_1_harmonized", "mean_arm_1") : "";
+            const sdArm1 = showContinuousArmColumns ? forestArmStatistic(row, "sd_arm_1_unit_harmonized", "sd_arm_1") : "";
             const nArm1 = forestSampleSize(row, "n_arm_1", sampleTotals);
             const eventArm2 = showEventColumns ? forestSampleSize(row, "events_arm_2", sampleTotals) : "";
+            const meanArm2 = showContinuousArmColumns ? forestArmStatistic(row, "mean_arm_2_harmonized", "mean_arm_2") : "";
+            const sdArm2 = showContinuousArmColumns ? forestArmStatistic(row, "sd_arm_2_unit_harmonized", "sd_arm_2") : "";
             const nArm2 = forestSampleSize(row, "n_arm_2", sampleTotals);
             const sampleText = showEventColumns
               ? ` | Intervention events/total=${eventArm1}/${nArm1}, Comparator events/total=${eventArm2}/${nArm2}`
+              : showContinuousArmColumns
+              ? isPooled
+                ? nArm1 === "—" && nArm2 === "—" ? "" : ` | Intervention n=${nArm1}, Comparator n=${nArm2}`
+                : ` | Intervention mean/SD/n=${meanArm1 || "—"}/${sdArm1 || "—"}/${nArm1}, Comparator mean/SD/n=${meanArm2 || "—"}/${sdArm2 || "—"}/${nArm2}`
               : nArm1 === "—" && nArm2 === "—" ? "" : ` | Intervention n=${nArm1}, Comparator n=${nArm2}`;
             const weightTooltip = weightText ? ` | Weight=${weightText}` : "";
             const transformedTooltip = logValueText && seText ? ` | log(HR)=${logValueText}, SE=${seText}` : "";
@@ -8917,8 +8970,12 @@
                 ${showHazardLogColumns ? `<text class="forest-log-label" x="${logValueX}" y="${y + 5}">${escapeHtml(logValueText)}</text>` : ""}
                 ${showHazardLogColumns ? `<text class="forest-se-label" x="${seValueX}" y="${y + 5}">${escapeHtml(seText)}</text>` : ""}
                 ${showEventColumns ? `<text class="forest-sample-label" x="${sampleOneEventX}" y="${y + 5}">${eventArm1}</text>` : ""}
+                ${showContinuousArmColumns ? `<text class="forest-sample-label" x="${sampleOneMeanX}" y="${y + 5}">${meanArm1}</text>` : ""}
+                ${showContinuousArmColumns ? `<text class="forest-sample-label" x="${sampleOneSdX}" y="${y + 5}">${sdArm1}</text>` : ""}
                 <text class="forest-sample-label" x="${sampleOneX}" y="${y + 5}">${nArm1}</text>
                 ${showEventColumns ? `<text class="forest-sample-label" x="${sampleTwoEventX}" y="${y + 5}">${eventArm2}</text>` : ""}
+                ${showContinuousArmColumns ? `<text class="forest-sample-label" x="${sampleTwoMeanX}" y="${y + 5}">${meanArm2}</text>` : ""}
+                ${showContinuousArmColumns ? `<text class="forest-sample-label" x="${sampleTwoSdX}" y="${y + 5}">${sdArm2}</text>` : ""}
                 <text class="forest-sample-label" x="${sampleTwoX}" y="${y + 5}">${nArm2}</text>
                 <text class="forest-weight-label" x="${weightLabelX}" y="${y + 5}">${escapeHtml(weightText)}</text>
                 ${renderForestValueLabel(valueText, valueLabelX, y, splitEffectValueLabel)}
@@ -8956,24 +9013,25 @@
     const effectMeasure = String(plotData.effect_measure || "").trim().toLowerCase();
     const showHazardLogColumns = effectMeasure === "hazard_ratio";
     const showEventColumns = ["risk_ratio", "odds_ratio"].includes(effectMeasure);
+    const showContinuousArmColumns = ["mean_difference", "standardized_mean_difference"].includes(effectMeasure);
     const splitEffectValueLabel = !showHazardLogColumns && !showEventColumns;
-    const width = showHazardLogColumns ? 1280 : showEventColumns ? 1340 : 1180;
+    const width = showHazardLogColumns ? 1280 : showEventColumns ? 1340 : showContinuousArmColumns ? 1380 : 1180;
     const favoursLeft = String(plotData.favours_left || "").trim();
     const favoursRight = String(plotData.favours_right || "").trim();
     const hasFavours = Boolean(favoursLeft || favoursRight);
     const height = hasFavours ? 184 : 112;
-    const plotLeft = showHazardLogColumns ? 895 : showEventColumns ? 925 : 725;
+    const plotLeft = showHazardLogColumns ? 895 : showEventColumns ? 925 : showContinuousArmColumns ? 920 : 725;
     const plotRight = width - 38;
     const plotWidth = plotRight - plotLeft;
-    const studyLabelX = showHazardLogColumns ? 150 : showEventColumns ? 155 : 165;
+    const studyLabelX = showHazardLogColumns ? 150 : showEventColumns ? 155 : showContinuousArmColumns ? 150 : 165;
     const logValueX = 285;
     const seValueX = 365;
     const sampleOneEventX = showEventColumns ? 292 : null;
-    const sampleOneX = showHazardLogColumns ? 490 : showEventColumns ? 360 : 305;
+    const sampleOneX = showHazardLogColumns ? 490 : showEventColumns ? 360 : showContinuousArmColumns ? 395 : 305;
     const sampleTwoEventX = showEventColumns ? 475 : null;
-    const sampleTwoX = showHazardLogColumns ? 585 : showEventColumns ? 543 : 405;
-    const weightLabelX = showHazardLogColumns ? 685 : showEventColumns ? 640 : 500;
-    const valueLabelX = showHazardLogColumns ? 860 : showEventColumns ? 870 : 660;
+    const sampleTwoX = showHazardLogColumns ? 585 : showEventColumns ? 543 : showContinuousArmColumns ? 615 : 405;
+    const weightLabelX = showHazardLogColumns ? 685 : showEventColumns ? 640 : showContinuousArmColumns ? 710 : 500;
+    const valueLabelX = showHazardLogColumns ? 860 : showEventColumns ? 870 : showContinuousArmColumns ? 870 : 660;
     const rowY = 40;
     const axisTop = 18;
     const axisBottom = 68;
