@@ -1560,8 +1560,14 @@
     }, { tp: [], tn: [], fp: [], fn: [] });
   }
 
-  function renderScreeningEvaluationStudyList(studies) {
+  function excludedBenchmarkReferenceLookup(searchMetrics) {
+    const lookup = searchMetrics?.benchmark?.excluded_references_by_pmid || {};
+    return lookup && typeof lookup === "object" && !Array.isArray(lookup) ? lookup : {};
+  }
+
+  function renderScreeningEvaluationStudyList(studies, options = {}) {
     const rows = Array.isArray(studies) ? studies : [];
+    const excludedReferencesByPmid = options.excludedReferencesByPmid || {};
     const countLabel = `${number(rows.length)} ${rows.length === 1 ? "study" : "studies"}`;
     return `
       <details class="screening-evaluation-study-details">
@@ -1571,9 +1577,12 @@
             ${rows.map((study) => {
               const { authorYear } = extractionPubInfoParts(study);
               const pmid = String(study?.pmid || "").trim();
+              const excludedReference = excludedReferencesByPmid[pmid] || {};
+              const exclusionReason = String(excludedReference.exclusion_reason || "").trim();
+              const labelTitle = exclusionReason ? ` title="${escapeHtml(`Cochrane exclusion reason: ${exclusionReason}`)}"` : "";
               return `
                 <div class="screening-evaluation-study-item">
-                  <div class="screening-evaluation-study-label">${escapeHtml(authorYear ? sentence(authorYear) : "No author/year")}</div>
+                  <div class="screening-evaluation-study-label"${labelTitle}>${escapeHtml(authorYear ? sentence(authorYear) : "No author/year")}</div>
                   ${pmid ? `<div class="screening-evaluation-study-pmid">PMID ${escapeHtml(pmid)}</div>` : ""}
                 </div>
               `;
@@ -1611,6 +1620,7 @@
     const benchmark = searchMetrics.benchmark || {};
     const hasExcludedBenchmark = Boolean(benchmark.has_excluded_screening_negative_benchmark ?? benchmark.has_excluded_negative_benchmark);
     const screeningStudyBuckets = screeningEvaluationStudyBuckets(screeningResults, searchMetrics);
+    const excludedReferencesByPmid = excludedBenchmarkReferenceLookup(searchMetrics);
     return `
       <div class="detail-card evaluation-card" style="margin-top:14px;">
         <h3>Title/Abstract Screening Evaluation</h3>
@@ -1632,7 +1642,7 @@
 	            label: "FP",
 	            value: number(metrics.fp),
 	            detail: "Cochrane-excluded kept",
-	            extraHtml: renderScreeningEvaluationStudyList(screeningStudyBuckets.fp),
+	            extraHtml: renderScreeningEvaluationStudyList(screeningStudyBuckets.fp, { excludedReferencesByPmid }),
 	          } : null,
 	          hasExcludedBenchmark ? {
 	            label: "FN",
@@ -4651,7 +4661,6 @@
             <span class="summary-description">Groups papers that may report the same underlying dataset or trial.</span>
           </span>
         </summary>
-        <p class="note">Likely linked reports are grouped by shared underlying dataset, trial, or cohort. Group-level and per-PMID evidence are shown below for audit.</p>
         ${renderLinkageOverview()}
         <p class="note linkage-detail-empty" data-linkage-empty>Click a group name above to view included studies.</p>
         <div class="linkage-group-list">
@@ -5388,28 +5397,15 @@
       `;
     }
 
-    function armDetailItems(study) {
+    function armLabelItems(study) {
       const arms = Array.isArray(study.study_arms) ? study.study_arms.filter(Boolean) : [];
       return arms
-        .map((arm) => {
-          const label = cleanText(arm.arm_label || arm.arm_name || arm.group_label);
-          const parts = [
-            cleanText(arm.description),
-            cleanText(arm.dose_or_intensity),
-            cleanText(arm.duration_or_cycles),
-            cleanText(arm.n_assigned_or_analyzed),
-            cleanText(arm.notes),
-          ].filter(Boolean);
-          if (!label && !parts.length) {
-            return "";
-          }
-          return label ? `${label}: ${parts.join("; ")}` : parts.join("; ");
-        })
+        .map((arm) => cleanText(arm.arm_label))
         .filter(Boolean);
     }
 
     function hasArmContent(study) {
-      return Boolean(armDetailItems(study).length);
+      return Boolean(armLabelItems(study).length);
     }
 
     const studies = allStudies.filter(hasArmContent);
@@ -5422,9 +5418,9 @@
       return `
         <details class="study-arms-omitted">
           <summary>
-            <span>Studies without source-reported arm details <span class="inline-section-count">(x ${number(omittedStudies.length)})</span></span>
+            <span>Studies without source-reported arm labels <span class="inline-section-count">(x ${number(omittedStudies.length)})</span></span>
           </summary>
-          <p class="note">No source-reported arm detail was saved in study_arms.json.</p>
+          <p class="note">No source-reported arm label was saved in study_arms.json.</p>
           <div class="table-wrap screening-wrap study-arms-omitted-wrap">
             <table class="screening-table extraction-study-summary-table study-sticky-table">
               <thead>
@@ -5439,7 +5435,7 @@
                   <tr>
                     <td class="screen-col-index mono">${index + 1}</td>
                     <td class="screen-col-study">${compactStudyCell(study)}</td>
-                    <td class="study-arm-omitted-reason">No source-reported arm detail saved.</td>
+                    <td class="study-arm-omitted-reason">No source-reported arm label saved.</td>
                   </tr>
                 `).join("")}
               </tbody>
@@ -5468,7 +5464,7 @@
                 </thead>
                 <tbody>
                   ${studies.map((study, index) => {
-                    const armDetails = armDetailItems(study);
+                    const armDetails = armLabelItems(study);
                     return `
                       <tr>
                         <td class="screen-col-index mono">${index + 1}</td>
@@ -10812,7 +10808,6 @@
           </div>
 	      </div>
 					        ${screeningMatrix(review, screening, currentScreeningLimit, currentScreeningDecisions, cochraneSearchScreeningMetrics, currentScreeningBenchmarkOnly, sourceAvailabilityGate)}
-					        ${renderScreeningEvaluation(cochraneSearchScreeningMetrics, screening)}
 					      </details>
 						        ${fulltextScreeningPanel(
 	                    perStudyOutputs,
