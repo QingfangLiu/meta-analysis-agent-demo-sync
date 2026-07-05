@@ -5696,19 +5696,12 @@ body.source-trace-open .evaluation-visibility-dock {
   overflow-wrap: anywhere;
 }
 
-.evaluation-match-judgment,
-.evaluation-match-confidence {
+.evaluation-match-judgment {
   display: block;
 }
 
 .evaluation-match-judgment {
   color: var(--ink);
-}
-
-.evaluation-match-confidence {
-  margin-top: 6px;
-  color: var(--muted);
-  font-size: 0.82rem;
 }
 
 .synthesis-ci-overlap-cell {
@@ -6037,7 +6030,7 @@ body.source-trace-open .evaluation-visibility-dock {
 }
 
 .cochrane-outcome-map-kind,
-.cochrane-outcome-map-score {
+.cochrane-outcome-map-relationship {
   flex: 0 0 auto;
   color: var(--evaluation-ink);
   font-weight: 800;
@@ -6048,10 +6041,6 @@ body.source-trace-open .evaluation-visibility-dock {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.cochrane-outcome-map-empty {
-  color: var(--muted);
 }
 
 .outcome-alignment-audit {

@@ -920,14 +920,12 @@
               <col class="evaluation-match-label-col">
               <col class="evaluation-match-label-col">
               <col class="evaluation-match-judgment-col">
-              <col class="evaluation-match-rationale-col">
             </colgroup>
             <thead>
               <tr>
                 <th>Agent outcome</th>
                 <th>Cochrane outcome</th>
                 <th>LLM judgment</th>
-                <th>Rationale</th>
               </tr>
             </thead>
             <tbody>
@@ -936,10 +934,8 @@
                   <td>${sentence(match.agent_label || match.agent_outcome_key || "Agent outcome")}</td>
                   <td>${sentence(match.benchmark_label || match.label || "Cochrane outcome")}</td>
                   <td>
-                    <span class="evaluation-match-judgment">${escapeHtml(String(match.relationship || match.reason || "semantic match").replaceAll("_", " "))}</span>
-                    <span class="evaluation-match-confidence">confidence ${escapeHtml(formatCochraneMatchScore(match))}</span>
+                    <span class="evaluation-match-judgment">${escapeHtml(String(match.relationship || "semantic match").replaceAll("_", " "))}</span>
                   </td>
-                  <td>${sentence(match.rationale || "")}</td>
                 </tr>
               `).join("")}
             </tbody>
@@ -1839,14 +1835,12 @@
                 <col class="evaluation-match-label-col">
                 <col class="evaluation-match-label-col">
                 <col class="evaluation-match-judgment-col">
-                <col class="evaluation-match-rationale-col">
               </colgroup>
               <thead>
                 <tr>
                   <th>Cochrane comparison</th>
                   <th>Agent analysis comparison</th>
                   <th>LLM judgment</th>
-                  <th>Rationale</th>
                 </tr>
               </thead>
               <tbody>
@@ -1855,10 +1849,8 @@
                     <td>${sentence(match.cochrane_label_clean || match.cochrane_label || "Cochrane comparison")}</td>
                     <td>${sentence(match.agent_label || (comparisonAlignment.agent_comparison || {}).comparison_label || "Agent comparison")}</td>
                     <td>
-                      <span class="evaluation-match-judgment">${escapeHtml(String(match.relationship || match.match_strength || "match").replaceAll("_", " "))}</span>
-                      <span class="evaluation-match-confidence">confidence ${escapeHtml(formatEffect(match.confidence ?? match.score))}</span>
+                      <span class="evaluation-match-judgment">${escapeHtml(String(match.relationship || "match").replaceAll("_", " "))}</span>
                     </td>
-                    <td>${sentence(match.rationale || "")}</td>
                   </tr>
                 `).join("")}
               </tbody>
@@ -2794,41 +2786,50 @@
     return Array.isArray(matches) ? matches : [];
   }
 
-  function cochraneMatchScore(match) {
-    const score = Number(match?.score);
-    return Number.isFinite(score) ? score : 0;
+  function cochraneMatchRelationship(match) {
+    return String(match?.relationship || "").trim().toLowerCase();
   }
 
-  function formatCochraneMatchScore(match) {
-    const score = cochraneMatchScore(match);
-    return score ? score.toFixed(2) : "—";
+  function cochraneMatchRelationshipRank(match) {
+    const relationship = cochraneMatchRelationship(match);
+    const ranks = {
+      equivalent: 0,
+      same_construct_different_wording: 1,
+      same_contrast_different_wording: 1,
+    };
+    return ranks[relationship] ?? 99;
   }
 
-  function cochraneMatchStrength(match) {
-    const explicit = String(match?.match_strength || "").trim().toLowerCase();
-    if (["strong", "moderate", "weak"].includes(explicit)) {
-      return explicit;
-    }
-    const score = cochraneMatchScore(match);
-    if (score >= 0.9) {
+  function cochraneMatchClass(match) {
+    const relationship = cochraneMatchRelationship(match);
+    if (relationship === "equivalent") {
       return "strong";
     }
-    if (score >= 0.75) {
+    if (relationship === "same_construct_different_wording" || relationship === "same_contrast_different_wording") {
       return "moderate";
     }
-    if (score >= 0.7) {
-      return "weak";
-    }
-    return "none";
+    return "weak";
   }
 
-  function cochraneStrengthLabel(value) {
-    const labels = {
-      strong: "Strong",
-      moderate: "Moderate",
-      weak: "Weak",
-    };
-    return labels[value] || "No match";
+  function outcomeMatchRelationshipLabel(value) {
+    const relationship = String(value || "").trim();
+    if (!relationship) {
+      return "No retained match";
+    }
+    if (relationship === "same_construct_different_wording") {
+      return "Same construct, different wording";
+    }
+    if (relationship === "same_contrast_different_wording") {
+      return "Same contrast, different wording";
+    }
+    if (relationship === "equivalent") {
+      return "Equivalent";
+    }
+    return relationship.replace(/_/g, " ");
+  }
+
+  function formatCochraneMatchRelationship(match) {
+    return outcomeMatchRelationshipLabel(cochraneMatchRelationship(match));
   }
 
   function armOrientationLabel(value) {
@@ -2852,7 +2853,7 @@
 
   function bestCochraneBenchmarkMatch(matches) {
     return (Array.isArray(matches) ? matches : []).reduce((best, match) => {
-      if (!best || cochraneMatchScore(match) > cochraneMatchScore(best)) {
+      if (!best || cochraneMatchRelationshipRank(match) < cochraneMatchRelationshipRank(best)) {
         return match;
       }
       return best;
@@ -2873,13 +2874,7 @@
     return (Array.isArray(matches) ? matches : [])
       .map((match) => {
         const label = cochraneOutcomeMatchLabel(match);
-        const strength = cochraneStrengthLabel(cochraneMatchStrength(match)).toLowerCase();
-        const score = formatCochraneMatchScore(match);
-        const relationship = String(match?.relationship || match?.reason || "").trim();
-        const rationale = String(match?.rationale || "").trim();
-        const relationshipText = relationship ? `, ${relationship.replace(/_/g, " ")}` : "";
-        const rationaleText = rationale ? `: ${rationale}` : "";
-        return `${label} (${strength}, confidence ${score}${relationshipText})${rationaleText}`;
+        return `${label} (${formatCochraneMatchRelationship(match)})`;
       })
       .join("; ");
   }
@@ -2900,29 +2895,26 @@
       if (!bestMatch) {
         return "";
       }
-      const strength = cochraneMatchStrength(bestMatch);
+      const relationshipClass = cochraneMatchClass(bestMatch);
       const label = cochraneOutcomeMatchLabel(bestMatch);
       const detail = cochraneOutcomeMatchDetail(matches);
       return `
-        <span class="cochrane-outcome-map-chip cochrane-outcome-map-${escapeHtml(strength)}" title="${escapeHtml(detail)}">
+        <span class="cochrane-outcome-map-chip cochrane-outcome-map-${escapeHtml(relationshipClass)}" title="${escapeHtml(detail)}">
           <span class="cochrane-outcome-map-kind">${escapeHtml(cochraneOutcomeBenchmarkLabel(mode))}</span>
           <span class="cochrane-outcome-map-name">${escapeHtml(label)}</span>
-          <span class="cochrane-outcome-map-score">${escapeHtml(`${cochraneStrengthLabel(strength)} ${formatCochraneMatchScore(bestMatch)}`)}</span>
+          <span class="cochrane-outcome-map-relationship">${escapeHtml(formatCochraneMatchRelationship(bestMatch))}</span>
         </span>
       `;
     }).filter(Boolean);
 
-    if (!chips.length && !options.showEmpty) {
+    if (!chips.length) {
       return "";
     }
 
     return `
       <div class="cochrane-outcome-map">
         <span class="cochrane-outcome-map-label">Cochrane outcome mapping</span>
-        ${chips.length
-          ? chips.join("")
-          : `<span class="cochrane-outcome-map-empty">No retained analyzed outcome match</span>`
-        }
+        ${chips.join("")}
       </div>
     `;
   }
@@ -4748,31 +4740,27 @@
       return cochraneOutcomeMatchesForKey(benchmarkAlignment, key, activeMode);
     }
 
-    function formatMatchScore(match) {
-      return formatCochraneMatchScore(match);
+    function formatMatchRelationship(match) {
+      return formatCochraneMatchRelationship(match);
     }
 
-    function matchStrength(match) {
-      return cochraneMatchStrength(match);
-    }
-
-    function strengthLabel(value) {
-      return cochraneStrengthLabel(value);
+    function matchClass(match) {
+      return cochraneMatchClass(match);
     }
 
     function bestBenchmarkMatch(matches) {
       return bestCochraneBenchmarkMatch(matches);
     }
 
-    function matchStrengthCounts(rows, benchmarkKey) {
+    function matchRelationshipCounts(rows, benchmarkKey) {
       return (rows || []).reduce((acc, row) => {
         const match = bestBenchmarkMatch((row.matches || {})[benchmarkKey] || []);
-        const strength = matchStrength(match);
-        if (strength in acc) {
-          acc[strength] += 1;
+        const relationship = cochraneMatchRelationship(match);
+        if (relationship in acc) {
+          acc[relationship] += 1;
         }
         return acc;
-      }, { strong: 0, moderate: 0, weak: 0 });
+      }, { equivalent: 0, same_construct_different_wording: 0 });
     }
 
     function matchDetail(matches) {
@@ -4793,10 +4781,10 @@
         return Array.isArray(matches) && matches.length;
       }).length;
       const totalAgentOutcomes = rows.length;
-      const counts = matchStrengthCounts(rows, benchmarkKey);
+      const counts = matchRelationshipCounts(rows, benchmarkKey);
       const cochraneMatched = countsFromArtifact.true_positive_outcome_matches ?? countsFromArtifact.cochrane_analyzed_outcomes_matched;
       const cochraneTotal = countsFromArtifact.cochrane_analyzed_outcomes;
-      return `${matchedAgentOutcomes}/${totalAgentOutcomes} final outcomes have one-to-one ${benchmarkLabel(activeMode).toLowerCase()} matches; ${number(cochraneMatched)}/${number(cochraneTotal)} Cochrane analyzed outcomes matched: ${counts.strong} strong, ${counts.moderate} moderate, ${counts.weak} weak.`;
+      return `${matchedAgentOutcomes}/${totalAgentOutcomes} final outcomes have one-to-one ${benchmarkLabel(activeMode).toLowerCase()} matches; ${number(cochraneMatched)}/${number(cochraneTotal)} Cochrane analyzed outcomes matched: ${counts.equivalent} equivalent, ${counts.same_construct_different_wording} same construct with different wording.`;
     }
 
     function outcomeCoverageMetric() {
@@ -4886,13 +4874,6 @@
       return `${shown.join("; ")}${suffix}`;
     }
 
-    function outcomeMatchRelationshipLabel(value) {
-      return String(value || "")
-        .trim()
-        .replace(/_/g, " ")
-        || "semantic match";
-    }
-
     function outcomeAlignmentLabelList(items, labelKey) {
       const values = (Array.isArray(items) ? items : [])
         .map((item) => String(item?.[labelKey] || item?.name || item?.label || "").trim())
@@ -4941,8 +4922,7 @@
                     <li>
                       <strong>${escapeHtml(match.agent_label || match.agent_outcome_key || "Agent outcome")}</strong>
                       <span> -> ${escapeHtml(match.benchmark_label || match.label || "Cochrane outcome")}</span>
-                      <span class="outcome-alignment-meta">${escapeHtml(outcomeMatchRelationshipLabel(match.relationship || match.reason))}; confidence ${escapeHtml(formatMatchScore(match))}</span>
-                      ${match.rationale ? `<span class="outcome-alignment-rationale">${escapeHtml(match.rationale)}</span>` : ""}
+                      <span class="outcome-alignment-meta">${escapeHtml(outcomeMatchRelationshipLabel(match.relationship))}</span>
                     </li>
                   `).join("")}
                 </ul>
@@ -5018,7 +4998,7 @@
       const benchmarkMatches = benchmarkMatchesForOutcome(key, activeMode);
       const isBenchmarkMatch = activeMode !== "off" && benchmarkMatches.length;
       const bestMatch = bestBenchmarkMatch(benchmarkMatches);
-      const strength = matchStrength(bestMatch);
+      const relationshipClass = matchClass(bestMatch);
       const fields = [
         ["outcome type", item.outcome_type],
         ["importance reason", item.importance_reason],
@@ -5027,7 +5007,7 @@
         ["preferred timepoint", item.preferred_timepoint],
         ["preferred measure", Array.isArray(item.preferred_effect_measures) ? item.preferred_effect_measures.join(", ") : ""],
         [
-          `${benchmarkLabel(activeMode)} match strength`,
+          `${benchmarkLabel(activeMode)} relationship`,
           isBenchmarkMatch ? matchDetail(benchmarkMatches) : "",
         ],
         ["source support", sourceSupportSummary(item)],
@@ -5037,14 +5017,14 @@
       const outcomeDefinition = String(item.outcome_definition || "").trim();
 
       return `
-        <details class="outcome-panel ${isBenchmarkMatch ? `is-cochrane-match is-cochrane-match-${escapeHtml(strength)}` : ""}">
+        <details class="outcome-panel ${isBenchmarkMatch ? `is-cochrane-match is-cochrane-match-${escapeHtml(relationshipClass)}` : ""}">
           <summary class="outcome-panel-head" tabindex="-1">
             ${outcomePanelToggleButton()}
             <div>
               <div class="insight-title">${escapeHtml(title)}</div>
               <h4>
                 ${sentence(outcomeName)}
-                ${isBenchmarkMatch ? `<span class="cochrane-match-badge cochrane-match-badge-${escapeHtml(strength)}">${escapeHtml(`${strengthLabel(strength)} ${formatMatchScore(bestMatch)}`)}</span>` : ""}
+                ${isBenchmarkMatch ? `<span class="cochrane-match-badge cochrane-match-badge-${escapeHtml(relationshipClass)}">${escapeHtml(formatMatchRelationship(bestMatch))}</span>` : ""}
               </h4>
               ${outcomeDefinition ? `<p class="outcome-panel-definition">${sentence(outcomeDefinition)}</p>` : ""}
             </div>
@@ -5505,23 +5485,12 @@
       return `${shown.join("; ")}${suffix}`;
     }
 
-    function comparisonScore(value) {
-      const score = Number(value);
-      return Number.isFinite(score) ? score : 0;
+    function comparisonRelationshipLabel(match) {
+      return outcomeMatchRelationshipLabel(match?.relationship);
     }
 
-    function formatComparisonScore(value) {
-      const score = comparisonScore(value);
-      return score ? score.toFixed(2) : "—";
-    }
-
-    function strengthLabel(value) {
-      const labels = {
-        strong: "Strong",
-        moderate: "Moderate",
-        weak: "Weak/domain",
-      };
-      return labels[String(value || "").toLowerCase()] || "No retained match";
+    function comparisonRelationshipClass(match) {
+      return cochraneMatchClass(match);
     }
 
     function renderComparisonEvaluation() {
@@ -5541,11 +5510,11 @@
         `;
       }
       const counts = comparisonAlignment.counts || {};
+      const relationshipClass = comparisonRelationshipClass(best);
       const detailRows = [
         ["Agent analysis comparison", best.agent_label],
         ["Cochrane comparison", best.cochrane_label_clean || best.cochrane_label],
-        ["Match strength", `${strengthLabel(best.match_strength)} ${formatComparisonScore(best.score)}`],
-        ["Relationship", best.relationship],
+        ["Relationship", comparisonRelationshipLabel(best)],
         ["Arm orientation", armOrientationLabel(best.arm_orientation)],
         ["Cochrane analysis comparisons", counts.cochrane_analysis_comparisons],
       ].filter(([, value]) => value !== undefined && String(value || "").trim() !== "");
@@ -5556,7 +5525,7 @@
               <div class="insight-title">Evaluation Overlay</div>
               <p class="note">Saved comparison alignment against local Cochrane meta-analysis comparison labels. This is evaluation-only and was not used by the agent.</p>
             </div>
-            <span class="cochrane-match-badge">${escapeHtml(`${strengthLabel(best.match_strength)} ${formatComparisonScore(best.score)}`)}</span>
+            <span class="cochrane-match-badge cochrane-match-badge-${escapeHtml(relationshipClass)}">${escapeHtml(comparisonRelationshipLabel(best))}</span>
           </div>
           <div class="artifact-field-list comparison-evaluation-details">
             ${detailRows.map(([label, value]) => `
@@ -7484,7 +7453,7 @@
             <div>
               <div class="insight-title">${escapeHtml(table.label || "Outcome")}</div>
               <h4>${sentence(outcomeTitle)}</h4>
-              ${renderCochraneOutcomeMapping(cochraneOutcomeAlignment, outcomeKey, { showEmpty: true })}
+              ${renderCochraneOutcomeMapping(cochraneOutcomeAlignment, outcomeKey)}
             </div>
           </summary>
           <div class="outcome-extraction-panel-row">
@@ -9927,14 +9896,12 @@
       if (!outcomeMatch && !relatedAnalysis.analysis_id) {
         return "";
       }
-      const relatedScore = Number(relatedAnalysis.outcome_match_score);
-      const relatedStrength = String(relatedAnalysis.outcome_match_strength || "").trim();
       const relatedLabel = relatedAnalysis.analysis_id
         ? `${relatedAnalysis.outcome || "Related Cochrane analysis"} (${relatedAnalysis.analysis_id})`
         : cochraneOutcomeMatchLabel(outcomeMatch);
       const relatedMatchText = relatedAnalysis.analysis_id
-        ? `${cochraneStrengthLabel(relatedStrength).toLowerCase()}, score ${Number.isFinite(relatedScore) ? relatedScore.toFixed(2) : "—"}`
-        : `${cochraneStrengthLabel(cochraneMatchStrength(outcomeMatch)).toLowerCase()}, confidence ${formatCochraneMatchScore(outcomeMatch)}`;
+        ? outcomeMatchRelationshipLabel(relatedAnalysis.outcome_match_reason)
+        : formatCochraneMatchRelationship(outcomeMatch);
       const statusText = row.status === "no_matched_cochrane_analysis"
         ? "No matched Cochrane forest-plot analysis with the same outcome/effect-measure target was found for this synthesized plot."
         : "No Cochrane synthesis-overlap match was available for this synthesized plot.";
@@ -10163,7 +10130,7 @@
                   <div class="insight-title">${escapeHtml(entry.label || "Outcome")}</div>
                   <h4>${sentence(entry.outcome_name || entry.key || "Outcome")}</h4>
                   ${definitionNote ? `<p class="synthesis-outcome-note">${sentence(definitionNote)}</p>` : ""}
-                  ${renderCochraneOutcomeMapping(cochraneOutcomeAlignment, entry.key, { showEmpty: true })}
+                  ${renderCochraneOutcomeMapping(cochraneOutcomeAlignment, entry.key)}
                   ${measureNote ? `<p class="synthesis-measure-note">${escapeHtml(measureNote)}</p>` : ""}
                 </div>
               </summary>
