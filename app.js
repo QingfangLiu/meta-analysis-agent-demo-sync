@@ -3257,25 +3257,19 @@
     };
   }
 
-  function publicationLinkagePayload(publicationLinkageArtifact, publicationLinkageEvidenceArtifact = {}) {
+  function publicationLinkagePayload(publicationLinkageArtifact) {
     const artifact = publicationLinkageArtifact || {};
     const linkage = artifact.publication_linkage || {};
-    const evidenceArtifact = publicationLinkageEvidenceArtifact || {};
-    const evidence = evidenceArtifact || {};
-    return { artifact, linkage: linkage || {}, evidence: evidence || {} };
+    return { artifact, linkage: linkage || {} };
   }
 
-  function publicationLinkageEvidenceList(linkage, evidence, key) {
-    const evidenceItems = Array.isArray(evidence?.[key]) ? evidence[key].filter(Boolean) : [];
-    if (evidenceItems.length) {
-      return evidenceItems;
-    }
+  function publicationLinkageList(linkage, key) {
     return Array.isArray(linkage?.[key]) ? linkage[key].filter(Boolean) : [];
   }
 
-  function publicationLinkagePmidEvidenceMap(linkage, evidence) {
+  function publicationLinkagePmidEvidenceMap(linkage) {
     return new Map(
-      publicationLinkageEvidenceList(linkage, evidence, "pmid_linkage_evidence")
+      publicationLinkageList(linkage, "pmid_linkage_evidence")
         .map((item) => [String(item.pmid || "").trim(), item])
         .filter(([pmid]) => pmid)
     );
@@ -3309,13 +3303,13 @@
     });
   }
 
-  function publicationLinkageUniquePmidCount(linkage, evidence = {}) {
+  function publicationLinkageUniquePmidCount(linkage) {
     const groups = Array.isArray(linkage?.publication_groups) ? linkage.publication_groups.filter(Boolean) : [];
     const singletonPmids = Array.isArray(linkage?.singleton_pmids) ? linkage.singleton_pmids.filter(Boolean) : [];
     const uncertainEntries = Array.isArray(linkage?.uncertain_linkage_pmids)
       ? linkage.uncertain_linkage_pmids.filter((item) => item !== null && item !== undefined)
       : [];
-    const pmidEvidenceByPmid = publicationLinkagePmidEvidenceMap(linkage, evidence);
+    const pmidEvidenceByPmid = publicationLinkagePmidEvidenceMap(linkage);
     const pmids = new Set();
 
     groups.forEach((group) => {
@@ -3347,14 +3341,14 @@
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   }
 
-  function publicationLinkageDisplayMap(publicationLinkageArtifact, publicationLinkageEvidenceArtifact = {}) {
-    const { linkage, evidence } = publicationLinkagePayload(publicationLinkageArtifact, publicationLinkageEvidenceArtifact);
+  function publicationLinkageDisplayMap(publicationLinkageArtifact) {
+    const { linkage } = publicationLinkagePayload(publicationLinkageArtifact);
     const groups = Array.isArray(linkage.publication_groups) ? linkage.publication_groups.filter(Boolean) : [];
     const singletonPmids = Array.isArray(linkage.singleton_pmids) ? linkage.singleton_pmids.filter(Boolean) : [];
     const uncertainEntries = Array.isArray(linkage.uncertain_linkage_pmids)
       ? linkage.uncertain_linkage_pmids.filter((item) => item !== null && item !== undefined)
       : [];
-    const pmidEvidenceByPmid = publicationLinkagePmidEvidenceMap(linkage, evidence);
+    const pmidEvidenceByPmid = publicationLinkagePmidEvidenceMap(linkage);
     const mapped = new Map();
     let colorIndex = 0;
 
@@ -4294,11 +4288,8 @@
     `;
   }
 
-  function publicationLinkageSection(publicationLinkageArtifact, publicationLinkageEvidenceArtifact, screenedStudies) {
-    const { artifact, linkage, evidence } = publicationLinkagePayload(
-      publicationLinkageArtifact,
-      publicationLinkageEvidenceArtifact
-    );
+  function publicationLinkageSection(publicationLinkageArtifact, screenedStudies) {
+    const { artifact, linkage } = publicationLinkagePayload(publicationLinkageArtifact);
     const status = artifact.status || "";
     const groups = Array.isArray(linkage.publication_groups) ? linkage.publication_groups.filter(Boolean) : [];
     const validGroupIds = new Set(groups.map((group) => String(group.group_id || "").trim()).filter(Boolean));
@@ -4306,14 +4297,9 @@
     const uncertainEntries = Array.isArray(linkage.uncertain_linkage_pmids)
       ? linkage.uncertain_linkage_pmids.filter((item) => item !== null && item !== undefined)
       : [];
-    const groupEvidenceById = new Map(
-      publicationLinkageEvidenceList(linkage, evidence, "group_linkage_evidence")
-        .map((item) => [String(item.group_id || "").trim(), item])
-        .filter(([groupId]) => groupId)
-    );
-    const pmidEvidenceByPmid = publicationLinkagePmidEvidenceMap(linkage, evidence);
+    const pmidEvidenceByPmid = publicationLinkagePmidEvidenceMap(linkage);
     const multiGroupByPmid = new Map(
-      publicationLinkageEvidenceList(linkage, evidence, "multi_group_pmids")
+      publicationLinkageList(linkage, "multi_group_pmids")
         .map((item) => [String(item.pmid || "").trim(), item])
         .filter(([pmid]) => pmid)
     );
@@ -4331,12 +4317,6 @@
 
       const parts = firstAuthor.split(/\s+/).filter(Boolean);
       return parts.length ? parts[parts.length - 1] : "";
-    }
-
-    function firstAuthorYear(study) {
-      const lastName = firstAuthorLastName(study);
-      const year = String(study?.year || "").trim();
-      return [lastName, year].filter(Boolean).join(", ");
     }
 
     function studyYearForSort(study) {
@@ -4415,13 +4395,12 @@
         : "";
 
       return `
-        <details class="linkage-evidence-details">
-          <summary>Evidence</summary>
+        <div class="linkage-study-evidence">
           <div class="linkage-evidence-grid">
             ${rows.join("")}
           </div>
           ${assignmentNote}
-        </details>
+        </div>
       `;
     }
 
@@ -4439,12 +4418,10 @@
     }
 
     function renderGroupEvidence(group) {
-      const groupId = String(group.group_id || "").trim();
-      const evidenceItem = groupEvidenceById.get(groupId) || {};
-      const evidenceReason = String(evidenceItem.reason || group.rationale || "").trim();
+      const evidenceReason = String(group.reason || "").trim();
       const rows = [
-        renderEvidenceRow("Dataset", renderChips(evidenceItem.dataset_ids)),
-        renderEvidenceRow("Trial acronym", renderChips(evidenceItem.trial_acronyms)),
+        renderEvidenceRow("Dataset", renderChips(group.dataset_ids)),
+        renderEvidenceRow("Trial acronym", renderChips(group.trial_acronyms)),
         renderEvidenceRow("Evidence reason", evidenceReason ? sentence(evidenceReason) : ""),
       ].filter(Boolean);
 
@@ -4464,24 +4441,16 @@
 
     function renderLinkedStudy(pmid, options = {}) {
       const study = studyByPmid.get(String(pmid).trim()) || { pmid };
-      const title = String(study.title || "").trim();
-      const abstract = String(study.abstract || "").trim();
-      const citation = firstAuthorYear(study);
-      const titleTooltip = [
-        title ? `Title: ${title}` : "",
-        abstract ? `Abstract: ${abstract}` : "",
-      ].filter(Boolean).join("\n\n");
+      const normalizedPmid = String(study.pmid || pmid || "").trim();
       return `
         <div class="linkage-study-item">
           <div class="linkage-study-row">
-            <div class="linkage-study-pmid mono">${renderPmidLink(study)}</div>
-            <div class="linkage-study-citation">
-              <span>${citation ? sentence(citation) : "—"}</span>
-              ${renderMultiGroupBadge(study.pmid)}
+            <div class="linkage-study-identity">
+              ${compactStudyCell({ ...study, pmid: normalizedPmid })}
+              ${renderMultiGroupBadge(normalizedPmid)}
             </div>
-            <div class="linkage-study-title" title="${escapeHtml(titleTooltip)}">${title ? sentence(title) : "No title available."}</div>
+            ${options.showEvidence ? renderPmidEvidence(normalizedPmid, options) : ""}
           </div>
-          ${options.showEvidence ? renderPmidEvidence(study.pmid, options) : ""}
         </div>
       `;
     }
@@ -4569,7 +4538,7 @@
     function renderLinkageOverview() {
       const items = linkageSummaryItems();
       const total = items.reduce((sum, item) => sum + item.count, 0);
-      const uniqueTotal = publicationLinkageUniquePmidCount(linkage, evidence);
+      const uniqueTotal = publicationLinkageUniquePmidCount(linkage);
       if (!total) {
         return "";
       }
@@ -10670,7 +10639,6 @@
     const sourceAvailabilityGate = current.source_availability_gate || {};
     const subgroupPlan = current.subgroup_plan || {};
     const publicationLinkage = current.publication_linkage || {};
-    const publicationLinkageEvidence = current.publication_linkage_evidence || {};
     const extractionOverview = current.extraction_overview || {};
     const nctLinkageRows = current.nct_linkage_rows || [];
     const timing = current.timing || {};
@@ -10827,7 +10795,7 @@
 			      ${nctLinkageSection(nctLinkageRows)}
 			      ${outcomesSection(outcomes, pico, outcomeSignalInventory, cochraneOutcomeAlignment)}
 		      ${comparisonSection(comparison, pico, cochraneComparisonAlignment, studyArms)}
-		      ${publicationLinkageSection(publicationLinkage, publicationLinkageEvidence, screening.screened_studies || [])}
+		      ${publicationLinkageSection(publicationLinkage, screening.screened_studies || [])}
 		      ${subgroupPlanSection(subgroupPlan, current.study_level_subgroup_values || [])}
 		    </section>
 
