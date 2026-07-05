@@ -4431,7 +4431,6 @@
 
       return `
         <div class="linkage-group-evidence">
-          <div class="linkage-evidence-heading">Group Evidence</div>
           <div class="linkage-evidence-grid">
             ${rows.join("")}
           </div>
