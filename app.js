@@ -24,8 +24,18 @@
   const COCHRANE_REFERENCE_STATUS_META = {
     matched_analysis: {
       label: "Matched analysis",
-      detail: "Used in the matched Cochrane forest plot.",
+      detail: "Plotted in the matched Cochrane forest plot.",
       color: "#15803d",
+    },
+    matched_analysis_grouped_under_plotted_study: {
+      label: "Grouped under plotted study",
+      detail: "Secondary PMID in the matched Cochrane analysis, grouped under a reproduced forest-plot study row.",
+      color: "#7c3aed",
+    },
+    matched_analysis_not_plotted: {
+      label: "Analysis, not plotted",
+      detail: "In the matched Cochrane analysis, but not estimable or not shown in the reproduced forest plot.",
+      color: "#a16207",
     },
     included_review_not_matched_analysis: {
       label: "Included elsewhere",
@@ -40,12 +50,12 @@
     not_in_cochrane_reference_sets: {
       label: "Not in refs",
       detail: "Absent from curated included/excluded Cochrane references.",
-      color: "#475569",
+      color: "#94a3b8",
     },
     no_pmid: {
       label: "No PMID",
       detail: "No PMID available for reference lookup.",
-      color: "#6d28d9",
+      color: "#64748b",
     },
   };
   const EXTRACTION_DISPLAY_FIELD_EXCLUDE = new Set([
@@ -1888,6 +1898,47 @@
     return key.replace(/_/g, " ");
   }
 
+  function displayAgentComparisonFallback(agent = {}) {
+    const id = String(agent.agent_comparison_id || "").trim().replace(/^agent:/, "");
+    const idMatch = id.match(/^analysis_comparison_(\d+)$/);
+    if (idMatch) {
+      return `Comparison ${Number(idMatch[1])}`;
+    }
+    if (id) {
+      return id.replace(/_/g, " ");
+    }
+    const subset = String(agent.agent_plot_subset || "").trim();
+    const subsetMatch = subset.match(/^comparison_analysis_comparison_(\d+)$/);
+    if (subsetMatch) {
+      return `Comparison ${Number(subsetMatch[1])}`;
+    }
+    return "";
+  }
+
+  function synthesisMatchedComparisonLabels(row = {}, alignmentRow = {}) {
+    const cochrane = row.cochrane_analysis || {};
+    const agent = row.agent_forest_plot || {};
+    const match = alignmentRow.best_match || {};
+    const comparisonMatch = match.comparison_alignment_match || {};
+    const cochraneLabel = String(
+      match.cochrane_matched_comparison_label
+        || comparisonMatch.cochrane_label
+        || cochrane.comparison
+        || cochrane.comparison_label
+        || ""
+    ).trim();
+    const agentLabel = String(
+      match.agent_matched_comparison_label
+        || comparisonMatch.agent_label
+        || displayAgentComparisonFallback(agent)
+        || ""
+    ).trim();
+    return {
+      cochrane: cochraneLabel,
+      agent: agentLabel,
+    };
+  }
+
   function synthesisConfusionBadge(classification) {
     const key = String(classification || "").toUpperCase();
     const label = key || "—";
@@ -2278,6 +2329,7 @@
       ?? (synthesisTp + synthesisFn ? synthesisTp / (synthesisTp + synthesisFn) : null);
     const synthesisF1 = finiteNumber(counts.synthesis_f1);
     const rows = synthesisConfusionRows(ciOverlapArtifact);
+    const ciOverlapRowsByPlotKey = synthesisCiOverlapByPlotKey(ciOverlapArtifact);
     const tableRows = rows.filter((row) => String(row.classification || "").toLowerCase() === "tp");
     const meanStudyOverlapF1 = finiteNumber(counts.mean_study_row_overlap_f1);
     const agentOutcomeEvaluation = new Map();
@@ -2328,8 +2380,8 @@
       <div class="detail-card evaluation-card" style="margin-top:14px;">
         <h3>Cochrane Analysis Evaluation</h3>
         <ul class="note synthesis-evaluation-summary">
-          <li>Evaluation uses one agent forest plot per outcome/effect measure: <span class="mono">all_eligible</span> when available, otherwise <span class="mono">study_design_randomized_trial</span>.</li>
-          <li>A Cochrane analysis is recalled only when the selected agent plot matches <strong>both</strong> conditions: the same outcome and the same effect measure.</li>
+          <li>Evaluation uses one agent forest plot per outcome/comparison/effect measure: <span class="mono">all_eligible</span> when available, comparison-specific plots when comparisons are separated, otherwise <span class="mono">study_design_randomized_trial</span>.</li>
+          <li>A Cochrane analysis is recalled only when the selected agent plot matches all required conditions: the same outcome, comparison, and effect measure.</li>
           <li>TP/FP/FN are defined at the forest-plot-analysis level; no true-negative denominator is defined.</li>
           <li>CI-IoU compares arm-orientation-adjusted agent CIs with reproduced Cochrane targets for all estimable studies and, when available, the PMCID-only subset. Ratio measures use log-scale overlap.</li>
         </ul>
@@ -2382,8 +2434,8 @@
                 <thead>
                   <tr>
                     <th>Result</th>
-                    <th>Cochrane outcome</th>
-                    <th>Agent outcome</th>
+                    <th>Cochrane analysis</th>
+                    <th>Agent synthesis</th>
                     <th>Study overlap</th>
                     <th>CI overlap</th>
                   </tr>
@@ -2393,6 +2445,8 @@
                     const classification = row.classification || "—";
                     const cochrane = row.cochrane_analysis || {};
                     const agent = row.agent_forest_plot || {};
+                    const alignmentRow = ciOverlapRowsByPlotKey[String(agent.agent_plot_key || row.agent_plot_key || "").trim()] || {};
+                    const comparisonLabels = synthesisMatchedComparisonLabels(row, alignmentRow);
                     const allStudies = row.all_studies_iou || null;
                     const pmcidOnly = row.pmcid_only_iou || null;
                     const selectedCiOverlap = currentSynthesisCiOverlapTarget === "pmcid_only"
@@ -2406,9 +2460,11 @@
                         <td class="synthesis-cochrane-analysis-cell">
                           <div class="screen-study-primary">${escapeHtml(cochrane.analysis_id || "—")}</div>
                           ${cochrane.outcome ? `<div class="screen-study-secondary synthesis-cochrane-analysis-label">${escapeHtml(cochrane.outcome)}</div>` : ""}
+                          ${comparisonLabels.cochrane ? `<div class="screen-study-secondary synthesis-analysis-comparison-label">Comparison: ${escapeHtml(comparisonLabels.cochrane)}</div>` : ""}
                         </td>
                         <td>
                           <div class="screen-study-primary">${escapeHtml(agent.outcome_name || agent.outcome_key || "—")}</div>
+                          ${comparisonLabels.agent ? `<div class="screen-study-secondary synthesis-analysis-comparison-label">Comparison: ${escapeHtml(comparisonLabels.agent)}</div>` : ""}
                         </td>
                         <td class="synthesis-study-overlap">${renderStudyRowOverlap(row.study_row_overlap, currentSynthesisStudyRowDetailsOpen)}</td>
                         <td class="synthesis-ci-overlap-cell">${renderCiOverlapBars(agent, selectedCiOverlap, cochrane, currentSynthesisCiOverlapTarget)}</td>
@@ -9383,21 +9439,50 @@
     `;
   }
 
-  function renderSynthesisComparisonVariants(variantAnalyses, entry, comparisonPayload, subgroupPlan) {
+  function renderSynthesisComparisonVariants(variantAnalyses, entry, comparisonPayload, subgroupPlan, evaluationContext = {}) {
     const variants = Array.isArray(variantAnalyses) ? variantAnalyses : [];
     if (!variants.length) {
       return "";
     }
+    const ciOverlapArtifact = evaluationContext.cochraneSynthesisCiOverlap || {};
+    const ciOverlapRowsByPlotKey = synthesisCiOverlapByPlotKey(ciOverlapArtifact);
+    const cochraneStudySelectionContext = {
+      screeningResults: evaluationContext.screeningResults || {},
+      outcomeExtractionTables: evaluationContext.outcomeExtractionTables || [],
+      extractionSourceSummary: evaluationContext.extractionSourceSummary || {},
+    };
     return `
       <div class="synthesis-comparison-variant-section">
         <div class="synthesis-comparison-variant-list">
           ${variants.map((variant, variantIndex) => {
+            const evaluationRow = ciOverlapRowsByPlotKey[variant.plotKey] || {};
+            const hasEvaluationRow = Boolean(evaluationRow.agent_plot_key || evaluationRow.status || evaluationRow.best_match);
+            const showCochraneReferenceStatuses = hasEvaluationRow && currentEvaluationVisible && currentCochraneReferenceStatusPlots.has(variant.plotKey);
+            const showCochraneReproducedPlot = hasEvaluationRow && currentEvaluationVisible && currentCochraneForestPlotViews.has(variant.plotKey);
+            const cochraneReferenceStatusesForSelection = hasEvaluationRow && currentEvaluationVisible
+              ? cochraneReferenceStatusesForPlot(ciOverlapArtifact, variant.plotKey)
+              : {};
+            const cochraneReferenceStatuses = showCochraneReferenceStatuses
+              ? cochraneReferenceStatusesForSelection
+              : {};
+            const selectedCochraneStudy = hasEvaluationRow && currentEvaluationVisible
+              ? currentCochraneStudySelections.get(variant.plotKey) || null
+              : null;
+            const comparisonAxisOverride = showCochraneReproducedPlot
+              ? synthesisComparisonAxisOverride(ciOverlapArtifact, variant.plotKey, variant.plotData)
+              : null;
             const interactivePlot = renderInteractiveForestPlot(
               variant.plotData,
               variant.plotKey,
               entry.outcome_name || entry.label || entry.key,
               comparisonPayload,
-              { showTitle: true }
+              {
+                showTitle: true,
+                referenceStatuses: cochraneReferenceStatuses,
+                showReferenceStatuses: showCochraneReferenceStatuses,
+                selectedStudy: selectedCochraneStudy,
+                axisOverride: comparisonAxisOverride,
+              }
             );
             const variantLabel = variant.label || humanizeMetric(variant.subsetName);
             const comparisonLabel = `Comparison ${variantIndex + 1}: ${variantLabel}`;
@@ -9411,6 +9496,16 @@
                     ${estimateLabel ? `<span>${escapeHtml(estimateLabel)}</span>` : ""}
                   </span>
                 </div>
+                ${renderSynthesisCochraneForestPlotEvaluation(
+                  ciOverlapArtifact,
+                  variant.plotKey,
+                  comparisonPayload,
+                  comparisonAxisOverride,
+                  {
+                    ...cochraneStudySelectionContext,
+                    referenceStatuses: cochraneReferenceStatusesForSelection,
+                  }
+                )}
                 <div class="synthesis-plot-card synthesis-forest-result labeled-forest-result agent-synthesis-forest-result" data-forest-source-label="Agent made">
                   ${interactivePlot || `<p class="note">No forest plot was generated for this comparison variant.</p>`}
                   ${renderPublicationOverlapWarnings(
@@ -9418,8 +9513,18 @@
                     || variant.primaryResult?.publication_overlap_warnings
                     || []
                   )}
-                  ${renderSynthesisDiagnostics(variant.primaryResult || {}, null, subgroupPlan, { showSubgroupDifferences: false })}
+                  ${renderSynthesisDiagnostics(variant.primaryResult || {}, null, subgroupPlan, {
+                    showSubgroupDifferences: false,
+                    collapsed: showCochraneReproducedPlot,
+                  })}
                 </div>
+                ${interactivePlot && hasEvaluationRow ? renderSynthesisCiOverlapEvaluation(
+                  ciOverlapArtifact,
+                  variant.plotKey,
+                  evaluationContext.cochraneOutcomeAlignment || {},
+                  entry.key,
+                  comparisonPayload
+                ) : ""}
               </div>
             `;
           }).join("")}
@@ -10270,7 +10375,14 @@
                         comparisonVariantAnalyses,
                         entry,
                         comparisonPayload,
-                        subgroupPlan
+                        subgroupPlan,
+                        {
+                          cochraneSynthesisCiOverlap,
+                          cochraneOutcomeAlignment,
+                          screeningResults,
+                          outcomeExtractionTables,
+                          extractionSourceSummary,
+                        }
                       )}
                       ${renderSynthesisStudyDesignBranches(
                         analysis,

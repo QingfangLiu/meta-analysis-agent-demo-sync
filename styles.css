@@ -1191,6 +1191,36 @@ main {
   stroke: #166534;
 }
 
+.forest-row-reference-matched_analysis_grouped_under_plotted_study .forest-row-hit {
+  fill: rgba(124, 58, 237, 0.11);
+  stroke: rgba(109, 40, 217, 0.42);
+  stroke-width: 1;
+}
+
+.forest-row-reference-matched_analysis_grouped_under_plotted_study .forest-point {
+  stroke: #7c3aed;
+  stroke-width: 2.2;
+}
+
+.forest-row-reference-matched_analysis_grouped_under_plotted_study .forest-ci-line {
+  stroke: #6d28d9;
+}
+
+.forest-row-reference-matched_analysis_not_plotted .forest-row-hit {
+  fill: rgba(202, 138, 4, 0.12);
+  stroke: rgba(161, 98, 7, 0.42);
+  stroke-width: 1;
+}
+
+.forest-row-reference-matched_analysis_not_plotted .forest-point {
+  stroke: #a16207;
+  stroke-width: 2.2;
+}
+
+.forest-row-reference-matched_analysis_not_plotted .forest-ci-line {
+  stroke: #854d0e;
+}
+
 .forest-row-reference-included_review_not_matched_analysis .forest-row-hit {
   fill: rgba(37, 99, 235, 0.11);
   stroke: rgba(37, 99, 235, 0.42);
@@ -1222,33 +1252,33 @@ main {
 }
 
 .forest-row-reference-not_in_cochrane_reference_sets .forest-row-hit {
-  fill: rgba(100, 116, 139, 0.12);
-  stroke: rgba(71, 85, 105, 0.42);
+  fill: rgba(148, 163, 184, 0.12);
+  stroke: rgba(148, 163, 184, 0.42);
   stroke-width: 1;
 }
 
 .forest-row-reference-not_in_cochrane_reference_sets .forest-point {
-  stroke: #475569;
+  stroke: #94a3b8;
   stroke-width: 2.2;
 }
 
 .forest-row-reference-not_in_cochrane_reference_sets .forest-ci-line {
-  stroke: #475569;
+  stroke: #64748b;
 }
 
 .forest-row-reference-no_pmid .forest-row-hit {
-  fill: rgba(124, 58, 237, 0.1);
-  stroke: rgba(109, 40, 217, 0.38);
+  fill: rgba(100, 116, 139, 0.1);
+  stroke: rgba(100, 116, 139, 0.38);
   stroke-width: 1;
 }
 
 .forest-row-reference-no_pmid .forest-point {
-  stroke: #6d28d9;
+  stroke: #64748b;
   stroke-width: 2.2;
 }
 
 .forest-row-reference-no_pmid .forest-ci-line {
-  stroke: #6d28d9;
+  stroke: #475569;
 }
 
 .cochrane-reference-legend {
@@ -5641,6 +5671,18 @@ body.source-trace-open .evaluation-visibility-dock {
   display: block;
   max-width: 150px;
   margin-inline: auto;
+  white-space: normal !important;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+.synthesis-analysis-comparison-label {
+  display: block;
+  max-width: 160px;
+  margin: 6px auto 0;
+  color: var(--muted-strong);
+  font-size: 0.72rem;
+  line-height: 1.35;
   white-space: normal !important;
   overflow-wrap: anywhere;
   word-break: normal;
