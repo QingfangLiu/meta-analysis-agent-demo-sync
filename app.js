@@ -23,7 +23,7 @@
   const LINKAGE_COLORS = ["#0f766e", "#d97706", "#1d4ed8", "#9333ea", "#b42318", "#64748b", "#166534", "#9a6700"];
   const COCHRANE_REFERENCE_STATUS_META = {
     matched_analysis: {
-      label: "Matched analysis",
+      label: "Matched study",
       detail: "Plotted in the matched Cochrane forest plot.",
       color: "#15803d",
     },
@@ -8669,10 +8669,18 @@
     if (!items.length) {
       return "";
     }
+    const renderDetailRow = (label, value) => value
+      ? `
+        <div class="synthesis-publication-overlap-detail-row">
+          <span class="synthesis-publication-overlap-detail-label">${label}</span>
+          <span>${escapeHtml(value)}</span>
+        </div>
+      `
+      : "";
     return `
       <div class="synthesis-publication-overlap-warning" role="note">
-        <strong>Possible overlapping dataset</strong>
-        <ul>
+        <strong class="synthesis-publication-overlap-title">Possible overlapping dataset</strong>
+        <div class="synthesis-publication-overlap-card-list">
           ${items.map((warning) => {
             const groupId = String(warning.group_id || "linked publication group").trim();
             const members = (Array.isArray(warning.member_labels_in_analysis)
@@ -8681,16 +8689,38 @@
             )
               .map((item) => String(item || "").trim())
               .filter(Boolean);
+            const excludedMembers = (Array.isArray(warning.excluded_labels)
+              ? warning.excluded_labels
+              : warning.excluded_pmids || []
+            )
+              .map((item) => String(item || "").trim())
+              .filter(Boolean);
             const message = String(warning.message || "This synthesis includes multiple linked publications; manual review is required.").trim();
             const reason = String(warning.reason || "").trim();
+            const resolved = warning.deduplicated_by_total_n === true;
+            const retainedLabel = String(warning.retained_label || warning.retained_pmid || "").trim();
+            const retainedTotalN = warning.retained_total_n === null || warning.retained_total_n === undefined || warning.retained_total_n === ""
+              ? ""
+              : `N = ${number(warning.retained_total_n)}`;
+            const retainedDetail = [retainedLabel, retainedTotalN].filter(Boolean).join("; ");
+            const details = [
+              renderDetailRow("Studies", members.join("; ")),
+              resolved ? renderDetailRow("Retained", retainedDetail) : "",
+              resolved ? renderDetailRow("Excluded", excludedMembers.join("; ")) : "",
+              renderDetailRow("Reason", reason),
+            ].filter(Boolean).join("");
             return `
-              <li>
-                <span>${escapeHtml(message)}</span>
-                <span class="synthesis-publication-overlap-detail">Group: ${escapeHtml(groupId)}${members.length ? `; studies: ${escapeHtml(members.join("; "))}` : ""}${reason ? `; reason: ${escapeHtml(reason)}` : ""}</span>
-              </li>
+              <section class="synthesis-publication-overlap-card synthesis-publication-overlap-card-${resolved ? "resolved" : "pending"}">
+                <div class="synthesis-publication-overlap-card-head">
+                  <span class="synthesis-publication-overlap-group">Group: ${escapeHtml(groupId)}</span>
+                  <span class="synthesis-publication-overlap-status">${resolved ? "Resolved by larger-N rule" : "Pending manual review"}</span>
+                </div>
+                <p class="synthesis-publication-overlap-message">${escapeHtml(message)}</p>
+                ${details ? `<div class="synthesis-publication-overlap-detail">${details}</div>` : ""}
+              </section>
             `;
           }).join("")}
-        </ul>
+        </div>
       </div>
     `;
   }
@@ -9998,6 +10028,8 @@
     const plotKeyForRows = `${plotKey}:cochrane:${selectedSubset || "plot"}`;
     const hasSharedAxis = finiteNumber(axisOverride?.x_min) !== null && finiteNumber(axisOverride?.x_max) !== null;
     const branchNote = cochraneRandomizedBranchNote(alignmentRow);
+    const showReferenceStatuses = currentCochraneReferenceStatusPlots.has(plotKey);
+    const referenceStatuses = showReferenceStatuses ? selectionContext.referenceStatuses || {} : {};
     return `
       <div class="cochrane-reproduced-plot-panel">
         <div class="cochrane-reproduced-plot-head">
@@ -10036,6 +10068,8 @@
               showTitle: true,
               disableRowJump: true,
               cochraneStudyMatchPlotKey: plotKey,
+              referenceStatuses,
+              showReferenceStatuses,
               selectedStudy,
               axisOverride,
             }
@@ -11323,6 +11357,7 @@
           event.target.closest("[data-cochrane-row-status]")
           || event.target.closest(".cochrane-reference-legend")
           || event.target.closest(".agent-synthesis-forest-result")
+          || event.target.closest(".cochrane-reproduced-forest-result")
         ) {
           return;
         }

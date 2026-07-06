@@ -1695,25 +1695,104 @@ main {
   display: grid;
   gap: 8px;
   margin: 10px 14px;
-  padding: 12px 14px;
-  border: 1px solid rgba(217, 119, 6, 0.32);
-  border-radius: var(--radius-sm);
-  background: rgba(217, 119, 6, 0.08);
   color: var(--ink);
   font-size: var(--text-sm);
   line-height: 1.4;
 }
 
-.synthesis-publication-overlap-warning ul {
+.synthesis-publication-overlap-title {
+  display: block;
+  color: var(--ink);
+  font-weight: 850;
+}
+
+.synthesis-publication-overlap-card-list {
   display: grid;
   gap: 8px;
+}
+
+.synthesis-publication-overlap-card {
+  display: grid;
+  gap: 8px;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-left-width: 4px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-strong);
+}
+
+.synthesis-publication-overlap-card-resolved {
+  border-color: rgba(63, 127, 95, 0.30);
+  border-left-color: #3f7f5f;
+  background: rgba(63, 127, 95, 0.08);
+}
+
+.synthesis-publication-overlap-card-pending {
+  border-color: rgba(190, 24, 93, 0.24);
+  border-left-color: #be185d;
+  background: rgba(190, 24, 93, 0.06);
+}
+
+.synthesis-publication-overlap-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  flex-wrap: wrap;
+}
+
+.synthesis-publication-overlap-group {
+  color: var(--ink);
+  font-weight: 850;
+}
+
+.synthesis-publication-overlap-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 8px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.62);
+  font-size: var(--text-xs);
+  font-weight: 850;
+  line-height: 1;
+}
+
+.synthesis-publication-overlap-card-resolved .synthesis-publication-overlap-status {
+  color: #315f49;
+}
+
+.synthesis-publication-overlap-card-pending .synthesis-publication-overlap-status {
+  color: #9d174d;
+}
+
+.synthesis-publication-overlap-message {
   margin: 0;
-  padding-left: 18px;
 }
 
 .synthesis-publication-overlap-detail {
-  display: block;
+  display: grid;
+  gap: 5px;
   color: var(--muted);
+}
+
+.synthesis-publication-overlap-detail-row {
+  display: grid;
+  grid-template-columns: minmax(72px, max-content) minmax(0, 1fr);
+  gap: 8px;
+}
+
+.synthesis-publication-overlap-detail-label {
+  color: var(--muted-strong);
+  font-weight: 800;
+}
+
+@media (max-width: 640px) {
+  .synthesis-publication-overlap-detail-row {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
 }
 
 .synthesis-diagnostics-collapsible {
@@ -5897,9 +5976,12 @@ body.source-trace-open .evaluation-visibility-dock {
 }
 
 .missed-cochrane-analysis-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 3px 8px;
+  align-items: start;
+  box-sizing: border-box;
+  width: 100%;
   max-width: none;
   min-height: 28px;
   padding: 5px 9px;
@@ -5913,8 +5995,22 @@ body.source-trace-open .evaluation-visibility-dock {
 
 .missed-cochrane-analysis-id {
   flex: 0 0 auto;
+  grid-row: 1 / span 2;
   color: var(--bad);
   font-weight: 900;
+}
+
+.missed-cochrane-analysis-chip .agent-only-outcome-name {
+  min-width: 0;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+.missed-cochrane-analysis-chip .agent-only-outcome-count {
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: normal;
 }
 
 .agent-only-outcome-name {
