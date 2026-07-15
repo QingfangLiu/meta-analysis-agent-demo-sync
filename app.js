@@ -2332,6 +2332,37 @@
     const ciOverlapRowsByPlotKey = synthesisCiOverlapByPlotKey(ciOverlapArtifact);
     const tableRows = rows.filter((row) => String(row.classification || "").toLowerCase() === "tp");
     const meanStudyOverlapF1 = finiteNumber(counts.mean_study_row_overlap_f1);
+    const includedStudyRecall = ciOverlapArtifact.included_study_recall || {};
+    const includedStudyCounts = includedStudyRecall.counts || {};
+    const cochraneIncludedStudies = finiteNumber(counts.cochrane_included_studies)
+      ?? finiteNumber(includedStudyCounts.cochrane_included_studies);
+    const cochraneIncludedStudiesRecalled = finiteNumber(counts.cochrane_included_studies_recalled)
+      ?? finiteNumber(includedStudyCounts.cochrane_included_studies_recalled);
+    const cochraneIncludedStudyRecall = finiteNumber(counts.cochrane_included_study_recall)
+      ?? finiteNumber(includedStudyCounts.recall);
+    const includedStudyMetric = (
+      cochraneIncludedStudies !== null
+      || cochraneIncludedStudiesRecalled !== null
+      || cochraneIncludedStudyRecall !== null
+    ) ? {
+      label: "Included studies recalled",
+      value: formatPercent(cochraneIncludedStudyRecall),
+      detail: `${number(cochraneIncludedStudiesRecalled)} of ${number(cochraneIncludedStudies)} Cochrane included studies appear in at least one agent synthesis plot`,
+    } : null;
+    const effectDirectionConsistency = counts.effect_direction_consistency || {};
+    const directionConsistent = finiteNumber(effectDirectionConsistency.consistent);
+    const directionEvaluable = finiteNumber(effectDirectionConsistency.evaluable);
+    const directionRate = finiteNumber(effectDirectionConsistency.consistency_rate);
+    const directionNotEvaluable = finiteNumber(effectDirectionConsistency.not_evaluable);
+    const effectDirectionMetric = (
+      directionConsistent !== null
+      || directionEvaluable !== null
+      || directionRate !== null
+    ) ? {
+      label: "Effect-direction consistency",
+      value: formatPercent(directionRate),
+      detail: `${number(directionConsistent)} of ${number(directionEvaluable)} matched analyses have the same effect direction after arm-order adjustment${directionNotEvaluable ? `; ${number(directionNotEvaluable)} not evaluable` : ""}`,
+    } : null;
     const agentOutcomeEvaluation = new Map();
     rows.forEach((row) => {
       const classification = String(row.classification || "").toLowerCase();
@@ -2408,6 +2439,10 @@
             label: "PMCID-only CI IoU",
             value: formatPercent(counts.mean_pmcid_only_ci_overlap_ratio),
           },
+        ])}
+        ${renderEvaluationMetricGrid([
+          includedStudyMetric,
+          effectDirectionMetric,
         ])}
         ${rows.length ? `
           <div class="synthesis-evaluation-actions">
