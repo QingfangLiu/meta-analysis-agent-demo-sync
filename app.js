@@ -2108,7 +2108,40 @@
     `;
   }
 
-  function renderCiOverlapBars(agent, overlap, cochrane, target = "all_studies") {
+  function ciClinicalConclusionLabel(value) {
+    const normalized = String(value || "unknown").toLowerCase();
+    const labels = {
+      favors_cochrane_arm_1: "favors Cochrane arm 1",
+      favors_cochrane_arm_2: "favors Cochrane arm 2",
+      not_conclusive: "not conclusive",
+      unknown: "unknown",
+    };
+    return labels[normalized] || normalized.replaceAll("_", " ");
+  }
+
+  function renderCiConclusionConsistencyBadge(consistency) {
+    const status = String(consistency?.status || "").toLowerCase();
+    if (!status) {
+      return "";
+    }
+    const statusLabel = ciConclusionConsistencyLabel(status);
+    if (!statusLabel) {
+      return "";
+    }
+    const agentConclusion = ciClinicalConclusionLabel(consistency.agent_ci_conclusion);
+    const cochraneConclusion = ciClinicalConclusionLabel(consistency.cochrane_ci_conclusion);
+    const detail = status === "not_evaluable"
+      ? (consistency.reason || "Not evaluable")
+      : `Agent: ${agentConclusion}; Cochrane: ${cochraneConclusion}`;
+    return `
+      <div class="ci-conclusion-badge ci-conclusion-badge-${escapeHtml(status)}">
+        <span class="ci-conclusion-badge-label">${escapeHtml(statusLabel)}</span>
+        <span class="ci-conclusion-badge-detail">${escapeHtml(detail)}</span>
+      </div>
+    `;
+  }
+
+  function renderCiOverlapBars(agent, overlap, cochrane, target = "all_studies", conclusionConsistency = null) {
     const agentBounds = ciIntervalBounds(agent?.ci_lower, agent?.ci_upper);
     const useCochraneFallback = target === "all_studies";
     const targetLabel = target === "pmcid_only" ? "PMCID-only" : "All studies";
@@ -2146,6 +2179,7 @@
           <span class="ci-overlap-score-label">IoU</span>
           <span class="ci-overlap-score-value">${formatPercent(overlap?.overlap_ratio)}</span>
         </div>
+        ${renderCiConclusionConsistencyBadge(conclusionConsistency)}
         ${!cochraneBounds ? `<div class="screen-study-secondary ci-overlap-note">No ${escapeHtml(targetLabel)} Cochrane CI</div>` : ""}
         ${!agentBounds ? `<div class="screen-study-secondary ci-overlap-note">No agent CI</div>` : ""}
       </div>
@@ -2349,19 +2383,19 @@
       value: formatPercent(cochraneIncludedStudyRecall),
       detail: `${number(cochraneIncludedStudiesRecalled)} of ${number(cochraneIncludedStudies)} Cochrane included studies appear in at least one agent synthesis plot`,
     } : null;
-    const effectDirectionConsistency = counts.effect_direction_consistency || {};
-    const directionConsistent = finiteNumber(effectDirectionConsistency.consistent);
-    const directionEvaluable = finiteNumber(effectDirectionConsistency.evaluable);
-    const directionRate = finiteNumber(effectDirectionConsistency.consistency_rate);
-    const directionNotEvaluable = finiteNumber(effectDirectionConsistency.not_evaluable);
-    const effectDirectionMetric = (
-      directionConsistent !== null
-      || directionEvaluable !== null
-      || directionRate !== null
+    const ciConclusionConsistency = counts.ci_conclusion_consistency || {};
+    const conclusionConsistent = finiteNumber(ciConclusionConsistency.consistent);
+    const conclusionEvaluable = finiteNumber(ciConclusionConsistency.evaluable);
+    const conclusionRate = finiteNumber(ciConclusionConsistency.consistency_rate);
+    const conclusionNotEvaluable = finiteNumber(ciConclusionConsistency.not_evaluable);
+    const ciConclusionMetric = (
+      conclusionConsistent !== null
+      || conclusionEvaluable !== null
+      || conclusionRate !== null
     ) ? {
-      label: "Effect-direction consistency",
-      value: formatPercent(directionRate),
-      detail: `${number(directionConsistent)} of ${number(directionEvaluable)} matched analyses have the same effect direction after arm-order adjustment${directionNotEvaluable ? `; ${number(directionNotEvaluable)} not evaluable` : ""}`,
+      label: "CI conclusion consistency",
+      value: formatPercent(conclusionRate),
+      detail: `${number(conclusionConsistent)} of ${number(conclusionEvaluable)} matched analyses have the same CI-based clinical conclusion${conclusionNotEvaluable ? `; ${number(conclusionNotEvaluable)} not evaluable` : ""}`,
     } : null;
     const agentOutcomeEvaluation = new Map();
     rows.forEach((row) => {
@@ -2442,7 +2476,7 @@
         ])}
         ${renderEvaluationMetricGrid([
           includedStudyMetric,
-          effectDirectionMetric,
+          ciConclusionMetric,
         ])}
         ${rows.length ? `
           <div class="synthesis-evaluation-actions">
@@ -2502,7 +2536,7 @@
                           ${comparisonLabels.agent ? `<div class="screen-study-secondary synthesis-analysis-comparison-label">Comparison: ${escapeHtml(comparisonLabels.agent)}</div>` : ""}
                         </td>
                         <td class="synthesis-study-overlap">${renderStudyRowOverlap(row.study_row_overlap, currentSynthesisStudyRowDetailsOpen)}</td>
-                        <td class="synthesis-ci-overlap-cell">${renderCiOverlapBars(agent, selectedCiOverlap, cochrane, currentSynthesisCiOverlapTarget)}</td>
+                        <td class="synthesis-ci-overlap-cell">${renderCiOverlapBars(agent, selectedCiOverlap, cochrane, currentSynthesisCiOverlapTarget, alignmentRow.best_match?.ci_conclusion_consistency)}</td>
                       </tr>
                     `;
                   }).join("")}
@@ -2933,11 +2967,11 @@
     return labels[String(value || "").toLowerCase()] || "Arm order not recorded";
   }
 
-  function effectDirectionConsistencyLabel(value) {
+  function ciConclusionConsistencyLabel(value) {
     const labels = {
-      consistent: "Effect direction consistent",
-      inconsistent: "Effect direction inconsistent",
-      not_evaluable: "Effect direction not evaluable",
+      consistent: "CI conclusion consistent",
+      inconsistent: "CI conclusion inconsistent",
+      not_evaluable: "CI conclusion not evaluable",
     };
     return labels[String(value || "").toLowerCase()] || "";
   }
@@ -10159,12 +10193,12 @@
     const selectedSubsetLabel = selectedVersion?.label || (selectedSubset === "pmcid_only" ? "PMCID-only studies" : "All estimable studies");
     const selectedIou = ciOverlapSubsetValue(match, selectedSubset);
     const selectedCi = ciOverlapSubsetCi(match, selectedSubset);
-    const directionConsistency = match.effect_direction_consistency || {};
+    const conclusionConsistency = match.ci_conclusion_consistency || {};
     const armOrientation = match.comparison_arm_orientation
-      || directionConsistency.arm_orientation
+      || conclusionConsistency.arm_orientation
       || (match.comparison_alignment_match || {}).arm_orientation
       || match.arm_orientation;
-    const directionConsistencyText = effectDirectionConsistencyLabel(directionConsistency.status);
+    const conclusionConsistencyText = ciConclusionConsistencyLabel(conclusionConsistency.status);
     return `
       <div class="synthesis-evaluation-block">
         <div class="synthesis-evaluation-panel">
@@ -10175,7 +10209,7 @@
           <div class="synthesis-evaluation-detail">
             Matched ${escapeHtml(match.outcome || "Cochrane outcome")} (${escapeHtml(match.analysis_id || "analysis")});
             reproduced Cochrane CI ${escapeHtml(selectedCi)}.
-            Arm orientation: ${escapeHtml(armOrientationLabel(armOrientation))}${directionConsistencyText ? `; ${escapeHtml(directionConsistencyText.toLowerCase())}.` : "."}
+            Arm orientation: ${escapeHtml(armOrientationLabel(armOrientation))}${conclusionConsistencyText ? `; ${escapeHtml(conclusionConsistencyText.toLowerCase())}.` : "."}
           </div>
           <div class="synthesis-evaluation-actions">
             ${hasReferenceStatuses ? `

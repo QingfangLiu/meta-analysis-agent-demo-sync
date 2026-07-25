@@ -119625,7 +119625,7 @@ window.DEMO_DATA = {
               "benchmark_id": "analysis:all cause mortality prior to discharge",
               "label": "All-cause mortality prior to discharge",
               "aliases": [],
-              "source": "benchmark.json",
+              "source": "benchmark.json:meta_analysis.analysis_results",
               "analysis_ids": [
                 "1.1"
               ],
@@ -119634,13 +119634,17 @@ window.DEMO_DATA = {
               ],
               "effect_measures": [
                 "Risk Ratio"
-              ]
+              ],
+              "role": "analyzed_outcome_target",
+              "source_note": "Explicit analyzed-outcome target for evaluation, derived from this review's saved all-studies main analysis result row.",
+              "curation_notes": "Added for CD011506 so the audit site displays the analyzed outcome denominator used by outcome-alignment evaluation.",
+              "target_order": 1
             },
             {
               "benchmark_id": "analysis:all cause mortality at 2 years of life",
               "label": "All-cause mortality at 2 years of life",
               "aliases": [],
-              "source": "benchmark.json",
+              "source": "benchmark.json:meta_analysis.analysis_results",
               "analysis_ids": [
                 "1.2"
               ],
@@ -119649,13 +119653,17 @@ window.DEMO_DATA = {
               ],
               "effect_measures": [
                 "Risk Ratio"
-              ]
+              ],
+              "role": "analyzed_outcome_target",
+              "source_note": "Explicit analyzed-outcome target for evaluation, derived from this review's saved all-studies main analysis result row.",
+              "curation_notes": "Added for CD011506 so the audit site displays the analyzed outcome denominator used by outcome-alignment evaluation.",
+              "target_order": 2
             },
             {
               "benchmark_id": "analysis:all cause mortality at longest follow up",
               "label": "All-cause mortality at longest follow-up",
               "aliases": [],
-              "source": "benchmark.json",
+              "source": "benchmark.json:meta_analysis.analysis_results",
               "analysis_ids": [
                 "1.3"
               ],
@@ -119664,13 +119672,17 @@ window.DEMO_DATA = {
               ],
               "effect_measures": [
                 "Risk Ratio"
-              ]
+              ],
+              "role": "analyzed_outcome_target",
+              "source_note": "Explicit analyzed-outcome target for evaluation, derived from this review's saved all-studies main analysis result row.",
+              "curation_notes": "Added for CD011506 so the audit site displays the analyzed outcome denominator used by outcome-alignment evaluation.",
+              "target_order": 3
             },
             {
               "benchmark_id": "analysis:major neurodevelopmental disability in children aged 18 to 24 months",
               "label": "Major neurodevelopmental disability in children aged 18 to 24 months",
               "aliases": [],
-              "source": "benchmark.json",
+              "source": "benchmark.json:meta_analysis.analysis_results",
               "analysis_ids": [
                 "1.4"
               ],
@@ -119679,13 +119691,17 @@ window.DEMO_DATA = {
               ],
               "effect_measures": [
                 "Risk Ratio"
-              ]
+              ],
+              "role": "analyzed_outcome_target",
+              "source_note": "Explicit analyzed-outcome target for evaluation, derived from this review's saved all-studies main analysis result row.",
+              "curation_notes": "Added for CD011506 so the audit site displays the analyzed outcome denominator used by outcome-alignment evaluation.",
+              "target_order": 4
             },
             {
               "benchmark_id": "analysis:major brain injury diagnosed by brain ultrasound prior to discharge",
               "label": "Major brain injury diagnosed by brain ultrasound prior to discharge",
               "aliases": [],
-              "source": "benchmark.json",
+              "source": "benchmark.json:meta_analysis.analysis_results",
               "analysis_ids": [
                 "1.5"
               ],
@@ -119694,13 +119710,17 @@ window.DEMO_DATA = {
               ],
               "effect_measures": [
                 "Risk Ratio"
-              ]
+              ],
+              "role": "analyzed_outcome_target",
+              "source_note": "Explicit analyzed-outcome target for evaluation, derived from this review's saved all-studies main analysis result row.",
+              "curation_notes": "Added for CD011506 so the audit site displays the analyzed outcome denominator used by outcome-alignment evaluation.",
+              "target_order": 5
             },
             {
               "benchmark_id": "analysis:intraventricular haemorrhage grade iii or iv prior to discharge",
               "label": "Intraventricular haemorrhage grade III or IV prior to discharge",
               "aliases": [],
-              "source": "benchmark.json",
+              "source": "benchmark.json:meta_analysis.analysis_results",
               "analysis_ids": [
                 "1.6"
               ],
@@ -119709,13 +119729,17 @@ window.DEMO_DATA = {
               ],
               "effect_measures": [
                 "Risk Ratio"
-              ]
+              ],
+              "role": "analyzed_outcome_target",
+              "source_note": "Explicit analyzed-outcome target for evaluation, derived from this review's saved all-studies main analysis result row.",
+              "curation_notes": "Added for CD011506 so the audit site displays the analyzed outcome denominator used by outcome-alignment evaluation.",
+              "target_order": 6
             },
             {
               "benchmark_id": "analysis:cystic periventricular leukomalacia prior to discharge",
               "label": "Cystic periventricular leukomalacia prior to discharge",
               "aliases": [],
-              "source": "benchmark.json",
+              "source": "benchmark.json:meta_analysis.analysis_results",
               "analysis_ids": [
                 "1.7"
               ],
@@ -119724,13 +119748,17 @@ window.DEMO_DATA = {
               ],
               "effect_measures": [
                 "Risk Ratio"
-              ]
+              ],
+              "role": "analyzed_outcome_target",
+              "source_note": "Explicit analyzed-outcome target for evaluation, derived from this review's saved all-studies main analysis result row.",
+              "curation_notes": "Added for CD011506 so the audit site displays the analyzed outcome denominator used by outcome-alignment evaluation.",
+              "target_order": 7
             },
             {
               "benchmark_id": "analysis:chronic lung disease at 36 weeks of gestational age",
               "label": "Chronic lung disease at 36 weeks of gestational age",
               "aliases": [],
-              "source": "benchmark.json",
+              "source": "benchmark.json:meta_analysis.analysis_results",
               "analysis_ids": [
                 "1.8"
               ],
@@ -119739,13 +119767,17 @@ window.DEMO_DATA = {
               ],
               "effect_measures": [
                 "Risk Ratio"
-              ]
+              ],
+              "role": "analyzed_outcome_target",
+              "source_note": "Explicit analyzed-outcome target for evaluation, derived from this review's saved all-studies main analysis result row.",
+              "curation_notes": "Added for CD011506 so the audit site displays the analyzed outcome denominator used by outcome-alignment evaluation.",
+              "target_order": 8
             },
             {
               "benchmark_id": "analysis:proven necrotising enterocolitis prior to discharge",
               "label": "Proven necrotising enterocolitis prior to discharge",
               "aliases": [],
-              "source": "benchmark.json",
+              "source": "benchmark.json:meta_analysis.analysis_results",
               "analysis_ids": [
                 "1.9"
               ],
@@ -119754,13 +119786,17 @@ window.DEMO_DATA = {
               ],
               "effect_measures": [
                 "Risk Ratio"
-              ]
+              ],
+              "role": "analyzed_outcome_target",
+              "source_note": "Explicit analyzed-outcome target for evaluation, derived from this review's saved all-studies main analysis result row.",
+              "curation_notes": "Added for CD011506 so the audit site displays the analyzed outcome denominator used by outcome-alignment evaluation.",
+              "target_order": 9
             },
             {
               "benchmark_id": "analysis:retinopathy of prematurity any stage prior to discharge",
               "label": "Retinopathy of prematurity (any stage) prior to discharge",
               "aliases": [],
-              "source": "benchmark.json",
+              "source": "benchmark.json:meta_analysis.analysis_results",
               "analysis_ids": [
                 "1.10"
               ],
@@ -119769,13 +119805,17 @@ window.DEMO_DATA = {
               ],
               "effect_measures": [
                 "Risk Ratio"
-              ]
+              ],
+              "role": "analyzed_outcome_target",
+              "source_note": "Explicit analyzed-outcome target for evaluation, derived from this review's saved all-studies main analysis result row.",
+              "curation_notes": "Added for CD011506 so the audit site displays the analyzed outcome denominator used by outcome-alignment evaluation.",
+              "target_order": 10
             },
             {
               "benchmark_id": "analysis:retinopathy of prematurity stage 3 prior to discharge",
               "label": "Retinopathy of prematurity (stage \u2265 3 ) prior to discharge",
               "aliases": [],
-              "source": "benchmark.json",
+              "source": "benchmark.json:meta_analysis.analysis_results",
               "analysis_ids": [
                 "1.11"
               ],
@@ -119784,13 +119824,17 @@ window.DEMO_DATA = {
               ],
               "effect_measures": [
                 "Risk Ratio"
-              ]
+              ],
+              "role": "analyzed_outcome_target",
+              "source_note": "Explicit analyzed-outcome target for evaluation, derived from this review's saved all-studies main analysis result row.",
+              "curation_notes": "Added for CD011506 so the audit site displays the analyzed outcome denominator used by outcome-alignment evaluation.",
+              "target_order": 11
             },
             {
               "benchmark_id": "analysis:severe adverse reactions prior to discharge",
               "label": "Severe adverse reactions prior to discharge",
               "aliases": [],
-              "source": "benchmark.json",
+              "source": "benchmark.json:meta_analysis.analysis_results",
               "analysis_ids": [
                 "1.12"
               ],
@@ -119799,13 +119843,17 @@ window.DEMO_DATA = {
               ],
               "effect_measures": [
                 "Risk Ratio"
-              ]
+              ],
+              "role": "analyzed_outcome_target",
+              "source_note": "Explicit analyzed-outcome target for evaluation, derived from this review's saved all-studies main analysis result row.",
+              "curation_notes": "Added for CD011506 so the audit site displays the analyzed outcome denominator used by outcome-alignment evaluation.",
+              "target_order": 12
             },
             {
               "benchmark_id": "analysis:abnormal fidgety movements at six to 20 weeks of corrected age",
               "label": "Abnormal fidgety movements (at six to 20 weeks of corrected age)",
               "aliases": [],
-              "source": "benchmark.json",
+              "source": "benchmark.json:meta_analysis.analysis_results",
               "analysis_ids": [
                 "1.13"
               ],
@@ -119814,7 +119862,11 @@ window.DEMO_DATA = {
               ],
               "effect_measures": [
                 "Risk Ratio"
-              ]
+              ],
+              "role": "analyzed_outcome_target",
+              "source_note": "Explicit analyzed-outcome target for evaluation, derived from this review's saved all-studies main analysis result row.",
+              "curation_notes": "Added for CD011506 so the audit site displays the analyzed outcome denominator used by outcome-alignment evaluation.",
+              "target_order": 13
             }
           ]
         },
@@ -130772,7 +130824,7 @@ window.DEMO_DATA = {
             "benchmark_id": "analysis:all cause mortality at 2 years of life",
             "label": "All-cause mortality at 2 years of life",
             "aliases": [],
-            "source": "benchmark.json",
+            "source": "benchmark.json:meta_analysis.analysis_results",
             "analysis_ids": [
               "1.2"
             ],
@@ -130781,13 +130833,17 @@ window.DEMO_DATA = {
             ],
             "effect_measures": [
               "Risk Ratio"
-            ]
+            ],
+            "role": "analyzed_outcome_target",
+            "source_note": "Explicit analyzed-outcome target for evaluation, derived from this review's saved all-studies main analysis result row.",
+            "curation_notes": "Added for CD011506 so the audit site displays the analyzed outcome denominator used by outcome-alignment evaluation.",
+            "target_order": 2
           },
           {
             "benchmark_id": "analysis:all cause mortality at longest follow up",
             "label": "All-cause mortality at longest follow-up",
             "aliases": [],
-            "source": "benchmark.json",
+            "source": "benchmark.json:meta_analysis.analysis_results",
             "analysis_ids": [
               "1.3"
             ],
@@ -130796,13 +130852,17 @@ window.DEMO_DATA = {
             ],
             "effect_measures": [
               "Risk Ratio"
-            ]
+            ],
+            "role": "analyzed_outcome_target",
+            "source_note": "Explicit analyzed-outcome target for evaluation, derived from this review's saved all-studies main analysis result row.",
+            "curation_notes": "Added for CD011506 so the audit site displays the analyzed outcome denominator used by outcome-alignment evaluation.",
+            "target_order": 3
           },
           {
             "benchmark_id": "analysis:cystic periventricular leukomalacia prior to discharge",
             "label": "Cystic periventricular leukomalacia prior to discharge",
             "aliases": [],
-            "source": "benchmark.json",
+            "source": "benchmark.json:meta_analysis.analysis_results",
             "analysis_ids": [
               "1.7"
             ],
@@ -130811,13 +130871,17 @@ window.DEMO_DATA = {
             ],
             "effect_measures": [
               "Risk Ratio"
-            ]
+            ],
+            "role": "analyzed_outcome_target",
+            "source_note": "Explicit analyzed-outcome target for evaluation, derived from this review's saved all-studies main analysis result row.",
+            "curation_notes": "Added for CD011506 so the audit site displays the analyzed outcome denominator used by outcome-alignment evaluation.",
+            "target_order": 7
           },
           {
             "benchmark_id": "analysis:retinopathy of prematurity stage 3 prior to discharge",
             "label": "Retinopathy of prematurity (stage \u2265 3 ) prior to discharge",
             "aliases": [],
-            "source": "benchmark.json",
+            "source": "benchmark.json:meta_analysis.analysis_results",
             "analysis_ids": [
               "1.11"
             ],
@@ -130826,13 +130890,17 @@ window.DEMO_DATA = {
             ],
             "effect_measures": [
               "Risk Ratio"
-            ]
+            ],
+            "role": "analyzed_outcome_target",
+            "source_note": "Explicit analyzed-outcome target for evaluation, derived from this review's saved all-studies main analysis result row.",
+            "curation_notes": "Added for CD011506 so the audit site displays the analyzed outcome denominator used by outcome-alignment evaluation.",
+            "target_order": 11
           },
           {
             "benchmark_id": "analysis:abnormal fidgety movements at six to 20 weeks of corrected age",
             "label": "Abnormal fidgety movements (at six to 20 weeks of corrected age)",
             "aliases": [],
-            "source": "benchmark.json",
+            "source": "benchmark.json:meta_analysis.analysis_results",
             "analysis_ids": [
               "1.13"
             ],
@@ -130841,7 +130909,11 @@ window.DEMO_DATA = {
             ],
             "effect_measures": [
               "Risk Ratio"
-            ]
+            ],
+            "role": "analyzed_outcome_target",
+            "source_note": "Explicit analyzed-outcome target for evaluation, derived from this review's saved all-studies main analysis result row.",
+            "curation_notes": "Added for CD011506 so the audit site displays the analyzed outcome denominator used by outcome-alignment evaluation.",
+            "target_order": 13
           }
         ],
         "input_signature": {
@@ -131456,7 +131528,7 @@ window.DEMO_DATA = {
         }
       },
       "cochrane_comparison_alignment": {
-        "artifact_version": "2026-07-05-cochrane-comparison-llm-relationship-main-v1",
+        "artifact_version": "2026-07-08-cochrane-comparison-analysis-group-name-v1",
         "status": "completed",
         "run_id": "20260620_120409_062492_q05_cd011506",
         "short_name": "q05_CD011506",
@@ -131587,13 +131659,13 @@ window.DEMO_DATA = {
         "cochrane_comparisons": [
           {
             "comparison_id": "cochrane_main:001",
-            "label": "NIRS versus Control",
-            "label_clean": "NIRS versus Control",
+            "label": "NIRS vs no NIRS or blinded NIRS",
+            "label_clean": "NIRS vs no NIRS or blinded NIRS",
             "comparison_type": "analysis_comparison",
             "comparison_role": "main_comparison",
             "arm_1": "NIRS",
-            "arm_2": "Control",
-            "source": "benchmark.json:meta_analysis.analysis_study_rows",
+            "arm_2": "no NIRS or blinded NIRS",
+            "source": "benchmark.json:meta_analysis.analysis_study_rows.comparison_label_clean",
             "analysis_ids": [
               "1.1",
               "1.2",
@@ -131603,8 +131675,11 @@ window.DEMO_DATA = {
               "1.6",
               "1.7",
               "1.8",
+              "1.9",
               "1.10",
-              "1.12"
+              "1.11",
+              "1.12",
+              "1.13"
             ],
             "analysis_headings": [
               "NIRS vs no NIRS or blinded NIRS"
@@ -131618,61 +131693,21 @@ window.DEMO_DATA = {
               "Intraventricular haemorrhage grade III or IV prior to discharge",
               "Cystic periventricular leukomalacia prior to discharge",
               "Chronic lung disease at 36 weeks of gestational age",
+              "Proven necrotising enterocolitis prior to discharge",
               "Retinopathy of prematurity (any stage) prior to discharge",
-              "Severe adverse reactions prior to discharge"
-            ],
-            "effect_measures": [
-              "Risk Ratio"
-            ],
-            "study_rows": 41
-          },
-          {
-            "comparison_id": "cochrane_main:002",
-            "label": "Experimental versus Control",
-            "label_clean": "Experimental versus Control",
-            "comparison_type": "analysis_comparison",
-            "comparison_role": "main_comparison",
-            "arm_1": "Experimental",
-            "arm_2": "Control",
-            "source": "benchmark.json:meta_analysis.analysis_study_rows",
-            "analysis_ids": [
-              "1.9"
-            ],
-            "analysis_headings": [
-              "NIRS vs no NIRS or blinded NIRS"
-            ],
-            "outcomes": [
-              "Proven necrotising enterocolitis prior to discharge"
-            ],
-            "effect_measures": [
-              "Risk Ratio"
-            ],
-            "study_rows": 5
-          },
-          {
-            "comparison_id": "cochrane_main:003",
-            "label": "NIRS versus No NIRS or blinded NIRS",
-            "label_clean": "NIRS versus No NIRS or blinded NIRS",
-            "comparison_type": "analysis_comparison",
-            "comparison_role": "main_comparison",
-            "arm_1": "NIRS",
-            "arm_2": "No NIRS or blinded NIRS",
-            "source": "benchmark.json:meta_analysis.analysis_study_rows",
-            "analysis_ids": [
-              "1.11",
-              "1.13"
-            ],
-            "analysis_headings": [
-              "NIRS vs no NIRS or blinded NIRS"
-            ],
-            "outcomes": [
               "Retinopathy of prematurity (stage \u2265 3 ) prior to discharge",
+              "Severe adverse reactions prior to discharge",
               "Abnormal fidgety movements (at six to 20 weeks of corrected age)"
             ],
             "effect_measures": [
               "Risk Ratio"
             ],
-            "study_rows": 3
+            "source_arm_label_pairs": [
+              "NIRS versus Control",
+              "Experimental versus Control",
+              "NIRS versus No NIRS or blinded NIRS"
+            ],
+            "study_rows": 49
           }
         ],
         "pairwise_judgments": [
@@ -131685,52 +131720,16 @@ window.DEMO_DATA = {
             "agent_arm_2": "Comparator: no active cerebral NIRS-guided management, including usual/standard care without NIRS use or masked/blinded NIRS recordings not available for clinical decisions.",
             "comparison_id": "cochrane_main:001",
             "cochrane_index": 0,
-            "cochrane_label": "NIRS versus Control",
-            "cochrane_label_clean": "NIRS versus Control",
+            "cochrane_label": "NIRS vs no NIRS or blinded NIRS",
+            "cochrane_label_clean": "NIRS vs no NIRS or blinded NIRS",
             "cochrane_arm_1": "NIRS",
-            "cochrane_arm_2": "Control",
+            "cochrane_arm_2": "no NIRS or blinded NIRS",
             "comparison_type": "analysis_comparison",
             "relationship": "same_contrast_different_wording",
             "arm_orientation": "same_order",
             "eligible_for_assignment": true
           },
           {
-            "agent_comparison_id": "agent:analysis_comparison_01",
-            "agent_label": "Clinician-visible cerebral NIRS-guided management versus usual/standard care or blinded NIRS",
-            "agent_arm_1_label": "Visible cerebral NIRS-guided management",
-            "agent_arm_1": "Target intervention: cerebral NIRS/cerebral oximetry monitoring available to clinical staff and used to guide respiratory, circulatory, oxygen, or other neonatal management.",
-            "agent_arm_2_label": "Usual/standard care or blinded NIRS",
-            "agent_arm_2": "Comparator: no active cerebral NIRS-guided management, including usual/standard care without NIRS use or masked/blinded NIRS recordings not available for clinical decisions.",
-            "comparison_id": "cochrane_main:002",
-            "cochrane_index": 1,
-            "cochrane_label": "Experimental versus Control",
-            "cochrane_label_clean": "Experimental versus Control",
-            "cochrane_arm_1": "Experimental",
-            "cochrane_arm_2": "Control",
-            "comparison_type": "analysis_comparison",
-            "relationship": "same_contrast_different_wording",
-            "arm_orientation": "same_order",
-            "eligible_for_assignment": true
-          },
-          {
-            "agent_comparison_id": "agent:analysis_comparison_01",
-            "agent_label": "Clinician-visible cerebral NIRS-guided management versus usual/standard care or blinded NIRS",
-            "agent_arm_1_label": "Visible cerebral NIRS-guided management",
-            "agent_arm_1": "Target intervention: cerebral NIRS/cerebral oximetry monitoring available to clinical staff and used to guide respiratory, circulatory, oxygen, or other neonatal management.",
-            "agent_arm_2_label": "Usual/standard care or blinded NIRS",
-            "agent_arm_2": "Comparator: no active cerebral NIRS-guided management, including usual/standard care without NIRS use or masked/blinded NIRS recordings not available for clinical decisions.",
-            "comparison_id": "cochrane_main:003",
-            "cochrane_index": 2,
-            "cochrane_label": "NIRS versus No NIRS or blinded NIRS",
-            "cochrane_label_clean": "NIRS versus No NIRS or blinded NIRS",
-            "cochrane_arm_1": "NIRS",
-            "cochrane_arm_2": "No NIRS or blinded NIRS",
-            "comparison_type": "analysis_comparison",
-            "relationship": "equivalent",
-            "arm_orientation": "same_order",
-            "eligible_for_assignment": true
-          },
-          {
             "agent_comparison_id": "agent:analysis_comparison_02",
             "agent_label": "Clinician-visible cerebral NIRS-guided management versus blinded or masked NIRS monitoring",
             "agent_arm_1_label": "Visible cerebral NIRS-guided management",
@@ -131739,46 +131738,10 @@ window.DEMO_DATA = {
             "agent_arm_2": "Comparator: cerebral NIRS data recorded or measured but concealed from clinical staff and not used for management.",
             "comparison_id": "cochrane_main:001",
             "cochrane_index": 0,
-            "cochrane_label": "NIRS versus Control",
-            "cochrane_label_clean": "NIRS versus Control",
+            "cochrane_label": "NIRS vs no NIRS or blinded NIRS",
+            "cochrane_label_clean": "NIRS vs no NIRS or blinded NIRS",
             "cochrane_arm_1": "NIRS",
-            "cochrane_arm_2": "Control",
-            "comparison_type": "analysis_comparison",
-            "relationship": "broader_or_narrower",
-            "arm_orientation": "not_applicable",
-            "eligible_for_assignment": false
-          },
-          {
-            "agent_comparison_id": "agent:analysis_comparison_02",
-            "agent_label": "Clinician-visible cerebral NIRS-guided management versus blinded or masked NIRS monitoring",
-            "agent_arm_1_label": "Visible cerebral NIRS-guided management",
-            "agent_arm_1": "Target intervention: active clinician-visible cerebral NIRS monitoring with management changes permitted or directed by NIRS values.",
-            "agent_arm_2_label": "Blinded/masked NIRS monitoring",
-            "agent_arm_2": "Comparator: cerebral NIRS data recorded or measured but concealed from clinical staff and not used for management.",
-            "comparison_id": "cochrane_main:002",
-            "cochrane_index": 1,
-            "cochrane_label": "Experimental versus Control",
-            "cochrane_label_clean": "Experimental versus Control",
-            "cochrane_arm_1": "Experimental",
-            "cochrane_arm_2": "Control",
-            "comparison_type": "analysis_comparison",
-            "relationship": "broader_or_narrower",
-            "arm_orientation": "not_applicable",
-            "eligible_for_assignment": false
-          },
-          {
-            "agent_comparison_id": "agent:analysis_comparison_02",
-            "agent_label": "Clinician-visible cerebral NIRS-guided management versus blinded or masked NIRS monitoring",
-            "agent_arm_1_label": "Visible cerebral NIRS-guided management",
-            "agent_arm_1": "Target intervention: active clinician-visible cerebral NIRS monitoring with management changes permitted or directed by NIRS values.",
-            "agent_arm_2_label": "Blinded/masked NIRS monitoring",
-            "agent_arm_2": "Comparator: cerebral NIRS data recorded or measured but concealed from clinical staff and not used for management.",
-            "comparison_id": "cochrane_main:003",
-            "cochrane_index": 2,
-            "cochrane_label": "NIRS versus No NIRS or blinded NIRS",
-            "cochrane_label_clean": "NIRS versus No NIRS or blinded NIRS",
-            "cochrane_arm_1": "NIRS",
-            "cochrane_arm_2": "No NIRS or blinded NIRS",
+            "cochrane_arm_2": "no NIRS or blinded NIRS",
             "comparison_type": "analysis_comparison",
             "relationship": "broader_or_narrower",
             "arm_orientation": "not_applicable",
@@ -131793,46 +131756,10 @@ window.DEMO_DATA = {
             "agent_arm_2": "Comparator: usual-care or standard-care arm not clearly described as blinded NIRS monitoring.",
             "comparison_id": "cochrane_main:001",
             "cochrane_index": 0,
-            "cochrane_label": "NIRS versus Control",
-            "cochrane_label_clean": "NIRS versus Control",
+            "cochrane_label": "NIRS vs no NIRS or blinded NIRS",
+            "cochrane_label_clean": "NIRS vs no NIRS or blinded NIRS",
             "cochrane_arm_1": "NIRS",
-            "cochrane_arm_2": "Control",
-            "comparison_type": "analysis_comparison",
-            "relationship": "broader_or_narrower",
-            "arm_orientation": "not_applicable",
-            "eligible_for_assignment": false
-          },
-          {
-            "agent_comparison_id": "agent:analysis_comparison_03",
-            "agent_label": "Clinician-visible cerebral NIRS-guided management versus usual or standard care without specified blinded NIRS",
-            "agent_arm_1_label": "Visible cerebral NIRS-guided management",
-            "agent_arm_1": "Target intervention: active cerebral NIRS/cerebral oximetry monitoring used for clinical management.",
-            "agent_arm_2_label": "Usual or standard care",
-            "agent_arm_2": "Comparator: usual-care or standard-care arm not clearly described as blinded NIRS monitoring.",
-            "comparison_id": "cochrane_main:002",
-            "cochrane_index": 1,
-            "cochrane_label": "Experimental versus Control",
-            "cochrane_label_clean": "Experimental versus Control",
-            "cochrane_arm_1": "Experimental",
-            "cochrane_arm_2": "Control",
-            "comparison_type": "analysis_comparison",
-            "relationship": "unclear",
-            "arm_orientation": "not_applicable",
-            "eligible_for_assignment": false
-          },
-          {
-            "agent_comparison_id": "agent:analysis_comparison_03",
-            "agent_label": "Clinician-visible cerebral NIRS-guided management versus usual or standard care without specified blinded NIRS",
-            "agent_arm_1_label": "Visible cerebral NIRS-guided management",
-            "agent_arm_1": "Target intervention: active cerebral NIRS/cerebral oximetry monitoring used for clinical management.",
-            "agent_arm_2_label": "Usual or standard care",
-            "agent_arm_2": "Comparator: usual-care or standard-care arm not clearly described as blinded NIRS monitoring.",
-            "comparison_id": "cochrane_main:003",
-            "cochrane_index": 2,
-            "cochrane_label": "NIRS versus No NIRS or blinded NIRS",
-            "cochrane_label_clean": "NIRS versus No NIRS or blinded NIRS",
-            "cochrane_arm_1": "NIRS",
-            "cochrane_arm_2": "No NIRS or blinded NIRS",
+            "cochrane_arm_2": "no NIRS or blinded NIRS",
             "comparison_type": "analysis_comparison",
             "relationship": "broader_or_narrower",
             "arm_orientation": "not_applicable",
@@ -131847,46 +131774,10 @@ window.DEMO_DATA = {
             "agent_arm_2": "Comparator: delivery-room standard care/resuscitation, usually guided by peripheral oxygen saturation, with cerebral NIRS absent or masked.",
             "comparison_id": "cochrane_main:001",
             "cochrane_index": 0,
-            "cochrane_label": "NIRS versus Control",
-            "cochrane_label_clean": "NIRS versus Control",
+            "cochrane_label": "NIRS vs no NIRS or blinded NIRS",
+            "cochrane_label_clean": "NIRS vs no NIRS or blinded NIRS",
             "cochrane_arm_1": "NIRS",
-            "cochrane_arm_2": "Control",
-            "comparison_type": "analysis_comparison",
-            "relationship": "broader_or_narrower",
-            "arm_orientation": "not_applicable",
-            "eligible_for_assignment": false
-          },
-          {
-            "agent_comparison_id": "agent:analysis_comparison_04",
-            "agent_label": "Delivery-room immediate-transition NIRS-guided resuscitation versus standard or masked-NIRS resuscitation",
-            "agent_arm_1_label": "Immediate-transition visible NIRS-guided resuscitation",
-            "agent_arm_1": "Target intervention: visible crSO2/cerebral NIRS monitoring during delivery-room transition or resuscitation, used to adjust FiO2, respiratory support, or related interventions.",
-            "agent_arm_2_label": "Standard or masked-NIRS resuscitation",
-            "agent_arm_2": "Comparator: delivery-room standard care/resuscitation, usually guided by peripheral oxygen saturation, with cerebral NIRS absent or masked.",
-            "comparison_id": "cochrane_main:002",
-            "cochrane_index": 1,
-            "cochrane_label": "Experimental versus Control",
-            "cochrane_label_clean": "Experimental versus Control",
-            "cochrane_arm_1": "Experimental",
-            "cochrane_arm_2": "Control",
-            "comparison_type": "analysis_comparison",
-            "relationship": "broader_or_narrower",
-            "arm_orientation": "not_applicable",
-            "eligible_for_assignment": false
-          },
-          {
-            "agent_comparison_id": "agent:analysis_comparison_04",
-            "agent_label": "Delivery-room immediate-transition NIRS-guided resuscitation versus standard or masked-NIRS resuscitation",
-            "agent_arm_1_label": "Immediate-transition visible NIRS-guided resuscitation",
-            "agent_arm_1": "Target intervention: visible crSO2/cerebral NIRS monitoring during delivery-room transition or resuscitation, used to adjust FiO2, respiratory support, or related interventions.",
-            "agent_arm_2_label": "Standard or masked-NIRS resuscitation",
-            "agent_arm_2": "Comparator: delivery-room standard care/resuscitation, usually guided by peripheral oxygen saturation, with cerebral NIRS absent or masked.",
-            "comparison_id": "cochrane_main:003",
-            "cochrane_index": 2,
-            "cochrane_label": "NIRS versus No NIRS or blinded NIRS",
-            "cochrane_label_clean": "NIRS versus No NIRS or blinded NIRS",
-            "cochrane_arm_1": "NIRS",
-            "cochrane_arm_2": "No NIRS or blinded NIRS",
+            "cochrane_arm_2": "no NIRS or blinded NIRS",
             "comparison_type": "analysis_comparison",
             "relationship": "broader_or_narrower",
             "arm_orientation": "not_applicable",
@@ -131901,46 +131792,10 @@ window.DEMO_DATA = {
             "agent_arm_2": "Comparator: early neonatal usual/standard care, or NIRS monitoring with values blinded and not used for care.",
             "comparison_id": "cochrane_main:001",
             "cochrane_index": 0,
-            "cochrane_label": "NIRS versus Control",
-            "cochrane_label_clean": "NIRS versus Control",
+            "cochrane_label": "NIRS vs no NIRS or blinded NIRS",
+            "cochrane_label_clean": "NIRS vs no NIRS or blinded NIRS",
             "cochrane_arm_1": "NIRS",
-            "cochrane_arm_2": "Control",
-            "comparison_type": "analysis_comparison",
-            "relationship": "broader_or_narrower",
-            "arm_orientation": "not_applicable",
-            "eligible_for_assignment": false
-          },
-          {
-            "agent_comparison_id": "agent:analysis_comparison_05",
-            "agent_label": "Early NICU continuous cerebral NIRS-guided care versus usual/standard care or blinded NIRS",
-            "agent_arm_1_label": "Early continuous visible cerebral NIRS-guided care",
-            "agent_arm_1": "Target intervention: continuous cerebral NIRS monitoring after admission or early neonatal stabilization, with visible values and protocolized responses to out-of-range oxygenation or hemodynamic signals.",
-            "agent_arm_2_label": "Usual/standard care or blinded early NIRS",
-            "agent_arm_2": "Comparator: early neonatal usual/standard care, or NIRS monitoring with values blinded and not used for care.",
-            "comparison_id": "cochrane_main:002",
-            "cochrane_index": 1,
-            "cochrane_label": "Experimental versus Control",
-            "cochrane_label_clean": "Experimental versus Control",
-            "cochrane_arm_1": "Experimental",
-            "cochrane_arm_2": "Control",
-            "comparison_type": "analysis_comparison",
-            "relationship": "broader_or_narrower",
-            "arm_orientation": "not_applicable",
-            "eligible_for_assignment": false
-          },
-          {
-            "agent_comparison_id": "agent:analysis_comparison_05",
-            "agent_label": "Early NICU continuous cerebral NIRS-guided care versus usual/standard care or blinded NIRS",
-            "agent_arm_1_label": "Early continuous visible cerebral NIRS-guided care",
-            "agent_arm_1": "Target intervention: continuous cerebral NIRS monitoring after admission or early neonatal stabilization, with visible values and protocolized responses to out-of-range oxygenation or hemodynamic signals.",
-            "agent_arm_2_label": "Usual/standard care or blinded early NIRS",
-            "agent_arm_2": "Comparator: early neonatal usual/standard care, or NIRS monitoring with values blinded and not used for care.",
-            "comparison_id": "cochrane_main:003",
-            "cochrane_index": 2,
-            "cochrane_label": "NIRS versus No NIRS or blinded NIRS",
-            "cochrane_label_clean": "NIRS versus No NIRS or blinded NIRS",
-            "cochrane_arm_1": "NIRS",
-            "cochrane_arm_2": "No NIRS or blinded NIRS",
+            "cochrane_arm_2": "no NIRS or blinded NIRS",
             "comparison_type": "analysis_comparison",
             "relationship": "broader_or_narrower",
             "arm_orientation": "not_applicable",
@@ -131955,48 +131810,12 @@ window.DEMO_DATA = {
             "agent_arm_2": "Comparator: standard hemodynamic assessment, usual care, or historical epoch without integrated hemodynamic evaluation.",
             "comparison_id": "cochrane_main:001",
             "cochrane_index": 0,
-            "cochrane_label": "NIRS versus Control",
-            "cochrane_label_clean": "NIRS versus Control",
+            "cochrane_label": "NIRS vs no NIRS or blinded NIRS",
+            "cochrane_label_clean": "NIRS vs no NIRS or blinded NIRS",
             "cochrane_arm_1": "NIRS",
-            "cochrane_arm_2": "Control",
+            "cochrane_arm_2": "no NIRS or blinded NIRS",
             "comparison_type": "analysis_comparison",
-            "relationship": "related_but_not_same",
-            "arm_orientation": "not_applicable",
-            "eligible_for_assignment": false
-          },
-          {
-            "agent_comparison_id": "agent:analysis_comparison_06",
-            "agent_label": "Multimodal or integrated hemodynamic assessment including cerebral NIRS versus standard care or no integrated hemodynamic evaluation",
-            "agent_arm_1_label": "Integrated hemodynamic assessment including NIRS",
-            "agent_arm_1": "Target intervention: multimodal or integrated hemodynamic evaluation that includes cerebral NIRS-derived measures alongside other assessments such as targeted neonatal echocardiography or specialist consultation.",
-            "agent_arm_2_label": "Standard care or no integrated hemodynamic evaluation",
-            "agent_arm_2": "Comparator: standard hemodynamic assessment, usual care, or historical epoch without integrated hemodynamic evaluation.",
-            "comparison_id": "cochrane_main:002",
-            "cochrane_index": 1,
-            "cochrane_label": "Experimental versus Control",
-            "cochrane_label_clean": "Experimental versus Control",
-            "cochrane_arm_1": "Experimental",
-            "cochrane_arm_2": "Control",
-            "comparison_type": "analysis_comparison",
-            "relationship": "related_but_not_same",
-            "arm_orientation": "not_applicable",
-            "eligible_for_assignment": false
-          },
-          {
-            "agent_comparison_id": "agent:analysis_comparison_06",
-            "agent_label": "Multimodal or integrated hemodynamic assessment including cerebral NIRS versus standard care or no integrated hemodynamic evaluation",
-            "agent_arm_1_label": "Integrated hemodynamic assessment including NIRS",
-            "agent_arm_1": "Target intervention: multimodal or integrated hemodynamic evaluation that includes cerebral NIRS-derived measures alongside other assessments such as targeted neonatal echocardiography or specialist consultation.",
-            "agent_arm_2_label": "Standard care or no integrated hemodynamic evaluation",
-            "agent_arm_2": "Comparator: standard hemodynamic assessment, usual care, or historical epoch without integrated hemodynamic evaluation.",
-            "comparison_id": "cochrane_main:003",
-            "cochrane_index": 2,
-            "cochrane_label": "NIRS versus No NIRS or blinded NIRS",
-            "cochrane_label_clean": "NIRS versus No NIRS or blinded NIRS",
-            "cochrane_arm_1": "NIRS",
-            "cochrane_arm_2": "No NIRS or blinded NIRS",
-            "comparison_type": "analysis_comparison",
-            "relationship": "related_but_not_same",
+            "relationship": "broader_or_narrower",
             "arm_orientation": "not_applicable",
             "eligible_for_assignment": false
           }
@@ -132004,121 +131823,56 @@ window.DEMO_DATA = {
         "one_to_one_matches": [
           {
             "agent_comparison_id": "agent:analysis_comparison_01",
-            "comparison_id": "cochrane_main:003",
-            "cochrane_label": "NIRS versus No NIRS or blinded NIRS",
-            "cochrane_label_clean": "NIRS versus No NIRS or blinded NIRS",
+            "comparison_id": "cochrane_main:001",
+            "cochrane_label": "NIRS vs no NIRS or blinded NIRS",
+            "cochrane_label_clean": "NIRS vs no NIRS or blinded NIRS",
             "cochrane_arm_1": "NIRS",
-            "cochrane_arm_2": "No NIRS or blinded NIRS",
+            "cochrane_arm_2": "no NIRS or blinded NIRS",
             "comparison_type": "analysis_comparison",
             "agent_label": "Clinician-visible cerebral NIRS-guided management versus usual/standard care or blinded NIRS",
             "agent_arm_1_label": "Visible cerebral NIRS-guided management",
             "agent_arm_1": "Target intervention: cerebral NIRS/cerebral oximetry monitoring available to clinical staff and used to guide respiratory, circulatory, oxygen, or other neonatal management.",
             "agent_arm_2_label": "Usual/standard care or blinded NIRS",
             "agent_arm_2": "Comparator: no active cerebral NIRS-guided management, including usual/standard care without NIRS use or masked/blinded NIRS recordings not available for clinical decisions.",
-            "relationship": "equivalent",
+            "relationship": "same_contrast_different_wording",
             "arm_orientation": "same_order"
           }
         ],
         "matches": [
           {
             "agent_comparison_id": "agent:analysis_comparison_01",
-            "comparison_id": "cochrane_main:003",
-            "cochrane_label": "NIRS versus No NIRS or blinded NIRS",
-            "cochrane_label_clean": "NIRS versus No NIRS or blinded NIRS",
+            "comparison_id": "cochrane_main:001",
+            "cochrane_label": "NIRS vs no NIRS or blinded NIRS",
+            "cochrane_label_clean": "NIRS vs no NIRS or blinded NIRS",
             "cochrane_arm_1": "NIRS",
-            "cochrane_arm_2": "No NIRS or blinded NIRS",
+            "cochrane_arm_2": "no NIRS or blinded NIRS",
             "comparison_type": "analysis_comparison",
             "agent_label": "Clinician-visible cerebral NIRS-guided management versus usual/standard care or blinded NIRS",
             "agent_arm_1_label": "Visible cerebral NIRS-guided management",
             "agent_arm_1": "Target intervention: cerebral NIRS/cerebral oximetry monitoring available to clinical staff and used to guide respiratory, circulatory, oxygen, or other neonatal management.",
             "agent_arm_2_label": "Usual/standard care or blinded NIRS",
             "agent_arm_2": "Comparator: no active cerebral NIRS-guided management, including usual/standard care without NIRS use or masked/blinded NIRS recordings not available for clinical decisions.",
-            "relationship": "equivalent",
+            "relationship": "same_contrast_different_wording",
             "arm_orientation": "same_order"
           }
         ],
         "best_match": {
           "agent_comparison_id": "agent:analysis_comparison_01",
-          "comparison_id": "cochrane_main:003",
-          "cochrane_label": "NIRS versus No NIRS or blinded NIRS",
-          "cochrane_label_clean": "NIRS versus No NIRS or blinded NIRS",
+          "comparison_id": "cochrane_main:001",
+          "cochrane_label": "NIRS vs no NIRS or blinded NIRS",
+          "cochrane_label_clean": "NIRS vs no NIRS or blinded NIRS",
           "cochrane_arm_1": "NIRS",
-          "cochrane_arm_2": "No NIRS or blinded NIRS",
+          "cochrane_arm_2": "no NIRS or blinded NIRS",
           "comparison_type": "analysis_comparison",
           "agent_label": "Clinician-visible cerebral NIRS-guided management versus usual/standard care or blinded NIRS",
           "agent_arm_1_label": "Visible cerebral NIRS-guided management",
           "agent_arm_1": "Target intervention: cerebral NIRS/cerebral oximetry monitoring available to clinical staff and used to guide respiratory, circulatory, oxygen, or other neonatal management.",
           "agent_arm_2_label": "Usual/standard care or blinded NIRS",
           "agent_arm_2": "Comparator: no active cerebral NIRS-guided management, including usual/standard care without NIRS use or masked/blinded NIRS recordings not available for clinical decisions.",
-          "relationship": "equivalent",
+          "relationship": "same_contrast_different_wording",
           "arm_orientation": "same_order"
         },
-        "unmatched_cochrane_comparisons": [
-          {
-            "comparison_id": "cochrane_main:001",
-            "label": "NIRS versus Control",
-            "label_clean": "NIRS versus Control",
-            "comparison_type": "analysis_comparison",
-            "comparison_role": "main_comparison",
-            "arm_1": "NIRS",
-            "arm_2": "Control",
-            "source": "benchmark.json:meta_analysis.analysis_study_rows",
-            "analysis_ids": [
-              "1.1",
-              "1.2",
-              "1.3",
-              "1.4",
-              "1.5",
-              "1.6",
-              "1.7",
-              "1.8",
-              "1.10",
-              "1.12"
-            ],
-            "analysis_headings": [
-              "NIRS vs no NIRS or blinded NIRS"
-            ],
-            "outcomes": [
-              "All-cause mortality prior to discharge",
-              "All-cause mortality at 2 years of life",
-              "All-cause mortality at longest follow-up",
-              "Major neurodevelopmental disability in children aged 18 to 24 months",
-              "Major brain injury diagnosed by brain ultrasound prior to discharge",
-              "Intraventricular haemorrhage grade III or IV prior to discharge",
-              "Cystic periventricular leukomalacia prior to discharge",
-              "Chronic lung disease at 36 weeks of gestational age",
-              "Retinopathy of prematurity (any stage) prior to discharge",
-              "Severe adverse reactions prior to discharge"
-            ],
-            "effect_measures": [
-              "Risk Ratio"
-            ],
-            "study_rows": 41
-          },
-          {
-            "comparison_id": "cochrane_main:002",
-            "label": "Experimental versus Control",
-            "label_clean": "Experimental versus Control",
-            "comparison_type": "analysis_comparison",
-            "comparison_role": "main_comparison",
-            "arm_1": "Experimental",
-            "arm_2": "Control",
-            "source": "benchmark.json:meta_analysis.analysis_study_rows",
-            "analysis_ids": [
-              "1.9"
-            ],
-            "analysis_headings": [
-              "NIRS vs no NIRS or blinded NIRS"
-            ],
-            "outcomes": [
-              "Proven necrotising enterocolitis prior to discharge"
-            ],
-            "effect_measures": [
-              "Risk Ratio"
-            ],
-            "study_rows": 5
-          }
-        ],
+        "unmatched_cochrane_comparisons": [],
         "unmatched_agent_comparisons": [
           {
             "agent_comparison_id": "agent:analysis_comparison_02",
@@ -132182,19 +131936,19 @@ window.DEMO_DATA = {
           }
         ],
         "counts": {
-          "cochrane_analysis_comparisons": 3,
+          "cochrane_analysis_comparisons": 1,
           "agent_comparisons": 6,
           "retained_matches": 1,
           "true_positive_comparison_matches": 1,
           "false_positive_agent_comparisons": 5,
-          "false_negative_cochrane_analysis_comparisons": 2,
-          "cochrane_analysis_comparison_coverage": 0.3333,
+          "false_negative_cochrane_analysis_comparisons": 0,
+          "cochrane_analysis_comparison_coverage": 1.0,
           "agent_comparison_precision": 0.1667,
-          "llm_pairwise_judgments": 18,
-          "llm_pairwise_eligible_matches": 3
+          "llm_pairwise_judgments": 6,
+          "llm_pairwise_eligible_matches": 1
         },
         "input_signature": {
-          "pairwise_judgment_version": "2026-07-05-comparison-pair-relationship-judge-v1",
+          "pairwise_judgment_version": "2026-07-08-comparison-pair-analysis-group-name-v1",
           "agent_comparisons": [
             {
               "agent_comparison_id": "agent:analysis_comparison_01",
@@ -132248,9 +132002,9 @@ window.DEMO_DATA = {
           "cochrane_main_comparisons": [
             {
               "comparison_id": "cochrane_main:001",
-              "label": "NIRS versus Control",
+              "label": "NIRS vs no NIRS or blinded NIRS",
               "arm_1": "NIRS",
-              "arm_2": "Control",
+              "arm_2": "no NIRS or blinded NIRS",
               "analysis_ids": [
                 "1.1",
                 "1.2",
@@ -132260,26 +132014,10 @@ window.DEMO_DATA = {
                 "1.6",
                 "1.7",
                 "1.8",
+                "1.9",
                 "1.10",
-                "1.12"
-              ]
-            },
-            {
-              "comparison_id": "cochrane_main:002",
-              "label": "Experimental versus Control",
-              "arm_1": "Experimental",
-              "arm_2": "Control",
-              "analysis_ids": [
-                "1.9"
-              ]
-            },
-            {
-              "comparison_id": "cochrane_main:003",
-              "label": "NIRS versus No NIRS or blinded NIRS",
-              "arm_1": "NIRS",
-              "arm_2": "No NIRS or blinded NIRS",
-              "analysis_ids": [
                 "1.11",
+                "1.12",
                 "1.13"
               ]
             }
@@ -132287,7 +132025,7 @@ window.DEMO_DATA = {
         }
       },
       "cochrane_synthesis_ci_overlap": {
-        "artifact_version": "2026-07-06-cochrane-synthesis-ci-overlap-reference-status-v1",
+        "artifact_version": "2026-07-09-cochrane-synthesis-ci-conclusion-v1",
         "status": "completed",
         "run_id": "20260620_120409_062492_q05_cd011506",
         "short_name": "q05_CD011506",
@@ -132311,18 +132049,20 @@ window.DEMO_DATA = {
           "ci_overlap_ratio": "overlap length of the arm-orientation-adjusted agent overall CI and the locally reproduced Cochrane all-estimable-study CI divided by their union length; ratio measures use log scale and non-ratio measures use the original linear scale",
           "pmcid_only_ci_overlap_ratio": "same interval-over-union calculation with the arm-orientation-adjusted agent CI, but using the locally reproduced Cochrane PMCID-only CI target when available; ratio measures use log scale",
           "cochrane_analysis_recall": "unique Cochrane all-studies main analyses matched by an evaluated agent forest plot through saved outcome alignment, saved comparison alignment, effect measure, and all-studies CI availability divided by all eligible Cochrane all-studies main analyses",
+          "cochrane_included_study_recall": "Cochrane included study rows with any matched PMID present in the union of all generated agent synthesis forest plots divided by all Cochrane included study rows",
           "included_agent_plots": "evaluated agent forest plots per outcome/effect-measure: all_eligible when available; otherwise comparison-specific plots when combined comparison synthesis was separated; otherwise the study_design_randomized_trial branch when available",
           "skipped_agent_plots": "non-randomized study-design branch plots, ordinary non-comparison subgroup plots, plots without overall CIs, plots without a matched Cochrane outcome/comparison/effect-measure target",
           "cochrane_ci_target": "locally reproduced Cochrane all-studies CI using all estimable extracted Cochrane forest-plot rows",
           "pmcid_only_cochrane_ci_target": "locally reproduced Cochrane PMCID-only CI using estimable extracted Cochrane rows that have PMC full text linkage",
           "single_study_ci_overlap_distribution": "for each matched analysis, each arm-orientation-adjusted agent single-study CI is compared with the reproduced Cochrane pooled CI target; the aggregate agent-vs-Cochrane CI IoU is saved as a marker against this contextual distribution",
-          "effect_direction_consistency": "for each matched analysis, the agent and Cochrane pooled effects are compared by direction relative to the null value after adjusting the agent direction when the saved comparison alignment indicates reversed arm order; ratio measures use null 1 and non-ratio measures use null 0",
+          "ci_conclusion_consistency": "for each matched analysis, agent and Cochrane confidence intervals are categorized as favoring Cochrane arm 1, favoring Cochrane arm 2, or not conclusive after mapping the agent CI into the saved Cochrane arm order and applying the outcome benefit direction; ratio measures use null 1 and non-ratio measures use null 0",
           "agent_study_reference_status": "per-agent forest-plot study classification against the reproduced matched Cochrane forest-plot PMIDs, secondary PMIDs grouped under those plotted study rows, non-plotted matched Cochrane analysis PMIDs, Cochrane included-reference PubMed IDs, and Cochrane excluded-reference PubMed IDs",
           "related_cochrane_analysis": "for unmatched agent forest plots, the best outcome-label/domain-level Cochrane analysis context is saved when available; this is explanatory context and is not counted as synthesis recall",
           "synthesis_tp_fp_fn": "TP means an evaluated agent forest plot matched a Cochrane main analysis through the current one-to-one outcome alignment gate, one-to-one comparison alignment gate, effect measure, and all-studies CI availability; FP means an evaluated agent forest plot had no matched Cochrane main analysis; FN means a Cochrane main analysis had no matched evaluated agent forest plot. No true-negative denominator is defined.",
           "synthesis_study_row_tp_fp_fn": "within each matched synthesis analysis, study-row TP/FP/FN is calculated by PMID set overlap between the agent forest plot rows and the reproduced matched Cochrane forest-plot rows; secondary PMIDs grouped under plotted Cochrane study rows and Cochrane analysis rows that are not estimable or not plotted are labeled separately and are not counted as true-positive plotted rows",
           "synthesis_f1": "harmonic mean of synthesis_precision and synthesis_recall at the evaluated forest-plot-analysis level",
-          "mean_study_row_overlap_f1": "mean of per-analysis study-row F1 values across non-FP confusion rows with estimable study-row overlap; missed Cochrane analyses without a matched agent plot are represented in synthesis recall rather than double-counted as study-row F1 zero"
+          "mean_ci_overlap_ratio": "mean all-studies CI IoU across eligible Cochrane main analyses; missed or non-computable Cochrane analyses contribute zero",
+          "mean_study_row_overlap_f1": "mean study-row overlap F1 across eligible Cochrane main analyses; missed or non-computable Cochrane analyses contribute zero"
         },
         "sources": {
           "agent_synthesis": "outputs/20260620_120409_062492_q05_cd011506/synthesis/synthesis_results.json",
@@ -132331,6 +132071,7 @@ window.DEMO_DATA = {
           "cochrane_comparison_alignment": "outputs/20260620_120409_062492_q05_cd011506/evaluation/cochrane_comparison_alignment.json",
           "cochrane_analysis_results": "Cochrane_reviews/benchmark_data/CD011506/benchmark.json",
           "cochrane_reproduced_forest_plots": "Cochrane_reviews/benchmark_data/CD011506/benchmark.json",
+          "cochrane_included_studies": "Cochrane_reviews/benchmark_data/CD011506/benchmark.json",
           "cochrane_included_pubmed_records": "Cochrane_reviews/benchmark_data/CD011506/benchmark.json",
           "cochrane_excluded_pubmed_records": "Cochrane_reviews/benchmark_data/CD011506/benchmark.json",
           "cochrane_benchmark": "Cochrane_reviews/benchmark_data/CD011506/benchmark.json",
@@ -132345,6 +132086,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_01",
             "outcome_name": "Death or moderate/severe neurodevelopmental impairment",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Visible cerebral NIRS-guided management",
+            "favours_right": "Favours Usual/standard care or blinded NIRS",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_01/risk_ratio/forest_plot_comparison_analysis_comparison_01.json",
             "agent_studies": [
               {
@@ -132451,6 +132195,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_01",
             "outcome_name": "Death or moderate/severe neurodevelopmental impairment",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Visible cerebral NIRS-guided management",
+            "favours_right": "Favours Blinded/masked NIRS monitoring",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_01/risk_ratio/forest_plot_comparison_analysis_comparison_02.json",
             "agent_studies": [
               {
@@ -132540,6 +132287,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_01",
             "outcome_name": "Death or moderate/severe neurodevelopmental impairment",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Visible cerebral NIRS-guided management",
+            "favours_right": "Favours Usual or standard care",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_01/risk_ratio/forest_plot_comparison_analysis_comparison_03.json",
             "agent_studies": [
               {
@@ -132623,6 +132373,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_01",
             "outcome_name": "Death or moderate/severe neurodevelopmental impairment",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Early continuous visible cerebral NIRS-guided care",
+            "favours_right": "Favours Usual/standard care or blinded early NIRS",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_01/risk_ratio/forest_plot_comparison_analysis_comparison_05.json",
             "agent_studies": [
               {
@@ -132729,6 +132482,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_02",
             "outcome_name": "Moderate/severe neurodevelopmental impairment",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Visible cerebral NIRS-guided management",
+            "favours_right": "Favours Usual/standard care or blinded NIRS",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_02/risk_ratio/forest_plot_comparison_analysis_comparison_01.json",
             "agent_studies": [
               {
@@ -132749,8 +132505,8 @@ window.DEMO_DATA = {
               "analysis_id": "1.4",
               "comparison": "NIRS vs no NIRS or blinded NIRS",
               "outcome": "Major neurodevelopmental disability in children aged 18 to 24 months",
-              "outcome_target_id": "",
-              "outcome_target_label": "",
+              "outcome_target_id": "analysis:major neurodevelopmental disability in children aged 18 to 24 months",
+              "outcome_target_label": "Major neurodevelopmental disability in children aged 18 to 24 months",
               "effect_measure": "risk_ratio",
               "cochrane_effect": 1.282,
               "cochrane_ci_lower": 0.4995,
@@ -133002,10 +132758,10 @@ window.DEMO_DATA = {
                 "agent_arm_2": "Comparator: no active cerebral NIRS-guided management, including usual/standard care without NIRS use or masked/blinded NIRS recordings not available for clinical decisions.",
                 "comparison_id": "cochrane_main:001",
                 "cochrane_index": 0,
-                "cochrane_label": "NIRS versus Control",
-                "cochrane_label_clean": "NIRS versus Control",
+                "cochrane_label": "NIRS vs no NIRS or blinded NIRS",
+                "cochrane_label_clean": "NIRS vs no NIRS or blinded NIRS",
                 "cochrane_arm_1": "NIRS",
-                "cochrane_arm_2": "Control",
+                "cochrane_arm_2": "no NIRS or blinded NIRS",
                 "comparison_type": "analysis_comparison",
                 "relationship": "same_contrast_different_wording",
                 "arm_orientation": "same_order",
@@ -133015,19 +132771,28 @@ window.DEMO_DATA = {
               "comparison_match_relationship": "same_contrast_different_wording",
               "comparison_arm_orientation": "same_order",
               "agent_matched_comparison_label": "Clinician-visible cerebral NIRS-guided management versus usual/standard care or blinded NIRS",
-              "cochrane_matched_comparison_label": "NIRS versus Control",
-              "effect_direction_consistency": {
+              "cochrane_matched_comparison_label": "NIRS vs no NIRS or blinded NIRS",
+              "ci_conclusion_consistency": {
                 "status": "consistent",
                 "consistent": true,
+                "metric_mode": "ci_based_clinical_benefit",
                 "effect_measure": "risk_ratio",
                 "null_value": 1.0,
+                "benefit_direction": "lower_is_better",
                 "arm_orientation": "same_order",
                 "agent_effect": 1.2820512820512822,
+                "agent_ci_lower": 0.499504947958749,
+                "agent_ci_upper": 3.290568985404876,
+                "agent_ci_lower_orientation_adjusted": 0.499504947958749,
+                "agent_ci_upper_orientation_adjusted": 3.290568985404876,
                 "cochrane_effect": 1.282,
-                "agent_direction": "above_null",
-                "cochrane_direction": "above_null",
-                "orientation_adjusted_agent_direction": "above_null",
-                "reason": "same direction after arm-orientation adjustment"
+                "cochrane_ci_lower": 0.4995,
+                "cochrane_ci_upper": 3.291,
+                "agent_interval_relation_to_null": "not_conclusive",
+                "cochrane_interval_relation_to_null": "not_conclusive",
+                "agent_ci_conclusion": "not_conclusive",
+                "cochrane_ci_conclusion": "not_conclusive",
+                "reason": "same CI-based clinical conclusion"
               },
               "ci_overlap_by_subset": {
                 "all_studies": {
@@ -133362,6 +133127,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_02",
             "outcome_name": "Moderate/severe neurodevelopmental impairment",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Visible cerebral NIRS-guided management",
+            "favours_right": "Favours Blinded/masked NIRS monitoring",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_02/risk_ratio/forest_plot_comparison_analysis_comparison_02.json",
             "agent_studies": [
               {
@@ -133419,6 +133187,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_02",
             "outcome_name": "Moderate/severe neurodevelopmental impairment",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Early continuous visible cerebral NIRS-guided care",
+            "favours_right": "Favours Usual/standard care or blinded early NIRS",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_02/risk_ratio/forest_plot_comparison_analysis_comparison_05.json",
             "agent_studies": [
               {
@@ -133476,6 +133247,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_03",
             "outcome_name": "Neurodevelopmental test scores",
             "effect_measure": "mean_difference",
+            "benefit_direction": "higher_is_better",
+            "favours_left": "Favours Usual/standard care or blinded NIRS",
+            "favours_right": "Favours Visible cerebral NIRS-guided management",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_03/mean_difference/forest_plot_comparison_analysis_comparison_01.json",
             "agent_studies": [
               {
@@ -133550,6 +133324,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_03",
             "outcome_name": "Neurodevelopmental test scores",
             "effect_measure": "mean_difference",
+            "benefit_direction": "higher_is_better",
+            "favours_left": "Favours Blinded/masked NIRS monitoring",
+            "favours_right": "Favours Visible cerebral NIRS-guided management",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_03/mean_difference/forest_plot_comparison_analysis_comparison_02.json",
             "agent_studies": [
               {
@@ -133607,6 +133384,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_03",
             "outcome_name": "Neurodevelopmental test scores",
             "effect_measure": "mean_difference",
+            "benefit_direction": "higher_is_better",
+            "favours_left": "Favours Usual or standard care",
+            "favours_right": "Favours Visible cerebral NIRS-guided management",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_03/mean_difference/forest_plot_comparison_analysis_comparison_03.json",
             "agent_studies": [
               {
@@ -133658,6 +133438,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_03",
             "outcome_name": "Neurodevelopmental test scores",
             "effect_measure": "mean_difference",
+            "benefit_direction": "higher_is_better",
+            "favours_left": "Favours Usual/standard care or blinded early NIRS",
+            "favours_right": "Favours Early continuous visible cerebral NIRS-guided care",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_03/mean_difference/forest_plot_comparison_analysis_comparison_05.json",
             "agent_studies": [
               {
@@ -133732,6 +133515,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_04",
             "outcome_name": "Mortality",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Visible cerebral NIRS-guided management",
+            "favours_right": "Favours Usual/standard care or blinded NIRS",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_04/risk_ratio/forest_plot_comparison_analysis_comparison_01.json",
             "agent_studies": [
               {
@@ -133780,8 +133566,8 @@ window.DEMO_DATA = {
               "analysis_id": "1.1",
               "comparison": "NIRS vs no NIRS or blinded NIRS",
               "outcome": "All-cause mortality prior to discharge",
-              "outcome_target_id": "",
-              "outcome_target_label": "",
+              "outcome_target_id": "analysis:all cause mortality prior to discharge",
+              "outcome_target_label": "All-cause mortality prior to discharge",
               "effect_measure": "risk_ratio",
               "cochrane_effect": 0.9915,
               "cochrane_ci_lower": 0.8283,
@@ -134257,10 +134043,10 @@ window.DEMO_DATA = {
                 "agent_arm_2": "Comparator: no active cerebral NIRS-guided management, including usual/standard care without NIRS use or masked/blinded NIRS recordings not available for clinical decisions.",
                 "comparison_id": "cochrane_main:001",
                 "cochrane_index": 0,
-                "cochrane_label": "NIRS versus Control",
-                "cochrane_label_clean": "NIRS versus Control",
+                "cochrane_label": "NIRS vs no NIRS or blinded NIRS",
+                "cochrane_label_clean": "NIRS vs no NIRS or blinded NIRS",
                 "cochrane_arm_1": "NIRS",
-                "cochrane_arm_2": "Control",
+                "cochrane_arm_2": "no NIRS or blinded NIRS",
                 "comparison_type": "analysis_comparison",
                 "relationship": "same_contrast_different_wording",
                 "arm_orientation": "same_order",
@@ -134270,19 +134056,28 @@ window.DEMO_DATA = {
               "comparison_match_relationship": "same_contrast_different_wording",
               "comparison_arm_orientation": "same_order",
               "agent_matched_comparison_label": "Clinician-visible cerebral NIRS-guided management versus usual/standard care or blinded NIRS",
-              "cochrane_matched_comparison_label": "NIRS versus Control",
-              "effect_direction_consistency": {
+              "cochrane_matched_comparison_label": "NIRS vs no NIRS or blinded NIRS",
+              "ci_conclusion_consistency": {
                 "status": "consistent",
                 "consistent": true,
+                "metric_mode": "ci_based_clinical_benefit",
                 "effect_measure": "risk_ratio",
                 "null_value": 1.0,
+                "benefit_direction": "lower_is_better",
                 "arm_orientation": "same_order",
                 "agent_effect": 0.7479424984657149,
+                "agent_ci_lower": 0.5150657216104828,
+                "agent_ci_upper": 1.0861099031439612,
+                "agent_ci_lower_orientation_adjusted": 0.5150657216104828,
+                "agent_ci_upper_orientation_adjusted": 1.0861099031439612,
                 "cochrane_effect": 0.9915,
-                "agent_direction": "below_null",
-                "cochrane_direction": "below_null",
-                "orientation_adjusted_agent_direction": "below_null",
-                "reason": "same direction after arm-orientation adjustment"
+                "cochrane_ci_lower": 0.8283,
+                "cochrane_ci_upper": 1.187,
+                "agent_interval_relation_to_null": "not_conclusive",
+                "cochrane_interval_relation_to_null": "not_conclusive",
+                "agent_ci_conclusion": "not_conclusive",
+                "cochrane_ci_conclusion": "not_conclusive",
+                "reason": "same CI-based clinical conclusion"
               },
               "ci_overlap_by_subset": {
                 "all_studies": {
@@ -135085,6 +134880,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_04",
             "outcome_name": "Mortality",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Visible cerebral NIRS-guided management",
+            "favours_right": "Favours Blinded/masked NIRS monitoring",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_04/risk_ratio/forest_plot_comparison_analysis_comparison_02.json",
             "agent_studies": [
               {
@@ -135237,6 +135035,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_04",
             "outcome_name": "Mortality",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Visible cerebral NIRS-guided management",
+            "favours_right": "Favours Usual or standard care",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_04/risk_ratio/forest_plot_comparison_analysis_comparison_03.json",
             "agent_studies": [
               {
@@ -135320,6 +135121,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_04",
             "outcome_name": "Mortality",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Immediate-transition visible NIRS-guided resuscitation",
+            "favours_right": "Favours Standard or masked-NIRS resuscitation",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_04/risk_ratio/forest_plot_comparison_analysis_comparison_04.json",
             "agent_studies": [
               {
@@ -135409,6 +135213,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_04",
             "outcome_name": "Mortality",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Early continuous visible cerebral NIRS-guided care",
+            "favours_right": "Favours Usual/standard care or blinded early NIRS",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_04/risk_ratio/forest_plot_comparison_analysis_comparison_05.json",
             "agent_studies": [
               {
@@ -135555,6 +135362,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_04",
             "outcome_name": "Mortality",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Integrated hemodynamic assessment including NIRS",
+            "favours_right": "Favours Standard care or no integrated hemodynamic evaluation",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_04/risk_ratio/forest_plot_comparison_analysis_comparison_06.json",
             "agent_studies": [
               {
@@ -135638,6 +135448,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_05",
             "outcome_name": "Death or severe brain injury",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Visible cerebral NIRS-guided management",
+            "favours_right": "Favours Usual/standard care or blinded NIRS",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_05/risk_ratio/forest_plot_comparison_analysis_comparison_01.json",
             "agent_studies": [
               {
@@ -135744,6 +135557,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_05",
             "outcome_name": "Death or severe brain injury",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Visible cerebral NIRS-guided management",
+            "favours_right": "Favours Usual or standard care",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_05/risk_ratio/forest_plot_comparison_analysis_comparison_03.json",
             "agent_studies": [
               {
@@ -135850,6 +135666,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_05",
             "outcome_name": "Death or severe brain injury",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Early continuous visible cerebral NIRS-guided care",
+            "favours_right": "Favours Usual/standard care or blinded early NIRS",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_05/risk_ratio/forest_plot_comparison_analysis_comparison_05.json",
             "agent_studies": [
               {
@@ -135956,6 +135775,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_05",
             "outcome_name": "Death or severe brain injury",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Integrated hemodynamic assessment including NIRS",
+            "favours_right": "Favours Standard care or no integrated hemodynamic evaluation",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_05/risk_ratio/forest_plot_comparison_analysis_comparison_06.json",
             "agent_studies": [
               {
@@ -136039,6 +135861,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_05",
             "outcome_name": "Death or severe brain injury",
             "effect_measure": "odds_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Visible cerebral NIRS-guided management",
+            "favours_right": "Favours Usual/standard care or blinded NIRS",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_05/odds_ratio/forest_plot_comparison_analysis_comparison_01.json",
             "agent_studies": [
               {
@@ -136128,6 +135953,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_05",
             "outcome_name": "Death or severe brain injury",
             "effect_measure": "odds_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Visible cerebral NIRS-guided management",
+            "favours_right": "Favours Blinded/masked NIRS monitoring",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_05/odds_ratio/forest_plot_comparison_analysis_comparison_02.json",
             "agent_studies": [
               {
@@ -136217,6 +136045,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_05",
             "outcome_name": "Death or severe brain injury",
             "effect_measure": "odds_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Early continuous visible cerebral NIRS-guided care",
+            "favours_right": "Favours Usual/standard care or blinded early NIRS",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_05/odds_ratio/forest_plot_comparison_analysis_comparison_05.json",
             "agent_studies": [
               {
@@ -136306,6 +136137,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_06",
             "outcome_name": "Survival without cerebral injury",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "unclear",
+            "favours_left": "",
+            "favours_right": "",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_06/risk_ratio/forest_plot_comparison_analysis_comparison_01.json",
             "agent_studies": [
               {
@@ -136395,6 +136229,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_06",
             "outcome_name": "Survival without cerebral injury",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "unclear",
+            "favours_left": "",
+            "favours_right": "",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_06/risk_ratio/forest_plot_comparison_analysis_comparison_02.json",
             "agent_studies": [
               {
@@ -136484,6 +136321,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_06",
             "outcome_name": "Survival without cerebral injury",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "unclear",
+            "favours_left": "",
+            "favours_right": "",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_06/risk_ratio/forest_plot_comparison_analysis_comparison_04.json",
             "agent_studies": [
               {
@@ -136573,6 +136413,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_07",
             "outcome_name": "Severe brain injury",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Visible cerebral NIRS-guided management",
+            "favours_right": "Favours Usual/standard care or blinded NIRS",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_07/risk_ratio/forest_plot_comparison_analysis_comparison_01.json",
             "agent_studies": [
               {
@@ -136600,8 +136443,8 @@ window.DEMO_DATA = {
               "analysis_id": "1.5",
               "comparison": "NIRS vs no NIRS or blinded NIRS",
               "outcome": "Major brain injury diagnosed by brain ultrasound prior to discharge",
-              "outcome_target_id": "",
-              "outcome_target_label": "",
+              "outcome_target_id": "analysis:major brain injury diagnosed by brain ultrasound prior to discharge",
+              "outcome_target_label": "Major brain injury diagnosed by brain ultrasound prior to discharge",
               "effect_measure": "risk_ratio",
               "cochrane_effect": 0.9931,
               "cochrane_ci_lower": 0.8419,
@@ -137077,10 +136920,10 @@ window.DEMO_DATA = {
                 "agent_arm_2": "Comparator: no active cerebral NIRS-guided management, including usual/standard care without NIRS use or masked/blinded NIRS recordings not available for clinical decisions.",
                 "comparison_id": "cochrane_main:001",
                 "cochrane_index": 0,
-                "cochrane_label": "NIRS versus Control",
-                "cochrane_label_clean": "NIRS versus Control",
+                "cochrane_label": "NIRS vs no NIRS or blinded NIRS",
+                "cochrane_label_clean": "NIRS vs no NIRS or blinded NIRS",
                 "cochrane_arm_1": "NIRS",
-                "cochrane_arm_2": "Control",
+                "cochrane_arm_2": "no NIRS or blinded NIRS",
                 "comparison_type": "analysis_comparison",
                 "relationship": "same_contrast_different_wording",
                 "arm_orientation": "same_order",
@@ -137090,19 +136933,28 @@ window.DEMO_DATA = {
               "comparison_match_relationship": "same_contrast_different_wording",
               "comparison_arm_orientation": "same_order",
               "agent_matched_comparison_label": "Clinician-visible cerebral NIRS-guided management versus usual/standard care or blinded NIRS",
-              "cochrane_matched_comparison_label": "NIRS versus Control",
-              "effect_direction_consistency": {
+              "cochrane_matched_comparison_label": "NIRS vs no NIRS or blinded NIRS",
+              "ci_conclusion_consistency": {
                 "status": "consistent",
                 "consistent": true,
+                "metric_mode": "ci_based_clinical_benefit",
                 "effect_measure": "risk_ratio",
                 "null_value": 1.0,
+                "benefit_direction": "lower_is_better",
                 "arm_orientation": "same_order",
                 "agent_effect": 0.8254975338744047,
+                "agent_ci_lower": 0.42746933640600826,
+                "agent_ci_upper": 1.5941404924199982,
+                "agent_ci_lower_orientation_adjusted": 0.42746933640600826,
+                "agent_ci_upper_orientation_adjusted": 1.5941404924199982,
                 "cochrane_effect": 0.9931,
-                "agent_direction": "below_null",
-                "cochrane_direction": "below_null",
-                "orientation_adjusted_agent_direction": "below_null",
-                "reason": "same direction after arm-orientation adjustment"
+                "cochrane_ci_lower": 0.8419,
+                "cochrane_ci_upper": 1.172,
+                "agent_interval_relation_to_null": "not_conclusive",
+                "cochrane_interval_relation_to_null": "not_conclusive",
+                "agent_ci_conclusion": "not_conclusive",
+                "cochrane_ci_conclusion": "not_conclusive",
+                "reason": "same CI-based clinical conclusion"
               },
               "ci_overlap_by_subset": {
                 "all_studies": {
@@ -137741,6 +137593,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_07",
             "outcome_name": "Severe brain injury",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Visible cerebral NIRS-guided management",
+            "favours_right": "Favours Blinded/masked NIRS monitoring",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_07/risk_ratio/forest_plot_comparison_analysis_comparison_02.json",
             "agent_studies": [
               {
@@ -137798,6 +137653,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_07",
             "outcome_name": "Severe brain injury",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Visible cerebral NIRS-guided management",
+            "favours_right": "Favours Usual or standard care",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_07/risk_ratio/forest_plot_comparison_analysis_comparison_03.json",
             "agent_studies": [
               {
@@ -137849,6 +137707,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_07",
             "outcome_name": "Severe brain injury",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Early continuous visible cerebral NIRS-guided care",
+            "favours_right": "Favours Usual/standard care or blinded early NIRS",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_07/risk_ratio/forest_plot_comparison_analysis_comparison_05.json",
             "agent_studies": [
               {
@@ -137923,6 +137784,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_08",
             "outcome_name": "Any brain injury",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Visible cerebral NIRS-guided management",
+            "favours_right": "Favours Usual/standard care or blinded NIRS",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_08/risk_ratio/forest_plot_comparison_analysis_comparison_01.json",
             "agent_studies": [
               {
@@ -138037,6 +137901,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_08",
             "outcome_name": "Any brain injury",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Visible cerebral NIRS-guided management",
+            "favours_right": "Favours Blinded/masked NIRS monitoring",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_08/risk_ratio/forest_plot_comparison_analysis_comparison_02.json",
             "agent_studies": [
               {
@@ -138134,6 +138001,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_08",
             "outcome_name": "Any brain injury",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Visible cerebral NIRS-guided management",
+            "favours_right": "Favours Usual or standard care",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_08/risk_ratio/forest_plot_comparison_analysis_comparison_03.json",
             "agent_studies": [
               {
@@ -138185,6 +138055,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_08",
             "outcome_name": "Any brain injury",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Immediate-transition visible NIRS-guided resuscitation",
+            "favours_right": "Favours Standard or masked-NIRS resuscitation",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_08/risk_ratio/forest_plot_comparison_analysis_comparison_04.json",
             "agent_studies": [
               {
@@ -138236,6 +138109,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_08",
             "outcome_name": "Any brain injury",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Early continuous visible cerebral NIRS-guided care",
+            "favours_right": "Favours Usual/standard care or blinded early NIRS",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_08/risk_ratio/forest_plot_comparison_analysis_comparison_05.json",
             "agent_studies": [
               {
@@ -138333,6 +138209,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_09",
             "outcome_name": "Severe intraventricular hemorrhage",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Visible cerebral NIRS-guided management",
+            "favours_right": "Favours Usual/standard care or blinded NIRS",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_09/risk_ratio/forest_plot_comparison_analysis_comparison_01.json",
             "agent_studies": [
               {
@@ -138360,8 +138239,8 @@ window.DEMO_DATA = {
               "analysis_id": "1.6",
               "comparison": "NIRS vs no NIRS or blinded NIRS",
               "outcome": "Intraventricular haemorrhage grade III or IV prior to discharge",
-              "outcome_target_id": "",
-              "outcome_target_label": "",
+              "outcome_target_id": "analysis:intraventricular haemorrhage grade iii or iv prior to discharge",
+              "outcome_target_label": "Intraventricular haemorrhage grade III or IV prior to discharge",
               "effect_measure": "risk_ratio",
               "cochrane_effect": 0.9262,
               "cochrane_ci_lower": 0.7588,
@@ -138837,10 +138716,10 @@ window.DEMO_DATA = {
                 "agent_arm_2": "Comparator: no active cerebral NIRS-guided management, including usual/standard care without NIRS use or masked/blinded NIRS recordings not available for clinical decisions.",
                 "comparison_id": "cochrane_main:001",
                 "cochrane_index": 0,
-                "cochrane_label": "NIRS versus Control",
-                "cochrane_label_clean": "NIRS versus Control",
+                "cochrane_label": "NIRS vs no NIRS or blinded NIRS",
+                "cochrane_label_clean": "NIRS vs no NIRS or blinded NIRS",
                 "cochrane_arm_1": "NIRS",
-                "cochrane_arm_2": "Control",
+                "cochrane_arm_2": "no NIRS or blinded NIRS",
                 "comparison_type": "analysis_comparison",
                 "relationship": "same_contrast_different_wording",
                 "arm_orientation": "same_order",
@@ -138850,19 +138729,28 @@ window.DEMO_DATA = {
               "comparison_match_relationship": "same_contrast_different_wording",
               "comparison_arm_orientation": "same_order",
               "agent_matched_comparison_label": "Clinician-visible cerebral NIRS-guided management versus usual/standard care or blinded NIRS",
-              "cochrane_matched_comparison_label": "NIRS versus Control",
-              "effect_direction_consistency": {
+              "cochrane_matched_comparison_label": "NIRS vs no NIRS or blinded NIRS",
+              "ci_conclusion_consistency": {
                 "status": "consistent",
                 "consistent": true,
+                "metric_mode": "ci_based_clinical_benefit",
                 "effect_measure": "risk_ratio",
                 "null_value": 1.0,
+                "benefit_direction": "lower_is_better",
                 "arm_orientation": "same_order",
                 "agent_effect": 0.7971383378456418,
+                "agent_ci_lower": 0.3990285346430638,
+                "agent_ci_upper": 1.5924413281163274,
+                "agent_ci_lower_orientation_adjusted": 0.3990285346430638,
+                "agent_ci_upper_orientation_adjusted": 1.5924413281163274,
                 "cochrane_effect": 0.9262,
-                "agent_direction": "below_null",
-                "cochrane_direction": "below_null",
-                "orientation_adjusted_agent_direction": "below_null",
-                "reason": "same direction after arm-orientation adjustment"
+                "cochrane_ci_lower": 0.7588,
+                "cochrane_ci_upper": 1.131,
+                "agent_interval_relation_to_null": "not_conclusive",
+                "cochrane_interval_relation_to_null": "not_conclusive",
+                "agent_ci_conclusion": "not_conclusive",
+                "cochrane_ci_conclusion": "not_conclusive",
+                "reason": "same CI-based clinical conclusion"
               },
               "ci_overlap_by_subset": {
                 "all_studies": {
@@ -139477,6 +139365,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_09",
             "outcome_name": "Severe intraventricular hemorrhage",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Visible cerebral NIRS-guided management",
+            "favours_right": "Favours Blinded/masked NIRS monitoring",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_09/risk_ratio/forest_plot_comparison_analysis_comparison_02.json",
             "agent_studies": [
               {
@@ -139562,6 +139453,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_09",
             "outcome_name": "Severe intraventricular hemorrhage",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Immediate-transition visible NIRS-guided resuscitation",
+            "favours_right": "Favours Standard or masked-NIRS resuscitation",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_09/risk_ratio/forest_plot_comparison_analysis_comparison_04.json",
             "agent_studies": [
               {
@@ -139630,6 +139524,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_09",
             "outcome_name": "Severe intraventricular hemorrhage",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Early continuous visible cerebral NIRS-guided care",
+            "favours_right": "Favours Usual/standard care or blinded early NIRS",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_09/risk_ratio/forest_plot_comparison_analysis_comparison_05.json",
             "agent_studies": [
               {
@@ -139692,6 +139589,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_09",
             "outcome_name": "Severe intraventricular hemorrhage",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Integrated hemodynamic assessment including NIRS",
+            "favours_right": "Favours Standard care or no integrated hemodynamic evaluation",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_09/risk_ratio/forest_plot_comparison_analysis_comparison_06.json",
             "agent_studies": [
               {
@@ -139754,6 +139654,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_10",
             "outcome_name": "Any intraventricular hemorrhage",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Visible cerebral NIRS-guided management",
+            "favours_right": "Favours Usual/standard care or blinded NIRS",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_10/risk_ratio/forest_plot_comparison_analysis_comparison_01.json",
             "agent_studies": [
               {
@@ -139828,6 +139731,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_10",
             "outcome_name": "Any intraventricular hemorrhage",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Visible cerebral NIRS-guided management",
+            "favours_right": "Favours Blinded/masked NIRS monitoring",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_10/risk_ratio/forest_plot_comparison_analysis_comparison_02.json",
             "agent_studies": [
               {
@@ -139902,6 +139808,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_10",
             "outcome_name": "Any intraventricular hemorrhage",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Visible cerebral NIRS-guided management",
+            "favours_right": "Favours Usual or standard care",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_10/risk_ratio/forest_plot_comparison_analysis_comparison_03.json",
             "agent_studies": [
               {
@@ -139953,6 +139862,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_10",
             "outcome_name": "Any intraventricular hemorrhage",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Immediate-transition visible NIRS-guided resuscitation",
+            "favours_right": "Favours Standard or masked-NIRS resuscitation",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_10/risk_ratio/forest_plot_comparison_analysis_comparison_04.json",
             "agent_studies": [
               {
@@ -140010,6 +139922,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_10",
             "outcome_name": "Any intraventricular hemorrhage",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Early continuous visible cerebral NIRS-guided care",
+            "favours_right": "Favours Usual/standard care or blinded early NIRS",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_10/risk_ratio/forest_plot_comparison_analysis_comparison_05.json",
             "agent_studies": [
               {
@@ -140061,6 +139976,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_10",
             "outcome_name": "Any intraventricular hemorrhage",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Integrated hemodynamic assessment including NIRS",
+            "favours_right": "Favours Standard care or no integrated hemodynamic evaluation",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_10/risk_ratio/forest_plot_comparison_analysis_comparison_06.json",
             "agent_studies": [
               {
@@ -140112,6 +140030,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_11",
             "outcome_name": "Combined cerebral hypoxia/hyperoxia burden",
             "effect_measure": "mean_difference",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Visible cerebral NIRS-guided management",
+            "favours_right": "Favours Usual/standard care or blinded NIRS",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_11/mean_difference/forest_plot_comparison_analysis_comparison_01.json",
             "agent_studies": [
               {
@@ -140169,6 +140090,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_11",
             "outcome_name": "Combined cerebral hypoxia/hyperoxia burden",
             "effect_measure": "mean_difference",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Visible cerebral NIRS-guided management",
+            "favours_right": "Favours Blinded/masked NIRS monitoring",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_11/mean_difference/forest_plot_comparison_analysis_comparison_02.json",
             "agent_studies": [
               {
@@ -140226,6 +140150,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_11",
             "outcome_name": "Combined cerebral hypoxia/hyperoxia burden",
             "effect_measure": "mean_difference",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Early continuous visible cerebral NIRS-guided care",
+            "favours_right": "Favours Usual/standard care or blinded early NIRS",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_11/mean_difference/forest_plot_comparison_analysis_comparison_05.json",
             "agent_studies": [
               {
@@ -140283,6 +140210,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_12",
             "outcome_name": "Cerebral hypoxia burden",
             "effect_measure": "mean_difference",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Visible cerebral NIRS-guided management",
+            "favours_right": "Favours Usual/standard care or blinded NIRS",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_12/mean_difference/forest_plot_comparison_analysis_comparison_01.json",
             "agent_studies": [
               {
@@ -140340,6 +140270,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_12",
             "outcome_name": "Cerebral hypoxia burden",
             "effect_measure": "mean_difference",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Visible cerebral NIRS-guided management",
+            "favours_right": "Favours Blinded/masked NIRS monitoring",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_12/mean_difference/forest_plot_comparison_analysis_comparison_02.json",
             "agent_studies": [
               {
@@ -140397,6 +140330,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_12",
             "outcome_name": "Cerebral hypoxia burden",
             "effect_measure": "mean_difference",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Early continuous visible cerebral NIRS-guided care",
+            "favours_right": "Favours Usual/standard care or blinded early NIRS",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_12/mean_difference/forest_plot_comparison_analysis_comparison_05.json",
             "agent_studies": [
               {
@@ -140454,6 +140390,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_13",
             "outcome_name": "Cerebral hyperoxia burden",
             "effect_measure": "mean_difference",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Visible cerebral NIRS-guided management",
+            "favours_right": "Favours Usual/standard care or blinded NIRS",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_13/mean_difference/forest_plot_comparison_analysis_comparison_01.json",
             "agent_studies": [
               {
@@ -140511,6 +140450,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_13",
             "outcome_name": "Cerebral hyperoxia burden",
             "effect_measure": "mean_difference",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Visible cerebral NIRS-guided management",
+            "favours_right": "Favours Blinded/masked NIRS monitoring",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_13/mean_difference/forest_plot_comparison_analysis_comparison_02.json",
             "agent_studies": [
               {
@@ -140568,6 +140510,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_13",
             "outcome_name": "Cerebral hyperoxia burden",
             "effect_measure": "mean_difference",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Early continuous visible cerebral NIRS-guided care",
+            "favours_right": "Favours Usual/standard care or blinded early NIRS",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_13/mean_difference/forest_plot_comparison_analysis_comparison_05.json",
             "agent_studies": [
               {
@@ -140625,6 +140570,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_14",
             "outcome_name": "Early motor or neurophysiological development",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "unclear",
+            "favours_left": "",
+            "favours_right": "",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_14/risk_ratio/forest_plot_comparison_analysis_comparison_01.json",
             "agent_studies": [
               {
@@ -140693,6 +140641,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_14",
             "outcome_name": "Early motor or neurophysiological development",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "unclear",
+            "favours_left": "",
+            "favours_right": "",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_14/risk_ratio/forest_plot_comparison_analysis_comparison_02.json",
             "agent_studies": [
               {
@@ -140761,6 +140712,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_14",
             "outcome_name": "Early motor or neurophysiological development",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "unclear",
+            "favours_left": "",
+            "favours_right": "",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_14/risk_ratio/forest_plot_comparison_analysis_comparison_04.json",
             "agent_studies": [
               {
@@ -140829,6 +140783,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_14",
             "outcome_name": "Early motor or neurophysiological development",
             "effect_measure": "mean_difference",
+            "benefit_direction": "unclear",
+            "favours_left": "",
+            "favours_right": "",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_14/mean_difference/forest_plot_comparison_analysis_comparison_01.json",
             "agent_studies": [
               {
@@ -140891,6 +140848,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_14",
             "outcome_name": "Early motor or neurophysiological development",
             "effect_measure": "mean_difference",
+            "benefit_direction": "unclear",
+            "favours_left": "",
+            "favours_right": "",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_14/mean_difference/forest_plot_comparison_analysis_comparison_02.json",
             "agent_studies": [
               {
@@ -140953,6 +140913,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_14",
             "outcome_name": "Early motor or neurophysiological development",
             "effect_measure": "mean_difference",
+            "benefit_direction": "unclear",
+            "favours_left": "",
+            "favours_right": "",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_14/mean_difference/forest_plot_comparison_analysis_comparison_04.json",
             "agent_studies": [
               {
@@ -141015,6 +140978,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_15",
             "outcome_name": "Bronchopulmonary dysplasia or chronic lung disease",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Visible cerebral NIRS-guided management",
+            "favours_right": "Favours Usual/standard care or blinded NIRS",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_15/risk_ratio/forest_plot_comparison_analysis_comparison_01.json",
             "agent_studies": [
               {
@@ -141056,8 +141022,8 @@ window.DEMO_DATA = {
               "analysis_id": "1.8",
               "comparison": "NIRS vs no NIRS or blinded NIRS",
               "outcome": "Chronic lung disease at 36 weeks of gestational age",
-              "outcome_target_id": "",
-              "outcome_target_label": "",
+              "outcome_target_id": "analysis:chronic lung disease at 36 weeks of gestational age",
+              "outcome_target_label": "Chronic lung disease at 36 weeks of gestational age",
               "effect_measure": "risk_ratio",
               "cochrane_effect": 0.9547,
               "cochrane_ci_lower": 0.862,
@@ -141533,10 +141499,10 @@ window.DEMO_DATA = {
                 "agent_arm_2": "Comparator: no active cerebral NIRS-guided management, including usual/standard care without NIRS use or masked/blinded NIRS recordings not available for clinical decisions.",
                 "comparison_id": "cochrane_main:001",
                 "cochrane_index": 0,
-                "cochrane_label": "NIRS versus Control",
-                "cochrane_label_clean": "NIRS versus Control",
+                "cochrane_label": "NIRS vs no NIRS or blinded NIRS",
+                "cochrane_label_clean": "NIRS vs no NIRS or blinded NIRS",
                 "cochrane_arm_1": "NIRS",
-                "cochrane_arm_2": "Control",
+                "cochrane_arm_2": "no NIRS or blinded NIRS",
                 "comparison_type": "analysis_comparison",
                 "relationship": "same_contrast_different_wording",
                 "arm_orientation": "same_order",
@@ -141546,19 +141512,28 @@ window.DEMO_DATA = {
               "comparison_match_relationship": "same_contrast_different_wording",
               "comparison_arm_orientation": "same_order",
               "agent_matched_comparison_label": "Clinician-visible cerebral NIRS-guided management versus usual/standard care or blinded NIRS",
-              "cochrane_matched_comparison_label": "NIRS versus Control",
-              "effect_direction_consistency": {
-                "status": "inconsistent",
-                "consistent": false,
+              "cochrane_matched_comparison_label": "NIRS vs no NIRS or blinded NIRS",
+              "ci_conclusion_consistency": {
+                "status": "consistent",
+                "consistent": true,
+                "metric_mode": "ci_based_clinical_benefit",
                 "effect_measure": "risk_ratio",
                 "null_value": 1.0,
+                "benefit_direction": "lower_is_better",
                 "arm_orientation": "same_order",
                 "agent_effect": 1.02453612563695,
+                "agent_ci_lower": 0.8588591378343948,
+                "agent_ci_upper": 1.2221727946935703,
+                "agent_ci_lower_orientation_adjusted": 0.8588591378343948,
+                "agent_ci_upper_orientation_adjusted": 1.2221727946935703,
                 "cochrane_effect": 0.9547,
-                "agent_direction": "above_null",
-                "cochrane_direction": "below_null",
-                "orientation_adjusted_agent_direction": "above_null",
-                "reason": "opposite direction after arm-orientation adjustment"
+                "cochrane_ci_lower": 0.862,
+                "cochrane_ci_upper": 1.057,
+                "agent_interval_relation_to_null": "not_conclusive",
+                "cochrane_interval_relation_to_null": "not_conclusive",
+                "agent_ci_conclusion": "not_conclusive",
+                "cochrane_ci_conclusion": "not_conclusive",
+                "reason": "same CI-based clinical conclusion"
               },
               "ci_overlap_by_subset": {
                 "all_studies": {
@@ -142282,6 +142257,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_15",
             "outcome_name": "Bronchopulmonary dysplasia or chronic lung disease",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Visible cerebral NIRS-guided management",
+            "favours_right": "Favours Blinded/masked NIRS monitoring",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_15/risk_ratio/forest_plot_comparison_analysis_comparison_02.json",
             "agent_studies": [
               {
@@ -142390,6 +142368,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_15",
             "outcome_name": "Bronchopulmonary dysplasia or chronic lung disease",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Visible cerebral NIRS-guided management",
+            "favours_right": "Favours Usual or standard care",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_15/risk_ratio/forest_plot_comparison_analysis_comparison_03.json",
             "agent_studies": [
               {
@@ -142452,6 +142433,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_15",
             "outcome_name": "Bronchopulmonary dysplasia or chronic lung disease",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Immediate-transition visible NIRS-guided resuscitation",
+            "favours_right": "Favours Standard or masked-NIRS resuscitation",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_15/risk_ratio/forest_plot_comparison_analysis_comparison_04.json",
             "agent_studies": [
               {
@@ -142520,6 +142504,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_15",
             "outcome_name": "Bronchopulmonary dysplasia or chronic lung disease",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Early continuous visible cerebral NIRS-guided care",
+            "favours_right": "Favours Usual/standard care or blinded early NIRS",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_15/risk_ratio/forest_plot_comparison_analysis_comparison_05.json",
             "agent_studies": [
               {
@@ -142622,6 +142609,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_15",
             "outcome_name": "Bronchopulmonary dysplasia or chronic lung disease",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Integrated hemodynamic assessment including NIRS",
+            "favours_right": "Favours Standard care or no integrated hemodynamic evaluation",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_15/risk_ratio/forest_plot_comparison_analysis_comparison_06.json",
             "agent_studies": [
               {
@@ -142684,6 +142674,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_16",
             "outcome_name": "Retinopathy of prematurity",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Visible cerebral NIRS-guided management",
+            "favours_right": "Favours Usual/standard care or blinded NIRS",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_16/risk_ratio/forest_plot_comparison_analysis_comparison_01.json",
             "agent_studies": [
               {
@@ -142725,8 +142718,8 @@ window.DEMO_DATA = {
               "analysis_id": "1.10",
               "comparison": "NIRS vs no NIRS or blinded NIRS",
               "outcome": "Retinopathy of prematurity (any stage) prior to discharge",
-              "outcome_target_id": "",
-              "outcome_target_label": "",
+              "outcome_target_id": "analysis:retinopathy of prematurity any stage prior to discharge",
+              "outcome_target_label": "Retinopathy of prematurity (any stage) prior to discharge",
               "effect_measure": "risk_ratio",
               "cochrane_effect": 1.15,
               "cochrane_ci_lower": 0.9015,
@@ -143265,10 +143258,10 @@ window.DEMO_DATA = {
                 "agent_arm_2": "Comparator: no active cerebral NIRS-guided management, including usual/standard care without NIRS use or masked/blinded NIRS recordings not available for clinical decisions.",
                 "comparison_id": "cochrane_main:001",
                 "cochrane_index": 0,
-                "cochrane_label": "NIRS versus Control",
-                "cochrane_label_clean": "NIRS versus Control",
+                "cochrane_label": "NIRS vs no NIRS or blinded NIRS",
+                "cochrane_label_clean": "NIRS vs no NIRS or blinded NIRS",
                 "cochrane_arm_1": "NIRS",
-                "cochrane_arm_2": "Control",
+                "cochrane_arm_2": "no NIRS or blinded NIRS",
                 "comparison_type": "analysis_comparison",
                 "relationship": "same_contrast_different_wording",
                 "arm_orientation": "same_order",
@@ -143278,19 +143271,28 @@ window.DEMO_DATA = {
               "comparison_match_relationship": "same_contrast_different_wording",
               "comparison_arm_orientation": "same_order",
               "agent_matched_comparison_label": "Clinician-visible cerebral NIRS-guided management versus usual/standard care or blinded NIRS",
-              "cochrane_matched_comparison_label": "NIRS versus Control",
-              "effect_direction_consistency": {
-                "status": "inconsistent",
-                "consistent": false,
+              "cochrane_matched_comparison_label": "NIRS vs no NIRS or blinded NIRS",
+              "ci_conclusion_consistency": {
+                "status": "consistent",
+                "consistent": true,
+                "metric_mode": "ci_based_clinical_benefit",
                 "effect_measure": "risk_ratio",
                 "null_value": 1.0,
+                "benefit_direction": "lower_is_better",
                 "arm_orientation": "same_order",
                 "agent_effect": 0.9827624335060896,
+                "agent_ci_lower": 0.9170198121117331,
+                "agent_ci_upper": 1.0532182488911503,
+                "agent_ci_lower_orientation_adjusted": 0.9170198121117331,
+                "agent_ci_upper_orientation_adjusted": 1.0532182488911503,
                 "cochrane_effect": 1.15,
-                "agent_direction": "below_null",
-                "cochrane_direction": "above_null",
-                "orientation_adjusted_agent_direction": "below_null",
-                "reason": "opposite direction after arm-orientation adjustment"
+                "cochrane_ci_lower": 0.9015,
+                "cochrane_ci_upper": 1.467,
+                "agent_interval_relation_to_null": "not_conclusive",
+                "cochrane_interval_relation_to_null": "not_conclusive",
+                "agent_ci_conclusion": "not_conclusive",
+                "cochrane_ci_conclusion": "not_conclusive",
+                "reason": "same CI-based clinical conclusion"
               },
               "ci_overlap_by_subset": {
                 "all_studies": {
@@ -144102,6 +144104,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_16",
             "outcome_name": "Retinopathy of prematurity",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Visible cerebral NIRS-guided management",
+            "favours_right": "Favours Blinded/masked NIRS monitoring",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_16/risk_ratio/forest_plot_comparison_analysis_comparison_02.json",
             "agent_studies": [
               {
@@ -144221,6 +144226,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_16",
             "outcome_name": "Retinopathy of prematurity",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Visible cerebral NIRS-guided management",
+            "favours_right": "Favours Usual or standard care",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_16/risk_ratio/forest_plot_comparison_analysis_comparison_03.json",
             "agent_studies": [
               {
@@ -144294,6 +144302,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_16",
             "outcome_name": "Retinopathy of prematurity",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Immediate-transition visible NIRS-guided resuscitation",
+            "favours_right": "Favours Standard or masked-NIRS resuscitation",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_16/risk_ratio/forest_plot_comparison_analysis_comparison_04.json",
             "agent_studies": [
               {
@@ -144373,6 +144384,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_16",
             "outcome_name": "Retinopathy of prematurity",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Early continuous visible cerebral NIRS-guided care",
+            "favours_right": "Favours Usual/standard care or blinded early NIRS",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_16/risk_ratio/forest_plot_comparison_analysis_comparison_05.json",
             "agent_studies": [
               {
@@ -144486,6 +144500,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_16",
             "outcome_name": "Retinopathy of prematurity",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Integrated hemodynamic assessment including NIRS",
+            "favours_right": "Favours Standard care or no integrated hemodynamic evaluation",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_16/risk_ratio/forest_plot_comparison_analysis_comparison_06.json",
             "agent_studies": [
               {
@@ -144559,6 +144576,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_17",
             "outcome_name": "Necrotizing enterocolitis",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Visible cerebral NIRS-guided management",
+            "favours_right": "Favours Usual/standard care or blinded NIRS",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_17/risk_ratio/forest_plot_comparison_analysis_comparison_01.json",
             "agent_studies": [
               {
@@ -144600,8 +144620,8 @@ window.DEMO_DATA = {
               "analysis_id": "1.9",
               "comparison": "NIRS vs no NIRS or blinded NIRS",
               "outcome": "Proven necrotising enterocolitis prior to discharge",
-              "outcome_target_id": "",
-              "outcome_target_label": "",
+              "outcome_target_id": "analysis:proven necrotising enterocolitis prior to discharge",
+              "outcome_target_label": "Proven necrotising enterocolitis prior to discharge",
               "effect_measure": "risk_ratio",
               "cochrane_effect": 1.079,
               "cochrane_ci_lower": 0.8476,
@@ -145067,7 +145087,7 @@ window.DEMO_DATA = {
               "outcome_match_relationship": "equivalent",
               "agent_matched_label": "Necrotizing enterocolitis",
               "cochrane_matched_label": "Proven necrotising enterocolitis prior to discharge",
-              "comparison_alignment_comparison_id": "cochrane_main:002",
+              "comparison_alignment_comparison_id": "cochrane_main:001",
               "comparison_alignment_match": {
                 "agent_comparison_id": "agent:analysis_comparison_01",
                 "agent_label": "Clinician-visible cerebral NIRS-guided management versus usual/standard care or blinded NIRS",
@@ -145075,12 +145095,12 @@ window.DEMO_DATA = {
                 "agent_arm_1": "Target intervention: cerebral NIRS/cerebral oximetry monitoring available to clinical staff and used to guide respiratory, circulatory, oxygen, or other neonatal management.",
                 "agent_arm_2_label": "Usual/standard care or blinded NIRS",
                 "agent_arm_2": "Comparator: no active cerebral NIRS-guided management, including usual/standard care without NIRS use or masked/blinded NIRS recordings not available for clinical decisions.",
-                "comparison_id": "cochrane_main:002",
-                "cochrane_index": 1,
-                "cochrane_label": "Experimental versus Control",
-                "cochrane_label_clean": "Experimental versus Control",
-                "cochrane_arm_1": "Experimental",
-                "cochrane_arm_2": "Control",
+                "comparison_id": "cochrane_main:001",
+                "cochrane_index": 0,
+                "cochrane_label": "NIRS vs no NIRS or blinded NIRS",
+                "cochrane_label_clean": "NIRS vs no NIRS or blinded NIRS",
+                "cochrane_arm_1": "NIRS",
+                "cochrane_arm_2": "no NIRS or blinded NIRS",
                 "comparison_type": "analysis_comparison",
                 "relationship": "same_contrast_different_wording",
                 "arm_orientation": "same_order",
@@ -145090,19 +145110,28 @@ window.DEMO_DATA = {
               "comparison_match_relationship": "same_contrast_different_wording",
               "comparison_arm_orientation": "same_order",
               "agent_matched_comparison_label": "Clinician-visible cerebral NIRS-guided management versus usual/standard care or blinded NIRS",
-              "cochrane_matched_comparison_label": "Experimental versus Control",
-              "effect_direction_consistency": {
+              "cochrane_matched_comparison_label": "NIRS vs no NIRS or blinded NIRS",
+              "ci_conclusion_consistency": {
                 "status": "consistent",
                 "consistent": true,
+                "metric_mode": "ci_based_clinical_benefit",
                 "effect_measure": "risk_ratio",
                 "null_value": 1.0,
+                "benefit_direction": "lower_is_better",
                 "arm_orientation": "same_order",
                 "agent_effect": 1.0872660699051266,
+                "agent_ci_lower": 0.8539972714921057,
+                "agent_ci_upper": 1.3842520886530345,
+                "agent_ci_lower_orientation_adjusted": 0.8539972714921057,
+                "agent_ci_upper_orientation_adjusted": 1.3842520886530345,
                 "cochrane_effect": 1.079,
-                "agent_direction": "above_null",
-                "cochrane_direction": "above_null",
-                "orientation_adjusted_agent_direction": "above_null",
-                "reason": "same direction after arm-orientation adjustment"
+                "cochrane_ci_lower": 0.8476,
+                "cochrane_ci_upper": 1.374,
+                "agent_interval_relation_to_null": "not_conclusive",
+                "cochrane_interval_relation_to_null": "not_conclusive",
+                "agent_ci_conclusion": "not_conclusive",
+                "cochrane_ci_conclusion": "not_conclusive",
+                "reason": "same CI-based clinical conclusion"
               },
               "ci_overlap_by_subset": {
                 "all_studies": {
@@ -145826,6 +145855,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_17",
             "outcome_name": "Necrotizing enterocolitis",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Visible cerebral NIRS-guided management",
+            "favours_right": "Favours Blinded/masked NIRS monitoring",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_17/risk_ratio/forest_plot_comparison_analysis_comparison_02.json",
             "agent_studies": [
               {
@@ -145934,6 +145966,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_17",
             "outcome_name": "Necrotizing enterocolitis",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Visible cerebral NIRS-guided management",
+            "favours_right": "Favours Usual or standard care",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_17/risk_ratio/forest_plot_comparison_analysis_comparison_03.json",
             "agent_studies": [
               {
@@ -145996,6 +146031,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_17",
             "outcome_name": "Necrotizing enterocolitis",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Immediate-transition visible NIRS-guided resuscitation",
+            "favours_right": "Favours Standard or masked-NIRS resuscitation",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_17/risk_ratio/forest_plot_comparison_analysis_comparison_04.json",
             "agent_studies": [
               {
@@ -146064,6 +146102,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_17",
             "outcome_name": "Necrotizing enterocolitis",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Early continuous visible cerebral NIRS-guided care",
+            "favours_right": "Favours Usual/standard care or blinded early NIRS",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_17/risk_ratio/forest_plot_comparison_analysis_comparison_05.json",
             "agent_studies": [
               {
@@ -146166,6 +146207,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_17",
             "outcome_name": "Necrotizing enterocolitis",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Integrated hemodynamic assessment including NIRS",
+            "favours_right": "Favours Standard care or no integrated hemodynamic evaluation",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_17/risk_ratio/forest_plot_comparison_analysis_comparison_06.json",
             "agent_studies": [
               {
@@ -146228,6 +146272,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_18",
             "outcome_name": "Sepsis",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Visible cerebral NIRS-guided management",
+            "favours_right": "Favours Usual/standard care or blinded NIRS",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_18/risk_ratio/forest_plot_comparison_analysis_comparison_01.json",
             "agent_studies": [
               {
@@ -146302,6 +146349,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_18",
             "outcome_name": "Sepsis",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Visible cerebral NIRS-guided management",
+            "favours_right": "Favours Blinded/masked NIRS monitoring",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_18/risk_ratio/forest_plot_comparison_analysis_comparison_02.json",
             "agent_studies": [
               {
@@ -146359,6 +146409,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_18",
             "outcome_name": "Sepsis",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Visible cerebral NIRS-guided management",
+            "favours_right": "Favours Usual or standard care",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_18/risk_ratio/forest_plot_comparison_analysis_comparison_03.json",
             "agent_studies": [
               {
@@ -146410,6 +146463,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_18",
             "outcome_name": "Sepsis",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Immediate-transition visible NIRS-guided resuscitation",
+            "favours_right": "Favours Standard or masked-NIRS resuscitation",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_18/risk_ratio/forest_plot_comparison_analysis_comparison_04.json",
             "agent_studies": [
               {
@@ -146467,6 +146523,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_18",
             "outcome_name": "Sepsis",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Early continuous visible cerebral NIRS-guided care",
+            "favours_right": "Favours Usual/standard care or blinded early NIRS",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_18/risk_ratio/forest_plot_comparison_analysis_comparison_05.json",
             "agent_studies": [
               {
@@ -146518,6 +146577,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_19",
             "outcome_name": "Device-related or monitoring-related adverse events",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Visible cerebral NIRS-guided management",
+            "favours_right": "Favours Usual/standard care or blinded NIRS",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_19/risk_ratio/forest_plot_comparison_analysis_comparison_01.json",
             "agent_studies": [
               {
@@ -146538,8 +146600,8 @@ window.DEMO_DATA = {
               "analysis_id": "1.12",
               "comparison": "NIRS vs no NIRS or blinded NIRS",
               "outcome": "Severe adverse reactions prior to discharge",
-              "outcome_target_id": "",
-              "outcome_target_label": "",
+              "outcome_target_id": "analysis:severe adverse reactions prior to discharge",
+              "outcome_target_label": "Severe adverse reactions prior to discharge",
               "effect_measure": "risk_ratio",
               "cochrane_effect": 9.408,
               "cochrane_ci_lower": 0.5073,
@@ -146857,10 +146919,10 @@ window.DEMO_DATA = {
                 "agent_arm_2": "Comparator: no active cerebral NIRS-guided management, including usual/standard care without NIRS use or masked/blinded NIRS recordings not available for clinical decisions.",
                 "comparison_id": "cochrane_main:001",
                 "cochrane_index": 0,
-                "cochrane_label": "NIRS versus Control",
-                "cochrane_label_clean": "NIRS versus Control",
+                "cochrane_label": "NIRS vs no NIRS or blinded NIRS",
+                "cochrane_label_clean": "NIRS vs no NIRS or blinded NIRS",
                 "cochrane_arm_1": "NIRS",
-                "cochrane_arm_2": "Control",
+                "cochrane_arm_2": "no NIRS or blinded NIRS",
                 "comparison_type": "analysis_comparison",
                 "relationship": "same_contrast_different_wording",
                 "arm_orientation": "same_order",
@@ -146870,19 +146932,28 @@ window.DEMO_DATA = {
               "comparison_match_relationship": "same_contrast_different_wording",
               "comparison_arm_orientation": "same_order",
               "agent_matched_comparison_label": "Clinician-visible cerebral NIRS-guided management versus usual/standard care or blinded NIRS",
-              "cochrane_matched_comparison_label": "NIRS versus Control",
-              "effect_direction_consistency": {
+              "cochrane_matched_comparison_label": "NIRS vs no NIRS or blinded NIRS",
+              "ci_conclusion_consistency": {
                 "status": "inconsistent",
                 "consistent": false,
+                "metric_mode": "ci_based_clinical_benefit",
                 "effect_measure": "risk_ratio",
                 "null_value": 1.0,
+                "benefit_direction": "lower_is_better",
                 "arm_orientation": "same_order",
                 "agent_effect": 0.31007751937984496,
+                "agent_ci_lower": 0.1042654410613532,
+                "agent_ci_upper": 0.922147041685475,
+                "agent_ci_lower_orientation_adjusted": 0.1042654410613532,
+                "agent_ci_upper_orientation_adjusted": 0.922147041685475,
                 "cochrane_effect": 9.408,
-                "agent_direction": "below_null",
-                "cochrane_direction": "above_null",
-                "orientation_adjusted_agent_direction": "below_null",
-                "reason": "opposite direction after arm-orientation adjustment"
+                "cochrane_ci_lower": 0.5073,
+                "cochrane_ci_upper": 174.4,
+                "agent_interval_relation_to_null": "below_null",
+                "cochrane_interval_relation_to_null": "not_conclusive",
+                "agent_ci_conclusion": "favors_cochrane_arm_1",
+                "cochrane_ci_conclusion": "not_conclusive",
+                "reason": "different CI-based clinical conclusion"
               },
               "ci_overlap_by_subset": {
                 "all_studies": {
@@ -147206,6 +147277,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_19",
             "outcome_name": "Device-related or monitoring-related adverse events",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Visible cerebral NIRS-guided management",
+            "favours_right": "Favours Blinded/masked NIRS monitoring",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_19/risk_ratio/forest_plot_comparison_analysis_comparison_02.json",
             "agent_studies": [
               {
@@ -147274,6 +147348,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_19",
             "outcome_name": "Device-related or monitoring-related adverse events",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Early continuous visible cerebral NIRS-guided care",
+            "favours_right": "Favours Usual/standard care or blinded early NIRS",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_19/risk_ratio/forest_plot_comparison_analysis_comparison_05.json",
             "agent_studies": [
               {
@@ -147342,6 +147419,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_20",
             "outcome_name": "Mechanical ventilation exposure",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Visible cerebral NIRS-guided management",
+            "favours_right": "Favours Usual/standard care or blinded NIRS",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_20/risk_ratio/forest_plot_comparison_analysis_comparison_01.json",
             "agent_studies": [
               {
@@ -147439,6 +147519,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_20",
             "outcome_name": "Mechanical ventilation exposure",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Visible cerebral NIRS-guided management",
+            "favours_right": "Favours Blinded/masked NIRS monitoring",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_20/risk_ratio/forest_plot_comparison_analysis_comparison_02.json",
             "agent_studies": [
               {
@@ -147519,6 +147602,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_20",
             "outcome_name": "Mechanical ventilation exposure",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Visible cerebral NIRS-guided management",
+            "favours_right": "Favours Usual or standard care",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_20/risk_ratio/forest_plot_comparison_analysis_comparison_03.json",
             "agent_studies": [
               {
@@ -147570,6 +147656,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_20",
             "outcome_name": "Mechanical ventilation exposure",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Immediate-transition visible NIRS-guided resuscitation",
+            "favours_right": "Favours Standard or masked-NIRS resuscitation",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_20/risk_ratio/forest_plot_comparison_analysis_comparison_04.json",
             "agent_studies": [
               {
@@ -147627,6 +147716,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_20",
             "outcome_name": "Mechanical ventilation exposure",
             "effect_measure": "risk_ratio",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Early continuous visible cerebral NIRS-guided care",
+            "favours_right": "Favours Usual/standard care or blinded early NIRS",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_20/risk_ratio/forest_plot_comparison_analysis_comparison_05.json",
             "agent_studies": [
               {
@@ -147701,6 +147793,9 @@ window.DEMO_DATA = {
             "outcome_key": "outcome_20",
             "outcome_name": "Mechanical ventilation exposure",
             "effect_measure": "mean_difference",
+            "benefit_direction": "lower_is_better",
+            "favours_left": "Favours Visible cerebral NIRS-guided management",
+            "favours_right": "Favours Usual/standard care or blinded NIRS",
             "plot_path": "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_20/mean_difference/forest_plot_all_eligible.json",
             "agent_studies": [
               {
@@ -147761,19 +147856,31 @@ window.DEMO_DATA = {
           "cochrane_all_studies_main_analyses": 13,
           "cochrane_analyses_recalled": 8,
           "cochrane_analysis_recall": 0.6154,
-          "mean_ci_overlap_ratio": 0.4721,
-          "mean_all_studies_ci_overlap_ratio": 0.4721,
+          "cochrane_included_studies": 5,
+          "cochrane_included_studies_recalled": 4,
+          "cochrane_included_studies_missed": 1,
+          "cochrane_included_studies_without_pmids": 0,
+          "cochrane_included_study_recall": 0.8,
+          "mean_ci_overlap_ratio": 0.2905,
+          "mean_all_studies_ci_overlap_ratio": 0.2905,
           "mean_pmcid_only_ci_overlap_ratio": 0.4722,
           "pmcid_only_ci_overlap_count": 8,
-          "study_row_overlap_count": 5,
-          "mean_study_row_overlap_f1": 0.4444,
-          "effect_direction_consistency": {
+          "study_row_overlap_count": 13,
+          "mean_study_row_overlap_f1": 0.1709,
+          "ci_conclusion_consistency": {
             "matched_analyses": 8,
             "evaluable": 8,
-            "consistent": 5,
-            "inconsistent": 3,
+            "consistent": 7,
+            "inconsistent": 1,
             "not_evaluable": 0,
-            "consistency_rate": 0.625
+            "consistency_rate": 0.875,
+            "agent_ci_conclusion_counts": {
+              "favors_cochrane_arm_1": 1,
+              "not_conclusive": 7
+            },
+            "cochrane_ci_conclusion_counts": {
+              "not_conclusive": 8
+            }
           }
         },
         "outcome_alignment_gate": {
@@ -147785,13 +147892,278 @@ window.DEMO_DATA = {
         },
         "comparison_alignment_gate": {
           "artifact_path": "outputs/20260620_120409_062492_q05_cd011506/evaluation/cochrane_comparison_alignment.json",
-          "artifact_version": "2026-07-05-cochrane-comparison-llm-relationship-main-v1",
+          "artifact_version": "2026-07-08-cochrane-comparison-analysis-group-name-v1",
           "match_method": "llm_semantic_relationship_analysis_comparison_pairwise_with_orientation_v1",
           "status": "completed",
           "one_to_one_match_count": 1,
-          "matched_analysis_count": 2,
-          "eligible_pairwise_match_count": 3,
+          "matched_analysis_count": 13,
+          "eligible_pairwise_match_count": 1,
           "comparison_specific_matched_analysis_count": 13
+        },
+        "included_study_recall": {
+          "unit": "Cochrane included study row",
+          "definition": "Cochrane included study rows with any matched PMID present in the union of all generated agent synthesis forest plots divided by all Cochrane included study rows.",
+          "counts": {
+            "cochrane_included_studies": 5,
+            "cochrane_included_studies_recalled": 4,
+            "cochrane_included_studies_missed": 1,
+            "cochrane_included_studies_without_pmids": 0,
+            "agent_synthesis_forest_plots": 95,
+            "agent_synthesis_unique_pmids": 14,
+            "recall": 0.8,
+            "pmid_linkable_denominator": 5,
+            "pmid_linkable_recall": 0.8
+          },
+          "agent_synthesis_pmids": [
+            "25569128",
+            "26571218",
+            "28328980",
+            "29450194",
+            "29908039",
+            "36693654",
+            "37075142",
+            "39126518",
+            "40202760",
+            "41642624",
+            "41736052",
+            "42008246",
+            "42030214",
+            "42050627"
+          ],
+          "recalled_studies": [
+            {
+              "study_label": "Hansen 2023",
+              "pmids": [
+                "37075142",
+                "31856902",
+                "37805539",
+                "37974280",
+                "31888764",
+                "38575977"
+              ],
+              "pmcids": [
+                "PMC6921567",
+                "PMC10560418",
+                "PMC10655478",
+                "PMC6937938",
+                "PMC10996265"
+              ],
+              "matched_agent_pmids": [
+                "37075142"
+              ],
+              "agent_synthesis_studies": [
+                {
+                  "pmid": "37075142",
+                  "label": "Hansen 2023 (37075142)",
+                  "plot_paths": [
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_05/risk_ratio/forest_plot_comparison_analysis_comparison_01.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_05/risk_ratio/forest_plot_comparison_analysis_comparison_03.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_05/risk_ratio/forest_plot_comparison_analysis_comparison_05.json"
+                  ],
+                  "n_plots": 3
+                }
+              ]
+            },
+            {
+              "study_label": "Hyttel-Sorensen 2015",
+              "pmids": [
+                "25569128",
+                "35073354",
+                "29908039",
+                "26571218",
+                "28328980"
+              ],
+              "pmcids": [
+                "PMC4283997",
+                "PMC8786171",
+                "PMC6585779",
+                "PMC4823642",
+                "PMC5362210"
+              ],
+              "matched_agent_pmids": [
+                "25569128",
+                "26571218",
+                "28328980",
+                "29908039"
+              ],
+              "agent_synthesis_studies": [
+                {
+                  "pmid": "25569128",
+                  "label": "Hyttel-Sorensen 2015 (25569128)",
+                  "plot_paths": [
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_04/risk_ratio/forest_plot_comparison_analysis_comparison_01.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_04/risk_ratio/forest_plot_comparison_analysis_comparison_02.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_04/risk_ratio/forest_plot_comparison_analysis_comparison_05.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_08/risk_ratio/forest_plot_comparison_analysis_comparison_01.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_08/risk_ratio/forest_plot_comparison_analysis_comparison_02.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_08/risk_ratio/forest_plot_comparison_analysis_comparison_05.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_11/mean_difference/forest_plot_comparison_analysis_comparison_01.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_11/mean_difference/forest_plot_comparison_analysis_comparison_02.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_11/mean_difference/forest_plot_comparison_analysis_comparison_05.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_12/mean_difference/forest_plot_comparison_analysis_comparison_01.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_12/mean_difference/forest_plot_comparison_analysis_comparison_02.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_12/mean_difference/forest_plot_comparison_analysis_comparison_05.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_13/mean_difference/forest_plot_comparison_analysis_comparison_01.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_13/mean_difference/forest_plot_comparison_analysis_comparison_02.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_13/mean_difference/forest_plot_comparison_analysis_comparison_05.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_15/risk_ratio/forest_plot_comparison_analysis_comparison_01.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_15/risk_ratio/forest_plot_comparison_analysis_comparison_02.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_15/risk_ratio/forest_plot_comparison_analysis_comparison_05.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_16/risk_ratio/forest_plot_comparison_analysis_comparison_01.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_16/risk_ratio/forest_plot_comparison_analysis_comparison_02.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_16/risk_ratio/forest_plot_comparison_analysis_comparison_05.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_17/risk_ratio/forest_plot_comparison_analysis_comparison_01.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_17/risk_ratio/forest_plot_comparison_analysis_comparison_02.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_17/risk_ratio/forest_plot_comparison_analysis_comparison_05.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_19/risk_ratio/forest_plot_comparison_analysis_comparison_01.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_19/risk_ratio/forest_plot_comparison_analysis_comparison_02.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_19/risk_ratio/forest_plot_comparison_analysis_comparison_05.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_20/risk_ratio/forest_plot_comparison_analysis_comparison_01.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_20/risk_ratio/forest_plot_comparison_analysis_comparison_02.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_20/risk_ratio/forest_plot_comparison_analysis_comparison_05.json"
+                  ],
+                  "n_plots": 30
+                },
+                {
+                  "pmid": "26571218",
+                  "label": "Plomgaard 2016 (26571218)",
+                  "plot_paths": [
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_07/risk_ratio/forest_plot_comparison_analysis_comparison_01.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_07/risk_ratio/forest_plot_comparison_analysis_comparison_02.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_07/risk_ratio/forest_plot_comparison_analysis_comparison_05.json"
+                  ],
+                  "n_plots": 3
+                },
+                {
+                  "pmid": "28328980",
+                  "label": "Plomgaard 2017 (28328980)",
+                  "plot_paths": [
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_05/odds_ratio/forest_plot_comparison_analysis_comparison_01.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_05/odds_ratio/forest_plot_comparison_analysis_comparison_02.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_05/odds_ratio/forest_plot_comparison_analysis_comparison_05.json"
+                  ],
+                  "n_plots": 3
+                },
+                {
+                  "pmid": "29908039",
+                  "label": "Plomgaard 2019 (29908039)",
+                  "plot_paths": [
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_01/risk_ratio/forest_plot_comparison_analysis_comparison_01.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_01/risk_ratio/forest_plot_comparison_analysis_comparison_02.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_01/risk_ratio/forest_plot_comparison_analysis_comparison_05.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_02/risk_ratio/forest_plot_comparison_analysis_comparison_01.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_02/risk_ratio/forest_plot_comparison_analysis_comparison_02.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_02/risk_ratio/forest_plot_comparison_analysis_comparison_05.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_03/mean_difference/forest_plot_comparison_analysis_comparison_01.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_03/mean_difference/forest_plot_comparison_analysis_comparison_02.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_03/mean_difference/forest_plot_comparison_analysis_comparison_05.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_04/risk_ratio/forest_plot_comparison_analysis_comparison_01.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_04/risk_ratio/forest_plot_comparison_analysis_comparison_02.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_04/risk_ratio/forest_plot_comparison_analysis_comparison_05.json"
+                  ],
+                  "n_plots": 12
+                }
+              ]
+            },
+            {
+              "study_label": "Pichler 2018",
+              "pmids": [
+                "29450194"
+              ],
+              "pmcids": [
+                "PMC5799241"
+              ],
+              "matched_agent_pmids": [
+                "29450194"
+              ],
+              "agent_synthesis_studies": [
+                {
+                  "pmid": "29450194",
+                  "label": "Pichler 2018 (29450194)",
+                  "plot_paths": [
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_08/risk_ratio/forest_plot_comparison_analysis_comparison_01.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_08/risk_ratio/forest_plot_comparison_analysis_comparison_02.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_08/risk_ratio/forest_plot_comparison_analysis_comparison_05.json"
+                  ],
+                  "n_plots": 3
+                }
+              ]
+            },
+            {
+              "study_label": "Pichler 2023",
+              "pmids": [
+                "36693654",
+                "30894226",
+                "39126518"
+              ],
+              "pmcids": [
+                "PMC9871806",
+                "PMC6427901",
+                "PMC11413120"
+              ],
+              "matched_agent_pmids": [
+                "36693654",
+                "39126518"
+              ],
+              "agent_synthesis_studies": [
+                {
+                  "pmid": "36693654",
+                  "label": "Pichler 2023 (36693654)",
+                  "plot_paths": [
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_04/risk_ratio/forest_plot_comparison_analysis_comparison_01.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_04/risk_ratio/forest_plot_comparison_analysis_comparison_02.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_04/risk_ratio/forest_plot_comparison_analysis_comparison_04.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_06/risk_ratio/forest_plot_comparison_analysis_comparison_01.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_06/risk_ratio/forest_plot_comparison_analysis_comparison_02.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_06/risk_ratio/forest_plot_comparison_analysis_comparison_04.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_09/risk_ratio/forest_plot_comparison_analysis_comparison_01.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_09/risk_ratio/forest_plot_comparison_analysis_comparison_02.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_09/risk_ratio/forest_plot_comparison_analysis_comparison_04.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_10/risk_ratio/forest_plot_comparison_analysis_comparison_01.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_10/risk_ratio/forest_plot_comparison_analysis_comparison_02.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_10/risk_ratio/forest_plot_comparison_analysis_comparison_04.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_15/risk_ratio/forest_plot_comparison_analysis_comparison_01.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_15/risk_ratio/forest_plot_comparison_analysis_comparison_02.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_15/risk_ratio/forest_plot_comparison_analysis_comparison_04.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_16/risk_ratio/forest_plot_comparison_analysis_comparison_01.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_16/risk_ratio/forest_plot_comparison_analysis_comparison_02.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_16/risk_ratio/forest_plot_comparison_analysis_comparison_04.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_17/risk_ratio/forest_plot_comparison_analysis_comparison_01.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_17/risk_ratio/forest_plot_comparison_analysis_comparison_02.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_17/risk_ratio/forest_plot_comparison_analysis_comparison_04.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_18/risk_ratio/forest_plot_comparison_analysis_comparison_01.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_18/risk_ratio/forest_plot_comparison_analysis_comparison_02.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_18/risk_ratio/forest_plot_comparison_analysis_comparison_04.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_20/risk_ratio/forest_plot_comparison_analysis_comparison_01.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_20/risk_ratio/forest_plot_comparison_analysis_comparison_02.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_20/risk_ratio/forest_plot_comparison_analysis_comparison_04.json"
+                  ],
+                  "n_plots": 27
+                },
+                {
+                  "pmid": "39126518",
+                  "label": "Wolfsberger 2024 (39126518)",
+                  "plot_paths": [
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_14/risk_ratio/forest_plot_comparison_analysis_comparison_01.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_14/risk_ratio/forest_plot_comparison_analysis_comparison_02.json",
+                    "outputs/20260620_120409_062492_q05_cd011506/synthesis/outcome_14/risk_ratio/forest_plot_comparison_analysis_comparison_04.json"
+                  ],
+                  "n_plots": 3
+                }
+              ]
+            }
+          ],
+          "missed_studies": [
+            {
+              "study_label": "Pichler 2016",
+              "pmids": [
+                "26743498"
+              ],
+              "pmcids": [],
+              "matched_agent_pmids": []
+            }
+          ],
+          "no_pmid_studies": []
         },
         "confusion_rows": [
           {
@@ -147802,8 +148174,8 @@ window.DEMO_DATA = {
               "analysis_id": "1.1",
               "comparison": "NIRS vs no NIRS or blinded NIRS",
               "outcome": "All-cause mortality prior to discharge",
-              "outcome_target_id": "",
-              "outcome_target_label": "",
+              "outcome_target_id": "analysis:all cause mortality prior to discharge",
+              "outcome_target_label": "All-cause mortality prior to discharge",
               "effect_measure": "risk_ratio",
               "ci_lower": 0.8283,
               "ci_upper": 1.187,
@@ -147872,18 +148244,27 @@ window.DEMO_DATA = {
               "status": "completed",
               "not_evaluable_reason": ""
             },
-            "effect_direction_consistency": {
+            "ci_conclusion_consistency": {
               "status": "consistent",
               "consistent": true,
+              "metric_mode": "ci_based_clinical_benefit",
               "effect_measure": "risk_ratio",
               "null_value": 1.0,
+              "benefit_direction": "lower_is_better",
               "arm_orientation": "same_order",
               "agent_effect": 0.7479424984657149,
+              "agent_ci_lower": 0.5150657216104828,
+              "agent_ci_upper": 1.0861099031439612,
+              "agent_ci_lower_orientation_adjusted": 0.5150657216104828,
+              "agent_ci_upper_orientation_adjusted": 1.0861099031439612,
               "cochrane_effect": 0.9915,
-              "agent_direction": "below_null",
-              "cochrane_direction": "below_null",
-              "orientation_adjusted_agent_direction": "below_null",
-              "reason": "same direction after arm-orientation adjustment"
+              "cochrane_ci_lower": 0.8283,
+              "cochrane_ci_upper": 1.187,
+              "agent_interval_relation_to_null": "not_conclusive",
+              "cochrane_interval_relation_to_null": "not_conclusive",
+              "agent_ci_conclusion": "not_conclusive",
+              "cochrane_ci_conclusion": "not_conclusive",
+              "reason": "same CI-based clinical conclusion"
             },
             "study_row_overlap": {
               "unit": "study PMID within matched synthesis analysis",
@@ -148318,8 +148699,8 @@ window.DEMO_DATA = {
               "analysis_id": "1.10",
               "comparison": "NIRS vs no NIRS or blinded NIRS",
               "outcome": "Retinopathy of prematurity (any stage) prior to discharge",
-              "outcome_target_id": "",
-              "outcome_target_label": "",
+              "outcome_target_id": "analysis:retinopathy of prematurity any stage prior to discharge",
+              "outcome_target_label": "Retinopathy of prematurity (any stage) prior to discharge",
               "effect_measure": "risk_ratio",
               "ci_lower": 0.9015,
               "ci_upper": 1.467,
@@ -148388,18 +148769,27 @@ window.DEMO_DATA = {
               "status": "completed",
               "not_evaluable_reason": ""
             },
-            "effect_direction_consistency": {
-              "status": "inconsistent",
-              "consistent": false,
+            "ci_conclusion_consistency": {
+              "status": "consistent",
+              "consistent": true,
+              "metric_mode": "ci_based_clinical_benefit",
               "effect_measure": "risk_ratio",
               "null_value": 1.0,
+              "benefit_direction": "lower_is_better",
               "arm_orientation": "same_order",
               "agent_effect": 0.9827624335060896,
+              "agent_ci_lower": 0.9170198121117331,
+              "agent_ci_upper": 1.0532182488911503,
+              "agent_ci_lower_orientation_adjusted": 0.9170198121117331,
+              "agent_ci_upper_orientation_adjusted": 1.0532182488911503,
               "cochrane_effect": 1.15,
-              "agent_direction": "below_null",
-              "cochrane_direction": "above_null",
-              "orientation_adjusted_agent_direction": "below_null",
-              "reason": "opposite direction after arm-orientation adjustment"
+              "cochrane_ci_lower": 0.9015,
+              "cochrane_ci_upper": 1.467,
+              "agent_interval_relation_to_null": "not_conclusive",
+              "cochrane_interval_relation_to_null": "not_conclusive",
+              "agent_ci_conclusion": "not_conclusive",
+              "cochrane_ci_conclusion": "not_conclusive",
+              "reason": "same CI-based clinical conclusion"
             },
             "study_row_overlap": {
               "unit": "study PMID within matched synthesis analysis",
@@ -148896,8 +149286,8 @@ window.DEMO_DATA = {
               "analysis_id": "1.12",
               "comparison": "NIRS vs no NIRS or blinded NIRS",
               "outcome": "Severe adverse reactions prior to discharge",
-              "outcome_target_id": "",
-              "outcome_target_label": "",
+              "outcome_target_id": "analysis:severe adverse reactions prior to discharge",
+              "outcome_target_label": "Severe adverse reactions prior to discharge",
               "effect_measure": "risk_ratio",
               "ci_lower": 0.5073,
               "ci_upper": 174.4,
@@ -148966,18 +149356,27 @@ window.DEMO_DATA = {
               "status": "completed",
               "not_evaluable_reason": ""
             },
-            "effect_direction_consistency": {
+            "ci_conclusion_consistency": {
               "status": "inconsistent",
               "consistent": false,
+              "metric_mode": "ci_based_clinical_benefit",
               "effect_measure": "risk_ratio",
               "null_value": 1.0,
+              "benefit_direction": "lower_is_better",
               "arm_orientation": "same_order",
               "agent_effect": 0.31007751937984496,
+              "agent_ci_lower": 0.1042654410613532,
+              "agent_ci_upper": 0.922147041685475,
+              "agent_ci_lower_orientation_adjusted": 0.1042654410613532,
+              "agent_ci_upper_orientation_adjusted": 0.922147041685475,
               "cochrane_effect": 9.408,
-              "agent_direction": "below_null",
-              "cochrane_direction": "above_null",
-              "orientation_adjusted_agent_direction": "below_null",
-              "reason": "opposite direction after arm-orientation adjustment"
+              "cochrane_ci_lower": 0.5073,
+              "cochrane_ci_upper": 174.4,
+              "agent_interval_relation_to_null": "below_null",
+              "cochrane_interval_relation_to_null": "not_conclusive",
+              "agent_ci_conclusion": "favors_cochrane_arm_1",
+              "cochrane_ci_conclusion": "not_conclusive",
+              "reason": "different CI-based clinical conclusion"
             },
             "study_row_overlap": {
               "unit": "study PMID within matched synthesis analysis",
@@ -149125,8 +149524,8 @@ window.DEMO_DATA = {
               "analysis_id": "1.4",
               "comparison": "NIRS vs no NIRS or blinded NIRS",
               "outcome": "Major neurodevelopmental disability in children aged 18 to 24 months",
-              "outcome_target_id": "",
-              "outcome_target_label": "",
+              "outcome_target_id": "analysis:major neurodevelopmental disability in children aged 18 to 24 months",
+              "outcome_target_label": "Major neurodevelopmental disability in children aged 18 to 24 months",
               "effect_measure": "risk_ratio",
               "ci_lower": 0.4995,
               "ci_upper": 3.291,
@@ -149195,18 +149594,27 @@ window.DEMO_DATA = {
               "status": "completed",
               "not_evaluable_reason": ""
             },
-            "effect_direction_consistency": {
+            "ci_conclusion_consistency": {
               "status": "consistent",
               "consistent": true,
+              "metric_mode": "ci_based_clinical_benefit",
               "effect_measure": "risk_ratio",
               "null_value": 1.0,
+              "benefit_direction": "lower_is_better",
               "arm_orientation": "same_order",
               "agent_effect": 1.2820512820512822,
+              "agent_ci_lower": 0.499504947958749,
+              "agent_ci_upper": 3.290568985404876,
+              "agent_ci_lower_orientation_adjusted": 0.499504947958749,
+              "agent_ci_upper_orientation_adjusted": 3.290568985404876,
               "cochrane_effect": 1.282,
-              "agent_direction": "above_null",
-              "cochrane_direction": "above_null",
-              "orientation_adjusted_agent_direction": "above_null",
-              "reason": "same direction after arm-orientation adjustment"
+              "cochrane_ci_lower": 0.4995,
+              "cochrane_ci_upper": 3.291,
+              "agent_interval_relation_to_null": "not_conclusive",
+              "cochrane_interval_relation_to_null": "not_conclusive",
+              "agent_ci_conclusion": "not_conclusive",
+              "cochrane_ci_conclusion": "not_conclusive",
+              "reason": "same CI-based clinical conclusion"
             },
             "study_row_overlap": {
               "unit": "study PMID within matched synthesis analysis",
@@ -149359,8 +149767,8 @@ window.DEMO_DATA = {
               "analysis_id": "1.5",
               "comparison": "NIRS vs no NIRS or blinded NIRS",
               "outcome": "Major brain injury diagnosed by brain ultrasound prior to discharge",
-              "outcome_target_id": "",
-              "outcome_target_label": "",
+              "outcome_target_id": "analysis:major brain injury diagnosed by brain ultrasound prior to discharge",
+              "outcome_target_label": "Major brain injury diagnosed by brain ultrasound prior to discharge",
               "effect_measure": "risk_ratio",
               "ci_lower": 0.8419,
               "ci_upper": 1.172,
@@ -149429,18 +149837,27 @@ window.DEMO_DATA = {
               "status": "completed",
               "not_evaluable_reason": ""
             },
-            "effect_direction_consistency": {
+            "ci_conclusion_consistency": {
               "status": "consistent",
               "consistent": true,
+              "metric_mode": "ci_based_clinical_benefit",
               "effect_measure": "risk_ratio",
               "null_value": 1.0,
+              "benefit_direction": "lower_is_better",
               "arm_orientation": "same_order",
               "agent_effect": 0.8254975338744047,
+              "agent_ci_lower": 0.42746933640600826,
+              "agent_ci_upper": 1.5941404924199982,
+              "agent_ci_lower_orientation_adjusted": 0.42746933640600826,
+              "agent_ci_upper_orientation_adjusted": 1.5941404924199982,
               "cochrane_effect": 0.9931,
-              "agent_direction": "below_null",
-              "cochrane_direction": "below_null",
-              "orientation_adjusted_agent_direction": "below_null",
-              "reason": "same direction after arm-orientation adjustment"
+              "cochrane_ci_lower": 0.8419,
+              "cochrane_ci_upper": 1.172,
+              "agent_interval_relation_to_null": "not_conclusive",
+              "cochrane_interval_relation_to_null": "not_conclusive",
+              "agent_ci_conclusion": "not_conclusive",
+              "cochrane_ci_conclusion": "not_conclusive",
+              "reason": "same CI-based clinical conclusion"
             },
             "study_row_overlap": {
               "unit": "study PMID within matched synthesis analysis",
@@ -149855,8 +150272,8 @@ window.DEMO_DATA = {
               "analysis_id": "1.6",
               "comparison": "NIRS vs no NIRS or blinded NIRS",
               "outcome": "Intraventricular haemorrhage grade III or IV prior to discharge",
-              "outcome_target_id": "",
-              "outcome_target_label": "",
+              "outcome_target_id": "analysis:intraventricular haemorrhage grade iii or iv prior to discharge",
+              "outcome_target_label": "Intraventricular haemorrhage grade III or IV prior to discharge",
               "effect_measure": "risk_ratio",
               "ci_lower": 0.7588,
               "ci_upper": 1.131,
@@ -149925,18 +150342,27 @@ window.DEMO_DATA = {
               "status": "completed",
               "not_evaluable_reason": ""
             },
-            "effect_direction_consistency": {
+            "ci_conclusion_consistency": {
               "status": "consistent",
               "consistent": true,
+              "metric_mode": "ci_based_clinical_benefit",
               "effect_measure": "risk_ratio",
               "null_value": 1.0,
+              "benefit_direction": "lower_is_better",
               "arm_orientation": "same_order",
               "agent_effect": 0.7971383378456418,
+              "agent_ci_lower": 0.3990285346430638,
+              "agent_ci_upper": 1.5924413281163274,
+              "agent_ci_lower_orientation_adjusted": 0.3990285346430638,
+              "agent_ci_upper_orientation_adjusted": 1.5924413281163274,
               "cochrane_effect": 0.9262,
-              "agent_direction": "below_null",
-              "cochrane_direction": "below_null",
-              "orientation_adjusted_agent_direction": "below_null",
-              "reason": "same direction after arm-orientation adjustment"
+              "cochrane_ci_lower": 0.7588,
+              "cochrane_ci_upper": 1.131,
+              "agent_interval_relation_to_null": "not_conclusive",
+              "cochrane_interval_relation_to_null": "not_conclusive",
+              "agent_ci_conclusion": "not_conclusive",
+              "cochrane_ci_conclusion": "not_conclusive",
+              "reason": "same CI-based clinical conclusion"
             },
             "study_row_overlap": {
               "unit": "study PMID within matched synthesis analysis",
@@ -150329,8 +150755,8 @@ window.DEMO_DATA = {
               "analysis_id": "1.8",
               "comparison": "NIRS vs no NIRS or blinded NIRS",
               "outcome": "Chronic lung disease at 36 weeks of gestational age",
-              "outcome_target_id": "",
-              "outcome_target_label": "",
+              "outcome_target_id": "analysis:chronic lung disease at 36 weeks of gestational age",
+              "outcome_target_label": "Chronic lung disease at 36 weeks of gestational age",
               "effect_measure": "risk_ratio",
               "ci_lower": 0.862,
               "ci_upper": 1.057,
@@ -150399,18 +150825,27 @@ window.DEMO_DATA = {
               "status": "completed",
               "not_evaluable_reason": ""
             },
-            "effect_direction_consistency": {
-              "status": "inconsistent",
-              "consistent": false,
+            "ci_conclusion_consistency": {
+              "status": "consistent",
+              "consistent": true,
+              "metric_mode": "ci_based_clinical_benefit",
               "effect_measure": "risk_ratio",
               "null_value": 1.0,
+              "benefit_direction": "lower_is_better",
               "arm_orientation": "same_order",
               "agent_effect": 1.02453612563695,
+              "agent_ci_lower": 0.8588591378343948,
+              "agent_ci_upper": 1.2221727946935703,
+              "agent_ci_lower_orientation_adjusted": 0.8588591378343948,
+              "agent_ci_upper_orientation_adjusted": 1.2221727946935703,
               "cochrane_effect": 0.9547,
-              "agent_direction": "above_null",
-              "cochrane_direction": "below_null",
-              "orientation_adjusted_agent_direction": "above_null",
-              "reason": "opposite direction after arm-orientation adjustment"
+              "cochrane_ci_lower": 0.862,
+              "cochrane_ci_upper": 1.057,
+              "agent_interval_relation_to_null": "not_conclusive",
+              "cochrane_interval_relation_to_null": "not_conclusive",
+              "agent_ci_conclusion": "not_conclusive",
+              "cochrane_ci_conclusion": "not_conclusive",
+              "reason": "same CI-based clinical conclusion"
             },
             "study_row_overlap": {
               "unit": "study PMID within matched synthesis analysis",
@@ -150819,8 +151254,8 @@ window.DEMO_DATA = {
               "analysis_id": "1.9",
               "comparison": "NIRS vs no NIRS or blinded NIRS",
               "outcome": "Proven necrotising enterocolitis prior to discharge",
-              "outcome_target_id": "",
-              "outcome_target_label": "",
+              "outcome_target_id": "analysis:proven necrotising enterocolitis prior to discharge",
+              "outcome_target_label": "Proven necrotising enterocolitis prior to discharge",
               "effect_measure": "risk_ratio",
               "ci_lower": 0.8476,
               "ci_upper": 1.374,
@@ -150889,18 +151324,27 @@ window.DEMO_DATA = {
               "status": "completed",
               "not_evaluable_reason": ""
             },
-            "effect_direction_consistency": {
+            "ci_conclusion_consistency": {
               "status": "consistent",
               "consistent": true,
+              "metric_mode": "ci_based_clinical_benefit",
               "effect_measure": "risk_ratio",
               "null_value": 1.0,
+              "benefit_direction": "lower_is_better",
               "arm_orientation": "same_order",
               "agent_effect": 1.0872660699051266,
+              "agent_ci_lower": 0.8539972714921057,
+              "agent_ci_upper": 1.3842520886530345,
+              "agent_ci_lower_orientation_adjusted": 0.8539972714921057,
+              "agent_ci_upper_orientation_adjusted": 1.3842520886530345,
               "cochrane_effect": 1.079,
-              "agent_direction": "above_null",
-              "cochrane_direction": "above_null",
-              "orientation_adjusted_agent_direction": "above_null",
-              "reason": "same direction after arm-orientation adjustment"
+              "cochrane_ci_lower": 0.8476,
+              "cochrane_ci_upper": 1.374,
+              "agent_interval_relation_to_null": "not_conclusive",
+              "cochrane_interval_relation_to_null": "not_conclusive",
+              "agent_ci_conclusion": "not_conclusive",
+              "cochrane_ci_conclusion": "not_conclusive",
+              "reason": "same CI-based clinical conclusion"
             },
             "study_row_overlap": {
               "unit": "study PMID within matched synthesis analysis",
@@ -153201,8 +153645,8 @@ window.DEMO_DATA = {
               "analysis_id": "1.11",
               "comparison": "NIRS vs no NIRS or blinded NIRS",
               "outcome": "Retinopathy of prematurity (stage \u2265 3 ) prior to discharge",
-              "outcome_target_id": "",
-              "outcome_target_label": "",
+              "outcome_target_id": "analysis:retinopathy of prematurity stage 3 prior to discharge",
+              "outcome_target_label": "Retinopathy of prematurity (stage \u2265 3 ) prior to discharge",
               "effect_measure": "risk_ratio",
               "ci_lower": 0.8567,
               "ci_upper": 1.542,
@@ -154341,8 +154785,8 @@ window.DEMO_DATA = {
               "analysis_id": "1.13",
               "comparison": "NIRS vs no NIRS or blinded NIRS",
               "outcome": "Abnormal fidgety movements (at six to 20 weeks of corrected age)",
-              "outcome_target_id": "",
-              "outcome_target_label": "",
+              "outcome_target_id": "analysis:abnormal fidgety movements at six to 20 weeks of corrected age",
+              "outcome_target_label": "Abnormal fidgety movements (at six to 20 weeks of corrected age)",
               "effect_measure": "risk_ratio",
               "ci_lower": 0.2414,
               "ci_upper": 3.123,
@@ -154657,8 +155101,8 @@ window.DEMO_DATA = {
               "analysis_id": "1.2",
               "comparison": "NIRS vs no NIRS or blinded NIRS",
               "outcome": "All-cause mortality at 2 years of life",
-              "outcome_target_id": "",
-              "outcome_target_label": "",
+              "outcome_target_id": "analysis:all cause mortality at 2 years of life",
+              "outcome_target_label": "All-cause mortality at 2 years of life",
               "effect_measure": "risk_ratio",
               "ci_lower": 0.2974,
               "ci_upper": 1.016,
@@ -155191,8 +155635,8 @@ window.DEMO_DATA = {
               "analysis_id": "1.3",
               "comparison": "NIRS vs no NIRS or blinded NIRS",
               "outcome": "All-cause mortality at longest follow-up",
-              "outcome_target_id": "",
-              "outcome_target_label": "",
+              "outcome_target_id": "analysis:all cause mortality at longest follow up",
+              "outcome_target_label": "All-cause mortality at longest follow-up",
               "effect_measure": "risk_ratio",
               "ci_lower": 0.8238,
               "ci_upper": 1.179,
@@ -156665,8 +157109,8 @@ window.DEMO_DATA = {
               "analysis_id": "1.7",
               "comparison": "NIRS vs no NIRS or blinded NIRS",
               "outcome": "Cystic periventricular leukomalacia prior to discharge",
-              "outcome_target_id": "",
-              "outcome_target_label": "",
+              "outcome_target_id": "analysis:cystic periventricular leukomalacia prior to discharge",
+              "outcome_target_label": "Cystic periventricular leukomalacia prior to discharge",
               "effect_measure": "risk_ratio",
               "ci_lower": 0.81,
               "ci_upper": 1.915,
